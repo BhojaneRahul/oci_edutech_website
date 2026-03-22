@@ -317,14 +317,7 @@ export type CommunityBootstrap = {
     muteUntil: string | Date | null;
     label: string | null;
   };
-  verifiedTeachers: {
-    id: number;
-    name: string | null;
-    profilePhoto?: string | null;
-    course?: string | null;
-    verifiedTeacher?: boolean;
-    role?: "admin" | "student" | "teacher";
-  }[];
+  verifiedTeachers: CommunityPresenceMember[];
   messages: CommunityChatMessage[];
 };
 
