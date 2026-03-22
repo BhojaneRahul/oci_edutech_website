@@ -4,6 +4,15 @@ import crypto from "crypto";
 import { prisma } from "../config/db.js";
 import { generateToken } from "../utils/generateToken.js";
 import { clearAuthCookie, setAuthCookie } from "../utils/authCookies.js";
+import { awardBookmarkXp, awardDailyLogin } from "../services/gamificationService.js";
+
+const safelyRunGamification = async (task) => {
+  try {
+    await task();
+  } catch (error) {
+    console.error("Gamification side-effect failed:", error);
+  }
+};
 
 const buildAuthResponse = (user) => ({
   success: true,
@@ -18,12 +27,14 @@ const buildAuthResponse = (user) => ({
     course: user.course,
     semester: user.semester,
     role: user.role,
+    verifiedTeacher: user.verifiedTeacher,
+    communityGroupId: user.communityGroupId,
     createdAt: user.createdAt
   }
 });
 
 export const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, university, phone, course, semester } = req.body;
+  const { name, email, password, university, phone, course, semester, role, communityGroupId } = req.body;
 
   if (!name || !email || !password || !university) {
     res.status(400);
@@ -45,11 +56,14 @@ export const registerUser = asyncHandler(async (req, res) => {
       university,
       phone: phone || null,
       course: course || null,
-      semester: semester || null
+      semester: semester || null,
+      role: role === "teacher" ? "teacher" : "student",
+      communityGroupId: communityGroupId ? Number(communityGroupId) : null
     }
   });
   const token = generateToken({ id: user.id, role: user.role });
   setAuthCookie(res, token);
+  await safelyRunGamification(() => awardDailyLogin(user.id));
   res.status(201).json(buildAuthResponse(user));
 });
 
@@ -64,39 +78,29 @@ export const loginUser = asyncHandler(async (req, res) => {
 
   const token = generateToken({ id: user.id, role: user.role });
   setAuthCookie(res, token);
+  await safelyRunGamification(() => awardDailyLogin(user.id));
   res.json(buildAuthResponse(user));
 });
 
 export const getCurrentUser = asyncHandler(async (req, res) => {
+  await safelyRunGamification(() => awardDailyLogin(req.user.id));
   res.json({ success: true, user: req.user });
 });
 
 export const updateProfile = asyncHandler(async (req, res) => {
-  const { name, email, university, phone, course, semester } = req.body;
+  const { name, role, university, phone, course, semester } = req.body;
 
-  if (!name || !email || !university) {
+  if (!name) {
     res.status(400);
-    throw new Error("Name, email, and university or PUC board are required");
-  }
-
-  const existingUser = await prisma.user.findFirst({
-    where: {
-      email,
-      NOT: { id: req.user.id }
-    }
-  });
-
-  if (existingUser) {
-    res.status(400);
-    throw new Error("Email is already in use");
+    throw new Error("Name is required");
   }
 
   const user = await prisma.user.update({
     where: { id: req.user.id },
     data: {
       name,
-      email,
-      university,
+      role: req.user.role === "admin" ? req.user.role : role === "teacher" ? "teacher" : "student",
+      university: university || null,
       phone: phone || null,
       course: course || null,
       semester: semester || null
@@ -236,7 +240,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
 export const googleCallback = asyncHandler(async (req, res) => {
   const token = generateToken({ id: req.user.id, role: req.user.role });
   setAuthCookie(res, token);
-  res.redirect(`${process.env.CLIENT_URL}/`);
+  await safelyRunGamification(() => awardDailyLogin(req.user.id));
+  res.redirect(req.user.role === "admin" ? `${process.env.CLIENT_URL}/admin` : `${process.env.CLIENT_URL}/account`);
 });
 
 export const getSavedDocuments = asyncHandler(async (req, res) => {
@@ -260,7 +265,9 @@ export const getSavedDocuments = asyncHandler(async (req, res) => {
         type: entry.document.type,
         fileUrl: entry.document.fileUrl,
         createdAt: entry.document.createdAt,
-        canDownload: entry.document.type === "model_qp"
+        canDownload: entry.document.type === "model_qp",
+        viewCount: entry.document.viewCount ?? 0,
+        downloadCount: entry.document.downloadCount ?? 0
       }
     }))
   );
@@ -338,6 +345,8 @@ export const saveDocument = asyncHandler(async (req, res) => {
       documentId
     }
   });
+
+  await safelyRunGamification(() => awardBookmarkXp(req.user.id, documentId));
 
   res.json({
     success: true,
@@ -431,3 +440,4 @@ export const logoutUser = asyncHandler(async (req, res) => {
     message: "Logged out successfully"
   });
 });
+

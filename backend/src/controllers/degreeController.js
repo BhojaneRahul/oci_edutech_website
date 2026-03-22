@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import { prisma } from "../config/db.js";
 import { NOTE_TYPES } from "../config/constants.js";
 import { withMongoStyleId, withMongoStyleIds } from "../utils/serializers.js";
+import { normalizeDocument } from "./documentController.js";
 
 export const getDegrees = asyncHandler(async (req, res) => {
   const degrees = await prisma.degree.findMany({ orderBy: { name: "asc" } });
@@ -36,12 +37,14 @@ export const getDegreeDetail = asyncHandler(async (req, res) => {
     orderBy: { createdAt: "desc" }
   });
 
+  const normalizedNotes = notes.map(normalizeDocument);
+
   res.json({
     degree: withMongoStyleId(degree),
     subjects: withMongoStyleIds(subjects),
     notes: {
-      notes: withMongoStyleIds(notes.filter((item) => item.type === NOTE_TYPES.NOTES)),
-      modelQps: withMongoStyleIds(notes.filter((item) => item.type === NOTE_TYPES.MODEL_QP))
+      notes: normalizedNotes.filter((item) => item.type === NOTE_TYPES.NOTES),
+      modelQps: normalizedNotes.filter((item) => item.type === NOTE_TYPES.MODEL_QP)
     }
   });
 });

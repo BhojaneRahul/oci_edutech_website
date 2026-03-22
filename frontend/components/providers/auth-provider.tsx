@@ -13,6 +13,8 @@ type AuthContextType = {
     email: string;
     password: string;
     university: string;
+    role?: "student" | "teacher";
+    communityGroupId?: number;
     phone?: string;
     course?: string;
     semester?: string;
@@ -57,6 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string;
     password: string;
     university: string;
+    role?: "student" | "teacher";
+    communityGroupId?: number;
     phone?: string;
     course?: string;
     semester?: string;

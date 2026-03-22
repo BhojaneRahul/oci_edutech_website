@@ -5,5 +5,6 @@ export const NOTE_TYPES = {
 
 export const USER_ROLES = {
   ADMIN: "admin",
-  STUDENT: "student"
+  STUDENT: "student",
+  TEACHER: "teacher"
 };

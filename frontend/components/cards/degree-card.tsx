@@ -15,8 +15,8 @@ export function DegreeCard({ degree }: { degree: Degree }) {
   const Icon = iconMap[degree.icon as keyof typeof iconMap] ?? BookOpen;
 
   return (
-    <div className="group rounded-[28px] border border-white/50 bg-white p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-primary to-brand-secondary text-white">
+    <div className="group rounded-[28px] border border-white/50 bg-white p-6 text-center shadow-soft transition hover:-translate-y-1 hover:shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-primary to-brand-secondary text-white">
         <Icon className="h-7 w-7" />
       </div>
       <h3 className="mt-5 text-xl font-semibold">{degree.name}</h3>
@@ -31,3 +31,4 @@ export function DegreeCard({ degree }: { degree: Degree }) {
     </div>
   );
 }
+

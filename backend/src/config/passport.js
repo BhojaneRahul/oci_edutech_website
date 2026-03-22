@@ -12,6 +12,9 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
+        const googlePhoto = profile.photos?.[0]?.value
+          ? profile.photos[0].value.replace(/=s\d+-c$/, "=s256-c")
+          : null;
 
         if (!email) {
           done(new Error("Google account email not available"));
@@ -26,16 +29,16 @@ passport.use(
               name: profile.displayName,
               email,
               googleId: profile.id,
-              profilePhoto: profile.photos?.[0]?.value
+              profilePhoto: googlePhoto
             }
           });
-        } else if (!user.googleId || user.profilePhoto !== profile.photos?.[0]?.value || user.name !== profile.displayName) {
+        } else if (!user.googleId || user.profilePhoto !== googlePhoto || user.name !== profile.displayName) {
           user = await prisma.user.update({
             where: { id: user.id },
             data: {
               name: profile.displayName,
               googleId: profile.id,
-              profilePhoto: profile.photos?.[0]?.value
+              profilePhoto: googlePhoto
             }
           });
         }

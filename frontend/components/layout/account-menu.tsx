@@ -1,16 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, LogOut, Shield, UserCircle2, UserRound } from "lucide-react";
+import { Bookmark, ChevronDown, LayoutDashboard, LogOut, MoonStar, Shield, SunMedium, UserCircle2, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { useAuth } from "../providers/auth-provider";
+import { resolveMediaUrl } from "@/lib/utils";
 
 export function AccountMenu() {
   const { user, logout, loading } = useAuth();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const profilePhotoUrl = resolveMediaUrl(user?.profilePhoto);
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [profilePhotoUrl]);
 
   if (loading) {
     return (
@@ -51,9 +61,15 @@ export function AccountMenu() {
         onClick={() => setOpen((value) => !value)}
         className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 dark:border-slate-800"
       >
-        {user.profilePhoto ? (
+        {profilePhotoUrl && !avatarFailed ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.profilePhoto} alt={user.name} className="h-7 w-7 rounded-full object-cover" />
+          <img
+            src={profilePhotoUrl}
+            alt={user.name}
+            className="h-7 w-7 rounded-full object-cover"
+            referrerPolicy="no-referrer"
+            onError={() => setAvatarFailed(true)}
+          />
         ) : (
           <UserCircle2 className="h-5 w-5 text-amber-500" />
         )}
@@ -67,11 +83,27 @@ export function AccountMenu() {
             <p className="text-sm font-semibold">{user.name}</p>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
             <span className="mt-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-              {user.role === "admin" ? "Admin" : "Student"}
+              {user.role === "admin" ? "Admin" : user.role === "teacher" ? "Teacher" : "Student"}
             </span>
           </div>
 
           <div className="mt-3 grid gap-2">
+            <button
+              type="button"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              className="flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900 sm:hidden"
+            >
+              {isDark ? <SunMedium className="h-4 w-4" /> : <MoonStar className="h-4 w-4" />}
+              {isDark ? "Light Mode" : "Dark Mode"}
+            </button>
+            <Link
+              href="/dashboard"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </Link>
             <Link
               href="/account"
               onClick={() => setOpen(false)}
@@ -81,20 +113,12 @@ export function AccountMenu() {
               My Account
             </Link>
             <Link
-              href="/account#saved-library"
+              href="/saved-notes"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900"
             >
-              <UserRound className="h-4 w-4" />
+              <Bookmark className="h-4 w-4" />
               Saved Notes
-            </Link>
-            <Link
-              href="/account#saved-library"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900"
-            >
-              <UserRound className="h-4 w-4" />
-              Bookmarks
             </Link>
             {user.role === "admin" ? (
               <Link

@@ -1,9 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import { PDFViewer } from "./PDFViewer";
 import { useAuth } from "../providers/auth-provider";
 import { LoginGate } from "../materials/login-gate";
+
+const PDFViewer = dynamic(() => import("./PDFViewer").then((module) => module.PDFViewer), {
+  ssr: false,
+  loading: () => (
+    <div className="border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+      Preparing reader...
+    </div>
+  )
+});
 
 export function ViewerClient({
   documentId,
@@ -57,7 +66,6 @@ export function ViewerClient({
       url={proxiedUrl}
       title={title}
       allowDownload={type === "model_qp"}
-      protectedMode={type === "notes"}
     />
   );
 }

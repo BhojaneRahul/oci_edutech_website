@@ -1,30 +1,100 @@
 "use client";
 
 import Link from "next/link";
-import { Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { FileText, FolderKanban, GraduationCap, ListChecks, Search, X } from "lucide-react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { SearchResults } from "@/lib/types";
 
+type FilterKey = "all" | "notes" | "model_qp" | "projects" | "mocktests";
+
+const filters: { key: FilterKey; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "notes", label: "Notes" },
+  { key: "model_qp", label: "Model QPs" },
+  { key: "projects", label: "Projects" },
+  { key: "mocktests", label: "Mock Tests" }
+];
+
 export function MobileSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const trimmedQuery = query.trim();
+  const deferredQuery = useDeferredValue(trimmedQuery);
 
-  const { data, isFetching } = useQuery({
-    queryKey: ["global-search", trimmedQuery],
+  const { data, isFetching, error } = useQuery({
+    queryKey: ["mobile-search", deferredQuery],
     queryFn: async () => {
-      const response = await api.get<SearchResults>(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+      const response = await api.get<SearchResults>(`/search?q=${encodeURIComponent(deferredQuery)}`);
       return response.data;
     },
-    enabled: trimmedQuery.length > 1
+    enabled: deferredQuery.length > 0,
+    refetchOnWindowFocus: false
   });
 
-  const hasResults = useMemo(
-    () => Boolean(data?.degrees.length || data?.subjects.length || data?.documents.length),
-    [data]
-  );
+  const filteredResults = useMemo(() => {
+    if (!data) {
+      return [];
+    }
+
+    const documents = data.documents
+      .filter((document) => activeFilter === "all" || document.type === activeFilter)
+      .map((document) => ({
+        id: `document-${document._id}`,
+        href: `/viewer?documentId=${document._id}&url=${encodeURIComponent(document.fileUrl)}&title=${encodeURIComponent(document.title)}&type=${document.type}`,
+        title: document.title,
+        meta: `${document.subject} • ${document.stream} • ${document.type === "model_qp" ? "Model QP" : "Notes"}`,
+        icon: FileText
+      }));
+
+    const projects =
+      activeFilter === "all" || activeFilter === "projects"
+        ? data.projects.map((project) => ({
+            id: `project-${project._id}`,
+            href: `/projects/${project._id}`,
+            title: project.title,
+            meta: `${project.category} • ${project.level}`,
+            icon: FolderKanban
+          }))
+        : [];
+
+    const mockTests =
+      activeFilter === "all" || activeFilter === "mocktests"
+        ? data.mockTests.map((test) => ({
+            id: `mock-${test._id}`,
+            href: `/mock-tests/${test._id}`,
+            title: test.title,
+            meta: `${test.totalQuestions} questions • ${test.subject} • Mock Test`,
+            icon: ListChecks
+          }))
+        : [];
+
+    const degrees =
+      activeFilter === "all"
+        ? data.degrees.map((degree) => ({
+            id: `degree-${degree._id}`,
+            href: `/degree/${degree._id}`,
+            title: degree.name,
+            meta: "Degree stream",
+            icon: GraduationCap
+          }))
+        : [];
+
+    const subjects =
+      activeFilter === "all"
+        ? data.subjects.map((subject) => ({
+            id: `subject-${subject._id}`,
+            href: subject.category === "puc" ? "/puc" : "/degree",
+            title: subject.name,
+            meta: `${subject.category === "puc" ? "PUC" : "Degree"} • ${subject.semester || "Subject"}`,
+            icon: GraduationCap
+          }))
+        : [];
+
+    return [...documents, ...projects, ...mockTests, ...degrees, ...subjects];
+  }, [activeFilter, data]);
 
   return (
     <div className="md:hidden">
@@ -38,16 +108,16 @@ export function MobileSearch() {
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-[70] bg-white/95 p-4 backdrop-blur dark:bg-slate-950/95">
+        <div className="fixed inset-0 z-[70] bg-white p-4 dark:bg-slate-950">
           <div className="flex items-center gap-3">
-            <div className="flex flex-1 items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-              <Search className="h-4 w-4 text-slate-400" />
+            <div className="flex h-10 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 dark:border-slate-700 dark:bg-slate-950">
+              <Search className="h-4 w-4 shrink-0 text-slate-400" />
               <input
                 autoFocus
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search notes, QPs, subjects, degrees..."
-                className="w-full bg-transparent text-sm outline-none"
+                placeholder="Search PDFs, notes, model QPs, projects..."
+                className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-white"
               />
             </div>
             <button
@@ -63,77 +133,75 @@ export function MobileSearch() {
             </button>
           </div>
 
-          <div className="mt-5 space-y-4 overflow-y-auto pb-20">
-            {isFetching ? (
-              <div className="rounded-3xl bg-slate-50 px-4 py-6 text-sm text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-                Searching...
+          {trimmedQuery.length > 0 ? (
+            <div className="mt-5 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-soft dark:border-slate-800 dark:bg-slate-950">
+              <div className="border-b border-slate-200 px-4 py-4 dark:border-slate-800">
+                <div className="flex flex-wrap gap-2">
+                  {filters.map((filter) => (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      onClick={() => setActiveFilter(filter.key)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        activeFilter === filter.key
+                          ? "bg-amber-500 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : null}
 
-            {trimmedQuery.length > 1 && !hasResults && !isFetching ? (
-              <div className="rounded-3xl bg-slate-50 px-4 py-6 text-sm text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-                No results found.
-              </div>
-            ) : null}
-
-            {data?.documents.length ? (
-              <ResultBlock title="Documents">
-                {data.documents.map((document) => (
-                  <Link
-                    key={document._id}
-                    href={`/viewer?documentId=${document._id}&url=${encodeURIComponent(document.fileUrl)}&title=${encodeURIComponent(document.title)}&type=${document.type}`}
-                    onClick={() => setOpen(false)}
-                    className="block rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-900"
-                  >
-                    <p className="text-sm font-semibold">{document.title}</p>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      {document.subject} • {document.stream}
-                    </p>
-                  </Link>
-                ))}
-              </ResultBlock>
-            ) : null}
-
-            {data?.subjects.length ? (
-              <ResultBlock title="Subjects">
-                {data.subjects.map((subject) => (
-                  <div key={subject._id} className="rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-900">
-                    <p className="text-sm font-semibold">{subject.name}</p>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      {subject.group || subject.category} • {subject.semester || "General"}
-                    </p>
+              <div className="max-h-[60vh] overflow-y-auto p-3">
+                {isFetching ? (
+                  <div className="rounded-2xl bg-slate-50 px-4 py-6 text-sm text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                    Searching...
                   </div>
-                ))}
-              </ResultBlock>
-            ) : null}
+                ) : error ? (
+                  <div className="rounded-2xl bg-rose-50 px-4 py-6 text-sm text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
+                    Search is temporarily unavailable. Please try again.
+                  </div>
+                ) : filteredResults.length ? (
+                  <div className="space-y-2">
+                    {filteredResults.map((item) => {
+                      const Icon = item.icon;
 
-            {data?.degrees.length ? (
-              <ResultBlock title="Degrees">
-                {data.degrees.map((degree) => (
-                  <Link
-                    key={degree._id}
-                    href={`/degree/${degree._id}`}
-                    onClick={() => setOpen(false)}
-                    className="block rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-900"
-                  >
-                    <p className="text-sm font-semibold">{degree.name}</p>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{degree.description}</p>
-                  </Link>
-                ))}
-              </ResultBlock>
-            ) : null}
-          </div>
+                      return (
+                        <Link
+                          key={item.id}
+                          href={item.href}
+                          onClick={() => setOpen(false)}
+                          className="flex items-start gap-3 rounded-2xl px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-900"
+                        >
+                          <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{item.title}</p>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.meta}</p>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-slate-50 px-4 py-6 text-sm text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                    No matching results found.
+                  </div>
+                )}
+              </div>
+
+              {filteredResults.length ? (
+                <div className="border-t border-slate-200 bg-slate-50 px-4 py-3 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+                  Searching across PDFs, mock tests, and projects from OCI - EduTech.
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
-  );
-}
-
-function ResultBlock({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{title}</h3>
-      <div className="space-y-2">{children}</div>
-    </section>
   );
 }

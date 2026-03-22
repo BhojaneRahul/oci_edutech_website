@@ -10,6 +10,13 @@ datasource db {
 enum UserRole {
   admin
   student
+  teacher
+}
+
+enum TeacherVerificationStatus {
+  pending
+  approved
+  rejected
 }
 
 enum SubjectCategory {
@@ -27,6 +34,43 @@ enum DocumentType {
   model_qp
 }
 
+enum ActivityType {
+  note_open
+  read_pages
+  bookmark
+  mock_test_complete
+  daily_login
+  mock_test_start
+  mock_test_exit
+  mock_test_submit
+}
+
+enum MockTestDifficulty {
+  easy
+  medium
+  hard
+}
+
+enum MockQuestionOption {
+  A
+  B
+  C
+  D
+}
+
+enum ChatFileType {
+  pdf
+  doc
+  ppt
+  image
+}
+
+enum ReportReason {
+  spam
+  abuse
+  inappropriate
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   name         String?  @db.VarChar(100)
@@ -41,15 +85,48 @@ model User {
   resetToken   String?  @map("reset_token") @db.VarChar(255)
   resetTokenExpiry DateTime? @map("reset_token_expiry")
   role         UserRole @default(student)
+  verifiedTeacher Boolean @default(false) @map("verified_teacher")
+  communityGroupId Int? @map("community_group_id")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt
+  communityGroup CommunityGroup? @relation(fields: [communityGroupId], references: [id], onDelete: SetNull)
   documents    Document[]
   savedDocuments SavedDocument[]
   likedDocuments LikedDocument[]
+  documentViews DocumentView[]
+  documentDownloads DocumentDownload[]
   notifications Notification[]
   contactInquiries ContactInquiry[] @relation("InquiryToUser")
+  xpProfile     UserXp?
+  streakProfile UserStreak?
+  studyProgress StudyProgress[]
+  activities    UserActivity[]
+  sentMessages  CommunityMessage[]
+  reactions     MessageReaction[]
+  hiddenCommunityMessages HiddenCommunityMessage[]
+  sentReports   ChatReport[]       @relation("ChatReportsByReporter")
+  receivedReports ChatReport[]     @relation("ChatReportsAgainstUser")
+  muteSettings  UserMuteSetting[]
+  teacherVerifications TeacherVerification[]
+  testAttempts  TestAttempt[]
 
   @@map("users")
+}
+
+model CommunityGroup {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(120)
+  slug        String   @unique @db.VarChar(120)
+  description String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  users       User[]
+  messages    CommunityMessage[]
+  reports     ChatReport[]
+  muteSettings UserMuteSetting[]
+  teacherVerifications TeacherVerification[]
+
+  @@map("community_groups")
 }
 
 model Degree {
@@ -88,23 +165,99 @@ model Note {
 }
 
 model MockTest {
-  id        Int      @id @default(autoincrement())
-  title     String
-  degreeId  Int
-  questions Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  degree    Degree   @relation(fields: [degreeId], references: [id], onDelete: Cascade)
+  id              Int                @id @default(autoincrement())
+  title           String             @db.VarChar(255)
+  description     String             @db.Text
+  degreeId        Int                @map("degree_id")
+  subject         String             @db.VarChar(120)
+  stream          String             @db.VarChar(80)
+  durationMinutes Int                @map("duration_minutes")
+  difficulty      MockTestDifficulty @default(medium)
+  isPublished     Boolean            @default(true) @map("is_published")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  degree          Degree             @relation(fields: [degreeId], references: [id], onDelete: Cascade)
+  questions       Question[]
+  attempts        TestAttempt[]
+
+  @@map("mock_tests")
+}
+
+model Question {
+  id            Int                @id @default(autoincrement())
+  mockTestId    Int                @map("mock_test_id")
+  orderIndex    Int                @map("order_index")
+  questionText  String             @map("question_text") @db.Text
+  optionA       String             @map("option_a") @db.Text
+  optionB       String             @map("option_b") @db.Text
+  optionC       String             @map("option_c") @db.Text
+  optionD       String             @map("option_d") @db.Text
+  correctAnswer MockQuestionOption @map("correct_answer")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+  mockTest      MockTest           @relation(fields: [mockTestId], references: [id], onDelete: Cascade)
+  answers       Answer[]
+
+  @@unique([mockTestId, orderIndex])
+  @@map("questions")
+}
+
+model TestAttempt {
+  id                  Int      @id @default(autoincrement())
+  mockTestId          Int      @map("mock_test_id")
+  userId              Int      @map("user_id")
+  started             Boolean  @default(false)
+  completed           Boolean  @default(false)
+  exited              Boolean  @default(false)
+  exitPenaltyApplied  Boolean  @default(false) @map("exit_penalty_applied")
+  currentQuestion     Int      @default(1) @map("current_question")
+  score               Int      @default(0)
+  totalQuestions      Int      @default(0) @map("total_questions")
+  correctAnswers      Int      @default(0) @map("correct_answers")
+  wrongAnswers        Int      @default(0) @map("wrong_answers")
+  accuracy            Float    @default(0)
+  xpEarned            Int      @default(0) @map("xp_earned")
+  startedAt           DateTime? @map("started_at")
+  submittedAt         DateTime? @map("submitted_at")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  mockTest            MockTest @relation(fields: [mockTestId], references: [id], onDelete: Cascade)
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers             Answer[]
+
+  @@index([userId, createdAt])
+  @@map("test_attempts")
+}
+
+model Answer {
+  id             Int                @id @default(autoincrement())
+  attemptId      Int                @map("attempt_id")
+  questionId     Int                @map("question_id")
+  selectedOption MockQuestionOption @map("selected_option")
+  isCorrect      Boolean            @default(false) @map("is_correct")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  attempt        TestAttempt        @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@map("answers")
 }
 
 model Project {
   id           Int      @id @default(autoincrement())
-  title        String
+  title        String   @db.VarChar(255)
   description  String   @db.Text
-  degree       String
-  downloadLink String   @default("")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  category     String   @db.VarChar(120)
+  level        String   @db.VarChar(120)
+  technologies Json?
+  images       Json?
+  fileUrl      String?  @map("file_url") @db.VarChar(255)
+  reportUrl    String?  @map("report_url") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("projects")
 }
 
 model Setting {
@@ -123,12 +276,42 @@ model Document {
   type       DocumentType
   fileUrl    String       @map("file_url") @db.VarChar(255)
   uploadedBy Int          @map("uploaded_by")
+  viewCount  Int          @default(0) @map("view_count")
+  downloadCount Int       @default(0) @map("download_count")
   createdAt  DateTime     @default(now()) @map("created_at")
   uploader   User         @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
   savedBy    SavedDocument[]
   likedBy    LikedDocument[]
+  views      DocumentView[]
+  downloads  DocumentDownload[]
+  studyProgress StudyProgress[]
+  activities  UserActivity[]
 
   @@map("documents")
+}
+
+model DocumentView {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  documentId Int      @map("document_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentId])
+  @@map("document_views")
+}
+
+model DocumentDownload {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  documentId Int      @map("document_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentId])
+  @@map("document_downloads")
 }
 
 model SavedDocument {
@@ -173,10 +356,182 @@ model Notification {
   userId     Int      @map("user_id")
   title      String   @db.VarChar(255)
   message    String   @db.Text
+  type       String   @default("general") @db.VarChar(50)
   documentId Int?     @map("document_id")
+  targetPath String?  @map("target_path") @db.VarChar(500)
   isRead     Boolean  @default(false) @map("is_read")
   createdAt  DateTime @default(now()) @map("created_at")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
+
+model CommunityMessage {
+  id         Int      @id @default(autoincrement())
+  groupId    Int      @map("group_id")
+  userId     Int      @map("user_id")
+  content    String   @db.Text
+  replyToId  Int?     @map("reply_to_id")
+  mentions   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  expiresAt  DateTime @map("expires_at")
+  group      CommunityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replyTo    CommunityMessage? @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies    CommunityMessage[] @relation("MessageReplies")
+  reactions  MessageReaction[]
+  files      ChatFile[]
+  hiddenForUsers HiddenCommunityMessage[]
+  reports    ChatReport[]
+
+  @@index([groupId, createdAt])
+  @@map("community_messages")
+}
+
+model MessageReaction {
+  id         Int      @id @default(autoincrement())
+  messageId  Int      @map("message_id")
+  userId     Int      @map("user_id")
+  emoji      String   @db.VarChar(16)
+  createdAt  DateTime @default(now()) @map("created_at")
+  message    CommunityMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("message_reactions")
+}
+
+model ChatFile {
+  id         Int          @id @default(autoincrement())
+  messageId  Int          @map("message_id")
+  fileUrl    String       @map("file_url") @db.VarChar(255)
+  fileName   String       @map("file_name") @db.VarChar(255)
+  fileType   ChatFileType @map("file_type")
+  mimeType   String       @map("mime_type") @db.VarChar(120)
+  sizeBytes  Int          @map("size_bytes")
+  expiresAt  DateTime     @map("expires_at")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  message    CommunityMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("chat_files")
+}
+
+model ChatReport {
+  id             Int          @id @default(autoincrement())
+  reporterId     Int          @map("reporter_id")
+  reportedUserId Int?         @map("reported_user_id")
+  messageId      Int?         @map("message_id")
+  groupId        Int          @map("group_id")
+  reason         ReportReason
+  createdAt      DateTime     @default(now()) @map("created_at")
+  reporter       User         @relation("ChatReportsByReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser   User?        @relation("ChatReportsAgainstUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  message        CommunityMessage? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  group          CommunityGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("chat_reports")
+}
+
+model UserMuteSetting {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  groupId   Int       @map("group_id")
+  muteUntil DateTime? @map("mute_until")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     CommunityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@map("user_mute_settings")
+}
+
+model HiddenCommunityMessage {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  messageId Int      @map("message_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   CommunityMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, messageId])
+  @@map("hidden_community_messages")
+}
+
+model TeacherVerification {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  communityGroupId Int     @map("community_group_id")
+  fullName        String   @map("full_name") @db.VarChar(120)
+  university      String   @db.VarChar(150)
+  subjectExpertise String  @map("subject_expertise") @db.VarChar(255)
+  idCardUrl       String   @map("id_card_url") @db.VarChar(255)
+  status          TeacherVerificationStatus @default(pending)
+  adminNote       String?  @map("admin_note") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  communityGroup  CommunityGroup @relation(fields: [communityGroupId], references: [id], onDelete: Cascade)
+
+  @@map("teacher_verification")
+}
+
+model UserXp {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique @map("user_id")
+  totalXp   Int      @default(0) @map("total_xp")
+  level     Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_xp")
+}
+
+model UserStreak {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @unique @map("user_id")
+  currentStreak Int      @default(0) @map("current_streak")
+  longestStreak Int      @default(0) @map("longest_streak")
+  lastStudyDate DateTime? @map("last_study_date")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_streaks")
+}
+
+model StudyProgress {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  documentId  Int      @map("document_id")
+  currentPage Int      @default(1) @map("current_page")
+  totalPages  Int      @default(1) @map("total_pages")
+  pagesRead   Int      @default(0) @map("pages_read")
+  milestone   Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentId])
+  @@map("study_progress")
+}
+
+model UserActivity {
+  id         Int          @id @default(autoincrement())
+  userId     Int          @map("user_id")
+  documentId Int?         @map("document_id")
+  type       ActivityType
+  xpEarned   Int          @default(0) @map("xp_earned")
+  meta       Json?
+  createdAt  DateTime     @default(now()) @map("created_at")
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document   Document?    @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([userId, type, createdAt])
+  @@index([userId, documentId])
+  @@map("user_activity")
+}
+

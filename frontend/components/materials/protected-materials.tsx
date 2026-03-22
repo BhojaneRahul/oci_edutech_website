@@ -31,21 +31,9 @@ export function ProtectedPucMaterials({ documents }: { documents: Document[] }) 
   }
 
   return (
-    <div className="grid gap-4">
-      {documents.map((document) => (
-        <div key={document._id} className="flex items-center justify-between rounded-[28px] border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-          <div>
-            <h3 className="text-lg font-semibold">{document.title}</h3>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{document.subject}</p>
-          </div>
-          <a
-            href={`/viewer?url=${encodeURIComponent(document.fileUrl)}&title=${encodeURIComponent(document.title)}&type=${document.type}`}
-            className="inline-flex rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white dark:bg-amber-500"
-          >
-            Open PDF
-          </a>
-        </div>
-      ))}
-    </div>
+    <MaterialTabs
+      notes={documents.filter((document) => document.type === "notes")}
+      modelQps={documents.filter((document) => document.type === "model_qp")}
+    />
   );
 }

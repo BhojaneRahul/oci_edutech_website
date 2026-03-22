@@ -13,8 +13,8 @@ export function Header({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const { user } = useAuth();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/40 bg-white/85 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80">
-      <div className="mx-auto flex h-20 max-w-[1600px] items-center gap-3 px-3 sm:gap-4 sm:px-4 md:px-6">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:left-64">
+      <div className="mx-auto flex h-20 w-full max-w-none items-center gap-3 px-3 sm:gap-4 sm:px-5 lg:px-6 xl:px-8">
         <button
           type="button"
           onClick={onToggleSidebar}
@@ -25,27 +25,26 @@ export function Header({ onToggleSidebar }: { onToggleSidebar: () => void }) {
 
         <Link
           href="/"
-          className="min-w-0 flex-1 text-center text-base font-semibold tracking-tight text-slate-900 dark:text-white sm:flex-none sm:text-lg"
+          className="min-w-0 flex-1 text-center text-sm font-semibold tracking-tight text-slate-900 dark:text-white md:flex-none md:text-lg lg:hidden"
         >
-          <span className="rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">
+          <span className="mobile-brand-gradient">
             OCI - EduTech
           </span>
         </Link>
 
-        <div className="hidden min-w-0 flex-1 justify-center md:flex">
+        <div className="hidden min-w-0 flex-1 justify-start md:flex">
           <SearchBar />
         </div>
 
-        <nav className="hidden items-center gap-4 text-sm font-medium text-slate-600 dark:text-slate-300 lg:flex xl:gap-5">
-          <Link href="/">Home</Link>
-          <Link href="/about">About</Link>
-          <Link href="/contact">Contact</Link>
-          {user?.role === "admin" ? <Link href="/admin">Admin Panel</Link> : null}
+        <nav className="hidden shrink-0 items-center gap-4 text-sm font-medium text-slate-700 dark:text-slate-200 xl:flex xl:gap-5">
+          <Link href="/about" className="transition hover:text-slate-950 dark:hover:text-white">About</Link>
+          <Link href="/contact" className="transition hover:text-slate-950 dark:hover:text-white">Contact</Link>
+          {user?.role === "admin" ? <Link href="/admin" className="transition hover:text-slate-950 dark:hover:text-white">Admin Panel</Link> : null}
           <a
-            href="https://play.google.com/store"
+            href="https://play.google.com/store/apps/details?id=com.oci.studyresources"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-3 py-2 text-white xl:px-4"
+            className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-white shadow-sm transition hover:bg-amber-600"
           >
             <Download className="h-4 w-4" />
             <span className="hidden xl:inline">Download App</span>

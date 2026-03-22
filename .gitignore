@@ -4,4 +4,5 @@ dist
 .env
 frontend/.env.local
 backend/.env
+backend/uploads/
 npm-debug.log*

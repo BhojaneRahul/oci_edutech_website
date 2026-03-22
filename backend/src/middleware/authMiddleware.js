@@ -33,6 +33,8 @@ export const protect = asyncHandler(async (req, res, next) => {
       course: true,
       semester: true,
       role: true,
+      verifiedTeacher: true,
+      communityGroupId: true,
       createdAt: true
     }
   });
