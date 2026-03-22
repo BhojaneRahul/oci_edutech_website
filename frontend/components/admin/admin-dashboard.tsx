@@ -383,7 +383,7 @@ export function AdminDashboard() {
     }
   };
 
-  const deleteDocument = async (documentId: string) => {
+  const deleteDocument = async (documentId: string | number) => {
     if (!window.confirm("Delete this document permanently?")) {
       return;
     }
