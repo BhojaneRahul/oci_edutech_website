@@ -1039,10 +1039,13 @@ export function CommunityChatClient() {
                       >
                         <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
                           {filePreviewUrl ? (
-                            <img
+                            <Image
                               alt={file.fileName}
                               src={filePreviewUrl}
-                              className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                              fill
+                              unoptimized
+                              sizes="(max-width: 640px) 100vw, 720px"
+                              className="object-cover transition-transform duration-300 hover:scale-[1.02]"
                             />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
