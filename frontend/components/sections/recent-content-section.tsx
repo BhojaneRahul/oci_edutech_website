@@ -136,8 +136,21 @@ function RecentCard({
     createdDate instanceof Date &&
     !Number.isNaN(createdDate.getTime()) &&
     Date.now() - createdDate.getTime() <= 7 * 24 * 60 * 60 * 1000;
+  const documentItem = isDocument ? (item as Document) : null;
+  const projectItem = isProject ? (item as Project) : null;
+  const mockTestItem = !isDocument && !isProject ? (item as MockTest) : null;
+  const documentFileUrl = documentItem?.fileUrl ?? "";
+  const documentType = documentItem?.type ?? "";
+  const metaText = documentItem
+    ? `${documentItem.subject} • ${documentItem.stream}`
+    : projectItem
+      ? `${projectItem.category} • ${projectItem.level}`
+      : mockTestItem
+        ? `${mockTestItem.subject} • ${mockTestItem.stream} • ${mockTestItem.totalQuestions} questions`
+        : "";
+  const resourceLabel = documentItem ? "PDF resource" : projectItem ? "Project reference" : "Timed mock test";
   const href = isDocument
-    ? `/viewer?documentId=${item._id}&url=${encodeURIComponent(item.fileUrl)}&title=${encodeURIComponent(item.title)}&type=${item.type}`
+    ? `/viewer?documentId=${item._id}&url=${encodeURIComponent(documentFileUrl)}&title=${encodeURIComponent(item.title)}&type=${documentType}`
     : isProject
       ? `/projects/${item._id}`
       : `/mock-tests/${item._id}`;
@@ -181,16 +194,10 @@ function RecentCard({
           {item.title}
         </h3>
 
-        <p className="text-xs leading-6 text-slate-500 sm:text-sm sm:leading-7 dark:text-slate-400">
-          {isDocument
-            ? `${item.subject} • ${item.stream}`
-            : isProject
-              ? `${item.category} • ${item.level}`
-              : `${item.subject} • ${item.stream} • ${item.totalQuestions} questions`}
-        </p>
+        <p className="text-xs leading-6 text-slate-500 sm:text-sm sm:leading-7 dark:text-slate-400">{metaText}</p>
 
         <div className="inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-[11px] dark:bg-slate-800 dark:text-slate-300">
-          {isDocument ? "PDF resource" : isProject ? "Project reference" : "Timed mock test"}
+          {resourceLabel}
         </div>
       </div>
 

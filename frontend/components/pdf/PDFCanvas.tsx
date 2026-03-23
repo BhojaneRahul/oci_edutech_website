@@ -510,7 +510,7 @@ export function PDFCanvas({
     return () => clearTimeout(fallbackTimer);
   }, [renderedPages.length, totalPages]);
 
-  const getTouchDistance = useCallback((touches: TouchList) => {
+  const getTouchDistance = useCallback((touches: ArrayLike<{ clientX: number; clientY: number }>) => {
     if (touches.length < 2) return 0;
     const first = touches[0];
     const second = touches[1];

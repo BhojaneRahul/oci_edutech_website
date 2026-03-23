@@ -42,6 +42,15 @@ import { useAuth } from "../providers/auth-provider";
 
 type MuteOption = "1h" | "8h" | "forever";
 type ReportReason = "spam" | "abuse" | "inappropriate";
+type ReplyTarget = {
+  id: number;
+  content: string;
+  user: {
+    id: number;
+    name: string | null;
+  };
+  files?: CommunityChatMessage["files"];
+};
 
 const baseUrl = (api.defaults.baseURL || "http://localhost:5000/api").replace(/\/api$/, "");
 const reactions = [
@@ -278,7 +287,7 @@ export function CommunityChatClient() {
   });
   const [teacherCard, setTeacherCard] = useState<File | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
-  const [replyTarget, setReplyTarget] = useState<CommunityChatMessage | null>(null);
+  const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -336,7 +345,11 @@ export function CommunityChatClient() {
         setMessages(payload.messages || []);
         setVerifiedTeachers(payload.verifiedTeachers || []);
         setVerification(payload.verification || null);
-        setMuteUntil(payload.muteSetting?.muteUntil || null);
+        setMuteUntil(
+          payload.muteSetting?.muteUntil
+            ? String(payload.muteSetting.muteUntil)
+            : null
+        );
         setSelectedJoinGroupId(payload.activeGroupId ?? payload.groups?.[0]?.id ?? null);
         setJoinName(user.name || "");
         setTeacherForm((current) => ({
@@ -567,7 +580,8 @@ export function CommunityChatClient() {
     setMobileActionMessage(null);
   };
 
-  const canDeleteMessage = (message: CommunityChatMessage) => message.user.id === user.id || user.role === "admin";
+  const canDeleteMessage = (message: CommunityChatMessage) =>
+    Boolean(user && (message.user.id === user.id || user.role === "admin"));
 
   const toggleMessageSelection = (messageId: number) => {
     setSelectedMessageIds((current) =>
@@ -1017,7 +1031,7 @@ export function CommunityChatClient() {
                       Replying to {message.replyTo.user.name}
                     </div>
                     <div className={cn("truncate text-sm", mine ? "text-white/95" : "text-slate-700")}>
-                      {message.replyTo.content || message.replyTo.files?.[0]?.fileName || "Attachment"}
+                      {message.replyTo.content || "Attachment"}
                     </div>
                   </div>
                 </button>
