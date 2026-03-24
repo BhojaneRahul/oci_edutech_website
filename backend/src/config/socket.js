@@ -75,6 +75,8 @@ const buildPresencePayload = async (groupId) => {
   };
 };
 
+export const getCommunityPresenceSnapshot = (groupId) => buildPresencePayload(groupId);
+
 const groupRoomName = (groupId) => `community:${groupId}`;
 
 export const getActiveCommunityUserIds = (groupId) => {

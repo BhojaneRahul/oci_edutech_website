@@ -312,6 +312,8 @@ export type CommunityBootstrap = {
   groups: CommunityGroup[];
   activeGroupId: number | null;
   verification: TeacherVerification | null;
+  onlineMembers?: CommunityPresenceMember[];
+  onlineCount?: number;
   muteSetting?: {
     muted: boolean;
     muteUntil: string | Date | null;

@@ -350,6 +350,7 @@ export function CommunityChatClient() {
         setGroups(payload.groups || []);
         setActiveGroupId(payload.activeGroupId ?? null);
         setMessages(payload.messages || []);
+        setOnlineMembers(payload.onlineMembers || []);
         setVerifiedTeachers(payload.verifiedTeachers || []);
         setVerification(payload.verification || null);
         setMuteUntil(
@@ -453,6 +454,29 @@ export function CommunityChatClient() {
   useEffect(() => {
     if (!activeGroupId || !user) return;
 
+    const intervalId = window.setInterval(() => {
+      void api
+        .get("/community")
+        .then(({ data }) => {
+          const payload = data as CommunityBootstrap;
+          if (payload.activeGroupId !== activeGroupId) return;
+          setOnlineMembers(payload.onlineMembers || []);
+          setVerifiedTeachers(payload.verifiedTeachers || []);
+          setMessages(payload.messages || []);
+        })
+        .catch((err) => {
+          console.error("Community fallback refresh failed", err);
+        });
+    }, 5000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [activeGroupId, user]);
+
+  useEffect(() => {
+    if (!activeGroupId || !user) return;
+
     void api.put("/notifications/read-all?type=community_message").catch((err) => {
       console.error(err);
     });
@@ -530,6 +554,8 @@ export function CommunityChatClient() {
   ) => {
     if (typeof window === "undefined") return;
 
+    const fallbackUrl = resolveMediaUrl(file.fileUrl);
+
     try {
       setError(null);
       setFileActionState({ fileName: file.fileName, mode });
@@ -560,7 +586,21 @@ export function CommunityChatClient() {
       window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 30_000);
     } catch (err) {
       console.error(err);
-      setError(`We couldn’t ${mode} this file right now.`);
+      if (fallbackUrl) {
+        const anchor = document.createElement("a");
+        anchor.href = fallbackUrl;
+        if (mode === "download") {
+          anchor.download = file.fileName;
+        } else {
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+        }
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      } else {
+        setError(`We couldn’t ${mode} this file right now.`);
+      }
     } finally {
       setFileActionState(null);
     }
@@ -1436,10 +1476,11 @@ export function CommunityChatClient() {
 
             <div
               className="sticky bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2.5 pt-2 shadow-[0_-18px_40px_-28px_rgba(15,23,42,0.2)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:shadow-[0_-18px_40px_-28px_rgba(2,6,23,0.55)] sm:px-3 sm:pt-2.5 lg:px-4 lg:pt-3"
-              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.55rem)" }}
+              style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.2rem)" }}
             >
-              <div className="min-h-[20px] px-1 pb-2">
-                {typingLabel ? (
+              {typingLabel || onlineMembers.length ? (
+                <div className="px-1 pb-2">
+                  {typingLabel ? (
                   <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                     <span className="flex items-center gap-1">
                       <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.25s]" />
@@ -1450,10 +1491,11 @@ export function CommunityChatClient() {
                   </div>
                 ) : (
                   <div className="px-2 text-[11px] text-slate-400 dark:text-slate-500">
-                    {onlineMembers.length ? `${onlineMembers.length} online now` : "Waiting for new messages"}
+                    {`${onlineMembers.length} online now`}
                   </div>
                 )}
-              </div>
+                </div>
+              ) : null}
               <div className="flex items-end gap-2 sm:gap-3">
               <button
                 type="button"

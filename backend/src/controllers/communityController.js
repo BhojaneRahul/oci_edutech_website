@@ -9,7 +9,8 @@ import {
   emitCommunityMessagesDeleted,
   emitCommunityMessageUpdate,
   formatCommunityMessage,
-  getActiveCommunityUserIds
+  getActiveCommunityUserIds,
+  getCommunityPresenceSnapshot
 } from "../config/socket.js";
 import { buildCommunityTargetPath, createNotifications } from "../services/notificationService.js";
 
@@ -213,7 +214,7 @@ const getCommunityBootstrapData = async (userId) => {
 
   const activeGroupId = user?.communityGroupId ?? null;
 
-  const [topMessages, verifiedTeachers, muteSetting] = activeGroupId
+  const [topMessages, verifiedTeachers, muteSetting, presence] = activeGroupId
     ? await Promise.all([
         getSafeCommunityMessageIds(activeGroupId, userId, 80, "desc"),
         prisma.user.findMany({
@@ -232,9 +233,10 @@ const getCommunityBootstrapData = async (userId) => {
           },
           orderBy: { name: "asc" }
         }),
-        getSafeMuteSetting(userId, activeGroupId)
+        getSafeMuteSetting(userId, activeGroupId),
+        getCommunityPresenceSnapshot(activeGroupId)
       ])
-    : [[], [], null];
+    : [[], [], null, { onlineMembers: [], onlineCount: 0 }];
 
   const formattedMessages = await Promise.all(topMessages.reverse().map((message) => formatCommunityMessage(message.id, userId)));
 
@@ -244,6 +246,8 @@ const getCommunityBootstrapData = async (userId) => {
     activeGroupId,
     verification,
     verifiedTeachers,
+    onlineMembers: presence.onlineMembers || [],
+    onlineCount: presence.onlineCount || 0,
     muteSetting: buildMutePayload(muteSetting),
     messages: formattedMessages.filter(Boolean)
   };
