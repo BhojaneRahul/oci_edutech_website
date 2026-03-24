@@ -12,9 +12,9 @@ export const metadata: Metadata = {
   title: "OCI - EduTech",
   description: "Modern EdTech platform for notes, model question papers, mock tests, and projects.",
   icons: {
-    icon: [{ url: "/oci-roundel.svg", type: "image/svg+xml" }],
-    shortcut: ["/oci-roundel.svg"],
-    apple: ["/oci-roundel.svg"]
+    icon: [{ url: "/oci-edutech.png", type: "image/png" }],
+    shortcut: ["/oci-edutech.png"],
+    apple: ["/oci-edutech.png"]
   }
 };
 

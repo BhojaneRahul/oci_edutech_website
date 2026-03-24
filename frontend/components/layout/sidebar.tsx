@@ -83,7 +83,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         <div className="flex min-h-20 items-start gap-3 border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:px-5">
           <Link href="/" onClick={onClose} className="flex min-w-0 flex-1 items-start gap-3 pr-1">
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl shadow-lg shadow-amber-500/15">
-              <Image src="/oci-roundel.svg" alt="OCI round logo" fill sizes="48px" className="object-cover" />
+              <Image src="/oci-edutech.png" alt="OCI logo" fill sizes="48px" className="object-cover" />
             </div>
             <div className="min-w-0 pt-0.5">
               <p className="truncate text-[1.05rem] font-semibold leading-5 text-slate-900 dark:text-white">OCI - EduTech</p>
