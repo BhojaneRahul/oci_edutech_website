@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight, Download, Mail, MapPin, Phone } from "lucide-react";
 
 export function Footer() {
@@ -10,7 +11,8 @@ export function Footer() {
         <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="grid gap-10 px-6 py-8 md:px-8 xl:grid-cols-[1.2fr_0.7fr_0.8fr]">
             <div>
-              <div className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+              <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                <Image src="/oci-roundel.svg" alt="OCI round logo" width={24} height={24} className="h-6 w-6 rounded-full" />
                 OCI - EduTech
               </div>
               <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">

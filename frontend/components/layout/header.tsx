@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Download, Menu, UserCircle2 } from "lucide-react";
 import { SearchBar } from "./search-bar";
 import { ThemeToggle } from "./theme-toggle";
@@ -25,8 +26,9 @@ export function Header({ onToggleSidebar }: { onToggleSidebar: () => void }) {
 
         <Link
           href="/"
-          className="min-w-0 flex-1 text-center text-sm font-semibold tracking-tight text-slate-900 dark:text-white md:flex-none md:text-lg lg:hidden"
+          className="flex min-w-0 flex-1 items-center justify-center gap-2 text-sm font-semibold tracking-tight text-slate-900 dark:text-white md:flex-none md:text-lg lg:hidden"
         >
+          <Image src="/oci-pen-mark.svg" alt="OCI mark" width={28} height={28} className="h-7 w-7 shrink-0" />
           <span className="mobile-brand-gradient">
             OCI - EduTech
           </span>

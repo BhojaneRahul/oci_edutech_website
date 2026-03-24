@@ -10,7 +10,12 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "OCI - EduTech",
-  description: "Modern EdTech platform for notes, model question papers, mock tests, and projects."
+  description: "Modern EdTech platform for notes, model question papers, mock tests, and projects.",
+  icons: {
+    icon: [{ url: "/oci-roundel.svg", type: "image/svg+xml" }],
+    shortcut: ["/oci-roundel.svg"],
+    apple: ["/oci-roundel.svg"]
+  }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
