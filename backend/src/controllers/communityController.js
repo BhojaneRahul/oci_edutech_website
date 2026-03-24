@@ -10,7 +10,8 @@ import {
   emitCommunityMessageUpdate,
   formatCommunityMessage,
   getActiveCommunityUserIds,
-  getCommunityPresenceSnapshot
+  getCommunityPresenceSnapshot,
+  registerCommunityHeartbeat
 } from "../config/socket.js";
 import { buildCommunityTargetPath, createNotifications } from "../services/notificationService.js";
 
@@ -299,6 +300,23 @@ export const getCommunityMessages = asyncHandler(async (req, res) => {
     messages: (await Promise.all(messages.map((message) => formatCommunityMessage(message.id, req.user.id)))).filter(Boolean),
     verifiedTeachers,
     muteSetting: buildMutePayload(muteSetting)
+  });
+});
+
+export const touchCommunityPresence = asyncHandler(async (req, res) => {
+  const groupId = Number(req.body.groupId);
+
+  if (!groupId) {
+    res.status(400);
+    throw new Error("Community group is required");
+  }
+
+  await ensureCommunityAccess(req.user.id, groupId);
+  registerCommunityHeartbeat(req.user.id, groupId);
+
+  res.json({
+    success: true,
+    ...(await getCommunityPresenceSnapshot(groupId))
   });
 });
 

@@ -386,6 +386,15 @@ export function CommunityChatClient() {
   useEffect(() => {
     if (!activeGroupId || !user) return;
 
+    void api
+      .post("/community/presence", { groupId: activeGroupId })
+      .then(({ data }) => {
+        setOnlineMembers(data.onlineMembers || []);
+      })
+      .catch((err) => {
+        console.error("Community presence bootstrap failed", err);
+      });
+
     const socket = io(baseUrl, {
       withCredentials: true,
       transports: ["websocket", "polling"]
@@ -456,18 +465,24 @@ export function CommunityChatClient() {
 
     const intervalId = window.setInterval(() => {
       void api
-        .get("/community")
+        .post("/community/presence", { groupId: activeGroupId })
         .then(({ data }) => {
-          const payload = data as CommunityBootstrap;
-          if (payload.activeGroupId !== activeGroupId) return;
-          setOnlineMembers(payload.onlineMembers || []);
-          setVerifiedTeachers(payload.verifiedTeachers || []);
-          setMessages(payload.messages || []);
+          setOnlineMembers(data.onlineMembers || []);
         })
         .catch((err) => {
-          console.error("Community fallback refresh failed", err);
+          console.error("Community presence refresh failed", err);
         });
-    }, 5000);
+
+      void api
+        .get(`/community/${activeGroupId}/messages`)
+        .then(({ data }) => {
+          setMessages(data.messages || []);
+          setVerifiedTeachers(data.verifiedTeachers || []);
+        })
+        .catch((err) => {
+          console.error("Community message refresh failed", err);
+        });
+    }, 3000);
 
     return () => {
       window.clearInterval(intervalId);
@@ -490,7 +505,7 @@ export function CommunityChatClient() {
     const imageFiles =
       messages
         .flatMap((message) => message.files || [])
-        .filter((file) => file.fileType === "image" && !filePreviewUrls[file.id]) || [];
+        .filter((file) => file.fileType === "image" && !filePreviewUrls[file.id] && !resolveMediaUrl(file.fileUrl)) || [];
 
     imageFiles.forEach((file) => {
       if (previewLoadingRef.current.has(file.id)) return;
@@ -1015,7 +1030,7 @@ export function CommunityChatClient() {
     const file = message.files?.[0];
     const FileIcon = getFileIcon(file?.fileType);
     const fileAccent = getFileAccent(file?.fileType, mine);
-    const filePreviewUrl = file ? filePreviewUrls[file.id] : null;
+    const filePreviewUrl = file ? filePreviewUrls[file.id] || resolveMediaUrl(file.fileUrl) : null;
     const desktopMenuOpen = activeMessageMenuId === message.id;
     const selected = selectedMessageIds.includes(message.id);
     const reactionSummaries = reactions
@@ -1475,7 +1490,7 @@ export function CommunityChatClient() {
           </div>
 
             <div
-              className="sticky bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2.5 pt-2 shadow-[0_-18px_40px_-28px_rgba(15,23,42,0.2)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:shadow-[0_-18px_40px_-28px_rgba(2,6,23,0.55)] sm:px-3 sm:pt-2.5 lg:px-4 lg:pt-3"
+              className="sticky bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2 py-1.5 shadow-[0_-18px_40px_-28px_rgba(15,23,42,0.2)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:shadow-[0_-18px_40px_-28px_rgba(2,6,23,0.55)] sm:px-3 sm:pt-2 lg:px-4 lg:pt-3"
               style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.2rem)" }}
             >
               {typingLabel || onlineMembers.length ? (
@@ -1496,15 +1511,15 @@ export function CommunityChatClient() {
                 )}
                 </div>
               ) : null}
-              <div className="flex items-end gap-2 sm:gap-3">
+              <div className="flex items-end gap-1.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => attachmentInputRef.current?.click()}
-                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 sm:size-12"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 sm:size-12"
               >
                 {isUploading ? <Loader2 className="size-5 animate-spin" /> : <Paperclip className="size-5" />}
               </button>
-                <div className="min-w-0 flex-1 overflow-hidden rounded-[22px] border border-slate-200 bg-white px-3 py-2 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-[0_20px_50px_-40px_rgba(2,6,23,0.65)] sm:rounded-[24px] sm:px-4 sm:py-2.5">
+                <div className="min-w-0 flex-1 overflow-hidden rounded-[20px] border border-slate-200 bg-white px-3 py-1.5 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-[0_20px_50px_-40px_rgba(2,6,23,0.65)] sm:rounded-[24px] sm:px-4 sm:py-2.5">
                   <textarea
                     ref={composerTextareaRef}
                     rows={1}
@@ -1513,7 +1528,7 @@ export function CommunityChatClient() {
                     onFocus={() => resizeComposer(44)}
                     onBlur={() => notifyTyping(false)}
                     placeholder={`Message ${activeGroup.name}... Use @name for mentions`}
-                    className="block max-h-28 min-h-[44px] w-full resize-none overflow-y-auto bg-transparent pt-1 text-[14px] leading-5 text-slate-900 outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 sm:text-[15px] sm:leading-6"
+                    className="block max-h-28 min-h-[40px] w-full resize-none overflow-y-auto bg-transparent pt-1 text-[14px] leading-5 text-slate-900 outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 sm:min-h-[44px] sm:text-[15px] sm:leading-6"
                     onKeyDown={(event) => {
                       if (event.key === "Enter" && !event.shiftKey) {
                         event.preventDefault();
@@ -1526,7 +1541,7 @@ export function CommunityChatClient() {
                 type="button"
                 onClick={() => void sendMessage()}
                 disabled={isSending || isUploading || (!composer.trim() && !attachment)}
-                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.8)] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:text-slate-950 sm:size-12"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.8)] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:text-slate-950 sm:size-12"
               >
                 {isSending ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5" />}
               </button>

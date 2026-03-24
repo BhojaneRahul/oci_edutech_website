@@ -15,6 +15,7 @@ import {
   sendCommunityMessage,
   submitTeacherVerification
   ,
+  touchCommunityPresence,
   unmuteCommunityNotifications,
   uploadCommunityMessageFile
 } from "../controllers/communityController.js";
@@ -29,6 +30,7 @@ router.get("/", getCommunityData);
 router.get("/:groupId/messages", getCommunityMessages);
 router.get("/files/:id", getCommunityFile);
 router.get("/reports", getCommunityReports);
+router.post("/presence", touchCommunityPresence);
 router.post("/join", joinCommunityGroup);
 router.post("/leave", leaveCommunityGroup);
 router.post("/send", sendCommunityMessage);

@@ -3,8 +3,10 @@ import { Server } from "socket.io";
 import { prisma } from "./db.js";
 
 const socketSessions = new Map();
+const presenceHeartbeats = new Map();
 let ioInstance = null;
 const userRoomName = (userId) => `user:${Number(userId)}`;
+const PRESENCE_TTL_MS = 45_000;
 
 const withDomainVariants = (value) => {
   if (!value) {
@@ -47,11 +49,23 @@ const allowedSocketOrigin = (origin) =>
   !origin || /^http:\/\/localhost:\d+$/.test(origin) || allowedSocketOrigins.has(origin);
 
 const buildPresencePayload = async (groupId) => {
-  const userIds = [...socketSessions.values()]
+  const now = Date.now();
+
+  for (const [key, value] of presenceHeartbeats.entries()) {
+    if (now - value.timestamp > PRESENCE_TTL_MS) {
+      presenceHeartbeats.delete(key);
+    }
+  }
+
+  const socketUserIds = [...socketSessions.values()]
     .filter((session) => session.groupId === groupId)
     .map((session) => session.userId);
 
-  const uniqueIds = [...new Set(userIds)];
+  const heartbeatUserIds = [...presenceHeartbeats.values()]
+    .filter((session) => session.groupId === groupId)
+    .map((session) => session.userId);
+
+  const uniqueIds = [...new Set([...socketUserIds, ...heartbeatUserIds])];
 
   if (!uniqueIds.length) {
     return { onlineMembers: [], onlineCount: 0 };
@@ -75,6 +89,18 @@ const buildPresencePayload = async (groupId) => {
   };
 };
 
+export const registerCommunityHeartbeat = (userId, groupId) => {
+  const numericUserId = Number(userId);
+  const numericGroupId = Number(groupId);
+  if (!numericUserId || !numericGroupId) return;
+
+  presenceHeartbeats.set(`${numericUserId}:${numericGroupId}`, {
+    userId: numericUserId,
+    groupId: numericGroupId,
+    timestamp: Date.now()
+  });
+};
+
 export const getCommunityPresenceSnapshot = (groupId) => buildPresencePayload(groupId);
 
 const groupRoomName = (groupId) => `community:${groupId}`;
@@ -83,11 +109,17 @@ export const getActiveCommunityUserIds = (groupId) => {
   const numericGroupId = Number(groupId);
   if (!numericGroupId) return [];
 
-  return [...new Set(
-    [...socketSessions.values()]
+  const now = Date.now();
+  const heartbeatIds = [...presenceHeartbeats.values()]
+    .filter((session) => session.groupId === numericGroupId && now - session.timestamp <= PRESENCE_TTL_MS)
+    .map((session) => session.userId);
+
+  return [...new Set([
+    ...[...socketSessions.values()]
       .filter((session) => session.groupId === numericGroupId)
-      .map((session) => session.userId)
-  )];
+      .map((session) => session.userId),
+    ...heartbeatIds
+  ])];
 };
 
 const isMissingTableError = (error, tableName) =>
@@ -295,6 +327,7 @@ export const initSocket = (server) => {
 
       socket.join(groupRoomName(numericGroupId));
       socketSessions.set(socket.id, { userId: socket.data.user.id, groupId: numericGroupId });
+      registerCommunityHeartbeat(socket.data.user.id, numericGroupId);
       await emitCommunityPresence(numericGroupId);
     });
 
