@@ -336,16 +336,60 @@ export const joinCommunityGroup = asyncHandler(async (req, res) => {
     throw new Error("Community group not found");
   }
 
+  const currentUser = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: {
+      id: true,
+      role: true,
+      verifiedTeacher: true
+    }
+  });
+
   if (role === "teacher") {
-    res.status(400);
-    throw new Error("Teachers must submit verification and wait for admin approval before entering community chat");
+    const approvedVerification = await prisma.teacherVerification.findFirst({
+      where: {
+        userId: req.user.id,
+        status: "approved"
+      },
+      orderBy: { createdAt: "desc" },
+      include: teacherVerificationInclude
+    });
+
+    if (!currentUser?.verifiedTeacher || !approvedVerification) {
+      res.status(400);
+      throw new Error("Teachers must submit verification and wait for admin approval before entering community chat");
+    }
+
+    if (approvedVerification.communityGroupId !== groupId) {
+      res.status(400);
+      throw new Error(`Your approved teacher access is available in ${approvedVerification.communityGroup?.name || "your assigned community"} only`);
+    }
+
+    const teacherUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        communityGroupId: groupId,
+        role: currentUser.role === "admin" ? "admin" : "teacher",
+        verifiedTeacher: true,
+        ...(name ? { name } : {})
+      },
+      select: {
+        communityGroupId: true
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: "Community joined successfully",
+      activeGroupId: teacherUser.communityGroupId
+    });
   }
 
   const user = await prisma.user.update({
     where: { id: req.user.id },
     data: {
       communityGroupId: groupId,
-      role: req.user.role === "admin" ? "admin" : "student",
+      role: currentUser?.role === "admin" ? "admin" : "student",
       verifiedTeacher: false,
       ...(name ? { name } : {})
     },

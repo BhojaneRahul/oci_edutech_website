@@ -314,6 +314,10 @@ export function CommunityChatClient() {
     () => groups.find((group) => group.id === activeGroupId) || null,
     [activeGroupId, groups]
   );
+  const approvedTeacherVerification = useMemo(
+    () => Boolean(verification?.status === "approved" && verification.communityGroup?.id),
+    [verification]
+  );
 
   const isMuted = useMemo(() => {
     if (!muteUntil) return false;
@@ -358,11 +362,21 @@ export function CommunityChatClient() {
             ? String(payload.muteSetting.muteUntil)
             : null
         );
-        setSelectedJoinGroupId(payload.activeGroupId ?? payload.groups?.[0]?.id ?? null);
+        setSelectedJoinGroupId(
+          payload.activeGroupId ??
+            payload.verification?.communityGroup?.id ??
+            payload.groups?.[0]?.id ??
+            null
+        );
         setJoinName(user.name || "");
+        if (payload.verification?.status === "approved") {
+          setSelectedRole("teacher");
+        }
         setTeacherForm((current) => ({
           ...current,
-          fullName: current.fullName || user.name || ""
+          fullName: current.fullName || payload.verification?.fullName || user.name || "",
+          university: current.university || payload.verification?.university || "",
+          subjectExpertise: current.subjectExpertise || payload.verification?.subjectExpertise || ""
         }));
       } catch (err) {
         console.error(err);
@@ -694,10 +708,11 @@ export function CommunityChatClient() {
         role: selectedRole,
         name: joinName.trim()
       });
-      setActiveGroupId(selectedJoinGroupId);
-      setMessages(data.messages || []);
+      const joinedGroupId = data.activeGroupId ?? selectedJoinGroupId;
+      setActiveGroupId(joinedGroupId);
       setVerification(data.verification || null);
       setMenuOpen(false);
+      await refreshMessages(joinedGroupId);
     } catch (err: any) {
       setError(err?.response?.data?.error || "We couldn’t join the community right now.");
     } finally {
@@ -951,6 +966,29 @@ export function CommunityChatClient() {
                   {isSending ? <Loader2 className="size-4 animate-spin" /> : <Users className="size-4" />}
                   Join community
                 </button>
+              ) : approvedTeacherVerification ? (
+                <div className="space-y-4 rounded-[24px] border border-emerald-200 bg-emerald-50 p-5">
+                  <div>
+                    <h4 className="text-base font-semibold text-slate-950">Verified teacher access approved</h4>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Your verification is already approved for{" "}
+                      <span className="font-semibold text-slate-900">{verification?.communityGroup?.name}</span>. You can
+                      enter the chat directly without submitting the form again.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-emerald-700">
+                    Current verification status: <span className="font-semibold capitalize">{verification?.status}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleJoin}
+                    disabled={isSending}
+                    className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSending ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+                    Enter community chat
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50 p-5">
                   <div>
