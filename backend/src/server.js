@@ -31,7 +31,29 @@ const server = http.createServer(app);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const allowedOrigins = [process.env.CLIENT_URL].filter(Boolean);
+const withDomainVariants = (value) => {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const url = new URL(value);
+    const variants = new Set([url.origin]);
+    const hostname = url.hostname;
+
+    if (hostname.startsWith("www.")) {
+      variants.add(`${url.protocol}//${hostname.replace(/^www\./, "")}`);
+    } else {
+      variants.add(`${url.protocol}//www.${hostname}`);
+    }
+
+    return [...variants];
+  } catch {
+    return [value];
+  }
+};
+
+const allowedOrigins = [...new Set([...withDomainVariants(process.env.CLIENT_URL), ...withDomainVariants(process.env.FRONTEND_URL)])];
 const isAllowedLocalOrigin = (origin) => /^http:\/\/localhost:\d+$/.test(origin);
 
 app.use(

@@ -6,6 +6,8 @@ import { generateToken } from "../utils/generateToken.js";
 import { clearAuthCookie, setAuthCookie } from "../utils/authCookies.js";
 import { awardBookmarkXp, awardDailyLogin } from "../services/gamificationService.js";
 
+const getFrontendUrl = () => process.env.FRONTEND_URL || process.env.CLIENT_URL || "http://localhost:3000";
+
 const safelyRunGamification = async (task) => {
   try {
     await task();
@@ -196,7 +198,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     resetUrl:
       process.env.NODE_ENV === "production"
         ? undefined
-        : `${process.env.CLIENT_URL}/auth/reset-password?token=${token}`
+        : `${getFrontendUrl()}/auth/reset-password?token=${token}`
   });
 });
 
@@ -241,7 +243,8 @@ export const googleCallback = asyncHandler(async (req, res) => {
   const token = generateToken({ id: req.user.id, role: req.user.role });
   setAuthCookie(res, token);
   await safelyRunGamification(() => awardDailyLogin(req.user.id));
-  res.redirect(req.user.role === "admin" ? `${process.env.CLIENT_URL}/admin` : `${process.env.CLIENT_URL}/account`);
+  const frontendUrl = getFrontendUrl();
+  res.redirect(req.user.role === "admin" ? `${frontendUrl}/admin` : `${frontendUrl}/account`);
 });
 
 export const getSavedDocuments = asyncHandler(async (req, res) => {
