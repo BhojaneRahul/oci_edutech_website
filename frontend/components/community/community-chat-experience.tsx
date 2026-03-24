@@ -322,6 +322,13 @@ export function CommunityChatClient() {
 
   const currentUserRank = useMemo(() => onlineMembers.find((member) => member.id === user?.id) || null, [onlineMembers, user?.id]);
 
+  const resizeComposer = (nextHeight?: number) => {
+    const textarea = composerTextareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "0px";
+    textarea.style.height = `${Math.min(nextHeight ?? textarea.scrollHeight, 112)}px`;
+  };
+
   useEffect(() => {
     if (loading) return;
 
@@ -384,7 +391,14 @@ export function CommunityChatClient() {
     });
 
     socketRef.current = socket;
-    socket.emit("community:join", { groupId: activeGroupId });
+    const joinActiveGroup = () => {
+      socket.emit("community:join", { groupId: activeGroupId });
+    };
+
+    socket.on("connect", joinActiveGroup);
+    if (socket.connected) {
+      joinActiveGroup();
+    }
 
     socket.on("community:message", (message: CommunityChatMessage) => {
       setMessages((current) => {
@@ -424,6 +438,10 @@ export function CommunityChatClient() {
       if (payload.groupId !== activeGroupId) return;
       setMessages((current) => current.filter((item) => !payload.messageIds.includes(item.id)));
       setSelectedMessageIds((current) => current.filter((id) => !payload.messageIds.includes(id)));
+    });
+
+    socket.on("connect_error", (connectionError) => {
+      console.error("Community socket connection failed", connectionError);
     });
 
     return () => {
@@ -493,11 +511,7 @@ export function CommunityChatClient() {
 
   const handleComposerChange = (value: string) => {
     setComposer(value);
-    const textarea = composerTextareaRef.current;
-    if (textarea) {
-      textarea.style.height = "0px";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 112)}px`;
-    }
+    resizeComposer();
     notifyTyping(true);
     if (typingTimeoutRef.current) {
       window.clearTimeout(typingTimeoutRef.current);
@@ -694,7 +708,7 @@ export function CommunityChatClient() {
       }
       setComposer("");
       if (composerTextareaRef.current) {
-        composerTextareaRef.current.style.height = "24px";
+        composerTextareaRef.current.style.height = "44px";
       }
       setAttachment(null);
       setReplyTarget(null);
@@ -778,6 +792,12 @@ export function CommunityChatClient() {
   };
 
   const typingNames = Object.values(typingUsers).filter((name) => name && name !== user?.name);
+  const typingLabel = useMemo(() => {
+    if (!typingNames.length) return null;
+    if (typingNames.length === 1) return `${typingNames[0]} is typing`;
+    if (typingNames.length === 2) return `${typingNames[0]} and ${typingNames[1]} are typing`;
+    return `${typingNames[0]} and ${typingNames.length - 1} others are typing`;
+  }, [typingNames]);
 
   if (loading || isBootstrapping) {
     return (
@@ -1373,9 +1393,6 @@ export function CommunityChatClient() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="text-sm text-slate-500 dark:text-slate-400">{activeGroup.description || "Real-time student discussion space"}</div>
             </div>
-            {typingNames.length ? (
-              <div className="mt-3 text-sm text-amber-600">{typingNames.join(", ")} typing...</div>
-            ) : null}
             {replyTarget ? (
               <div className="mt-3 flex items-start justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
                 <div className="min-w-0">
@@ -1413,11 +1430,30 @@ export function CommunityChatClient() {
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Messages and uploaded files stay available for 24 hours before they expire automatically.</p>
                 </div>
               )}
-              <div ref={messageEndRef} />
+              <div className="h-20 sm:h-24" ref={messageEndRef} />
             </div>
           </div>
 
-            <div className="sticky bottom-0 z-30 border-t border-slate-200 bg-white px-2.5 py-2 shadow-[0_-18px_40px_-28px_rgba(15,23,42,0.2)] dark:border-slate-800 dark:bg-slate-950 dark:shadow-[0_-18px_40px_-28px_rgba(2,6,23,0.55)] sm:px-3 sm:py-2.5 lg:px-4 lg:py-3">
+            <div
+              className="sticky bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2.5 pt-2 shadow-[0_-18px_40px_-28px_rgba(15,23,42,0.2)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:shadow-[0_-18px_40px_-28px_rgba(2,6,23,0.55)] sm:px-3 sm:pt-2.5 lg:px-4 lg:pt-3"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.55rem)" }}
+            >
+              <div className="min-h-[20px] px-1 pb-2">
+                {typingLabel ? (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                    <span className="flex items-center gap-1">
+                      <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.25s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.1s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-current" />
+                    </span>
+                    {typingLabel}...
+                  </div>
+                ) : (
+                  <div className="px-2 text-[11px] text-slate-400 dark:text-slate-500">
+                    {onlineMembers.length ? `${onlineMembers.length} online now` : "Waiting for new messages"}
+                  </div>
+                )}
+              </div>
               <div className="flex items-end gap-2 sm:gap-3">
               <button
                 type="button"
@@ -1432,8 +1468,10 @@ export function CommunityChatClient() {
                     rows={1}
                     value={composer}
                     onChange={(event) => handleComposerChange(event.target.value)}
+                    onFocus={() => resizeComposer(44)}
+                    onBlur={() => notifyTyping(false)}
                     placeholder={`Message ${activeGroup.name}... Use @name for mentions`}
-                    className="block max-h-28 min-h-[24px] w-full resize-none overflow-y-auto bg-transparent text-[14px] leading-6 text-slate-900 outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 sm:text-[15px] sm:leading-6"
+                    className="block max-h-28 min-h-[44px] w-full resize-none overflow-y-auto bg-transparent pt-1 text-[14px] leading-5 text-slate-900 outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 sm:text-[15px] sm:leading-6"
                     onKeyDown={(event) => {
                       if (event.key === "Enter" && !event.shiftKey) {
                         event.preventDefault();

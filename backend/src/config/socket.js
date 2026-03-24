@@ -6,6 +6,28 @@ const socketSessions = new Map();
 let ioInstance = null;
 const userRoomName = (userId) => `user:${Number(userId)}`;
 
+const withDomainVariants = (value) => {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const url = new URL(value);
+    const variants = new Set([url.origin]);
+    const hostname = url.hostname;
+
+    if (hostname.startsWith("www.")) {
+      variants.add(`${url.protocol}//${hostname.replace(/^www\./, "")}`);
+    } else {
+      variants.add(`${url.protocol}//www.${hostname}`);
+    }
+
+    return [...variants];
+  } catch {
+    return [value];
+  }
+};
+
 const parseCookieValue = (cookieHeader, key) => {
   if (!cookieHeader) return null;
   const match = cookieHeader
@@ -16,7 +38,13 @@ const parseCookieValue = (cookieHeader, key) => {
   return match ? decodeURIComponent(match.split("=")[1]) : null;
 };
 
-const allowedSocketOrigin = (origin) => !origin || /^http:\/\/localhost:\d+$/.test(origin) || origin === process.env.CLIENT_URL;
+const allowedSocketOrigins = new Set([
+  ...withDomainVariants(process.env.CLIENT_URL),
+  ...withDomainVariants(process.env.FRONTEND_URL)
+]);
+
+const allowedSocketOrigin = (origin) =>
+  !origin || /^http:\/\/localhost:\d+$/.test(origin) || allowedSocketOrigins.has(origin);
 
 const buildPresencePayload = async (groupId) => {
   const userIds = [...socketSessions.values()]
