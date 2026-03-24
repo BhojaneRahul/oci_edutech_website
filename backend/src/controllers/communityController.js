@@ -215,6 +215,10 @@ const getCommunityBootstrapData = async (userId) => {
 
   const activeGroupId = user?.communityGroupId ?? null;
 
+  if (activeGroupId) {
+    registerCommunityHeartbeat(userId, activeGroupId);
+  }
+
   const [topMessages, verifiedTeachers, muteSetting, presence] = activeGroupId
     ? await Promise.all([
         getSafeCommunityMessageIds(activeGroupId, userId, 80, "desc"),
@@ -274,7 +278,9 @@ export const getCommunityMessages = asyncHandler(async (req, res) => {
 
   await ensureCommunityAccess(req.user.id, groupId);
 
-  const [messages, verifiedTeachers, muteSetting] = await Promise.all([
+  registerCommunityHeartbeat(req.user.id, groupId);
+
+  const [messages, verifiedTeachers, muteSetting, presence] = await Promise.all([
     getSafeCommunityMessageIds(groupId, req.user.id, 150, "asc"),
     prisma.user.findMany({
       where: {
@@ -292,14 +298,17 @@ export const getCommunityMessages = asyncHandler(async (req, res) => {
       },
       orderBy: { name: "asc" }
     }),
-    getSafeMuteSetting(req.user.id, groupId)
+    getSafeMuteSetting(req.user.id, groupId),
+    getCommunityPresenceSnapshot(groupId)
   ]);
 
   res.json({
     success: true,
     messages: (await Promise.all(messages.map((message) => formatCommunityMessage(message.id, req.user.id)))).filter(Boolean),
     verifiedTeachers,
-    muteSetting: buildMutePayload(muteSetting)
+    muteSetting: buildMutePayload(muteSetting),
+    onlineMembers: presence.onlineMembers || [],
+    onlineCount: presence.onlineCount || 0
   });
 });
 

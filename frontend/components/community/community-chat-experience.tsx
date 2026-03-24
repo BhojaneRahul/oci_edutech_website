@@ -300,6 +300,7 @@ export function CommunityChatClient() {
   const [reportingMessage, setReportingMessage] = useState<CommunityChatMessage | null>(null);
   const [reportReason, setReportReason] = useState<ReportReason>("spam");
   const [typingUsers, setTypingUsers] = useState<Record<number, string>>({});
+  const [keyboardInset, setKeyboardInset] = useState(0);
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
   const composerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -492,6 +493,7 @@ export function CommunityChatClient() {
         .then(({ data }) => {
           setMessages(data.messages || []);
           setVerifiedTeachers(data.verifiedTeachers || []);
+          setOnlineMembers(data.onlineMembers || []);
         })
         .catch((err) => {
           console.error("Community message refresh failed", err);
@@ -519,7 +521,7 @@ export function CommunityChatClient() {
     const imageFiles =
       messages
         .flatMap((message) => message.files || [])
-        .filter((file) => file.fileType === "image" && !filePreviewUrls[file.id] && !resolveMediaUrl(file.fileUrl)) || [];
+        .filter((file) => file.fileType === "image" && !filePreviewUrls[file.id]) || [];
 
     imageFiles.forEach((file) => {
       if (previewLoadingRef.current.has(file.id)) return;
@@ -541,6 +543,10 @@ export function CommunityChatClient() {
         })
         .catch((err) => {
           console.error(err);
+          const fallbackUrl = resolveMediaUrl(file.fileUrl);
+          if (fallbackUrl) {
+            setFilePreviewUrls((current) => ({ ...current, [file.id]: fallbackUrl }));
+          }
         })
         .finally(() => {
           previewLoadingRef.current.delete(file.id);
@@ -554,6 +560,25 @@ export function CommunityChatClient() {
         window.URL.revokeObjectURL(url);
       });
       previewUrlsRef.current = {};
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+
+    const viewport = window.visualViewport;
+    const updateKeyboardInset = () => {
+      const inset = Math.max(window.innerHeight - viewport.height - viewport.offsetTop, 0);
+      setKeyboardInset(inset > 0 ? inset : 0);
+    };
+
+    updateKeyboardInset();
+    viewport.addEventListener("resize", updateKeyboardInset);
+    viewport.addEventListener("scroll", updateKeyboardInset);
+
+    return () => {
+      viewport.removeEventListener("resize", updateKeyboardInset);
+      viewport.removeEventListener("scroll", updateKeyboardInset);
     };
   }, []);
 
@@ -575,6 +600,8 @@ export function CommunityChatClient() {
   const refreshMessages = async (groupId: number) => {
     const { data } = await api.get(`/community/${groupId}/messages`);
     setMessages(data.messages || []);
+    setVerifiedTeachers(data.verifiedTeachers || []);
+    setOnlineMembers(data.onlineMembers || []);
   };
 
   const handleCommunityFileAction = async (
@@ -1523,17 +1550,19 @@ export function CommunityChatClient() {
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Messages and uploaded files stay available for 24 hours before they expire automatically.</p>
                 </div>
               )}
-              <div className="h-20 sm:h-24" ref={messageEndRef} />
+              <div className="h-10 sm:h-16" ref={messageEndRef} />
             </div>
           </div>
 
             <div
-              className="sticky bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2 py-1.5 shadow-[0_-18px_40px_-28px_rgba(15,23,42,0.2)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:shadow-[0_-18px_40px_-28px_rgba(2,6,23,0.55)] sm:px-3 sm:pt-2 lg:px-4 lg:pt-3"
-              style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.2rem)" }}
+              className="sticky bottom-0 z-30 border-t border-slate-200 bg-white/95 px-2 py-1 shadow-[0_-18px_40px_-28px_rgba(15,23,42,0.2)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:shadow-[0_-18px_40px_-28px_rgba(2,6,23,0.55)] sm:px-3 sm:pt-2 lg:px-4 lg:pt-3"
+              style={{
+                bottom: keyboardInset ? `${keyboardInset}px` : undefined,
+                paddingBottom: keyboardInset ? "0.15rem" : "max(env(safe-area-inset-bottom, 0px), 0.15rem)"
+              }}
             >
-              {typingLabel || onlineMembers.length ? (
+              {typingLabel ? (
                 <div className="px-1 pb-2">
-                  {typingLabel ? (
                   <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                     <span className="flex items-center gap-1">
                       <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.25s]" />
@@ -1542,22 +1571,17 @@ export function CommunityChatClient() {
                     </span>
                     {typingLabel}...
                   </div>
-                ) : (
-                  <div className="px-2 text-[11px] text-slate-400 dark:text-slate-500">
-                    {`${onlineMembers.length} online now`}
-                  </div>
-                )}
                 </div>
               ) : null}
               <div className="flex items-end gap-1.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => attachmentInputRef.current?.click()}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 sm:size-12"
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 sm:size-12"
               >
                 {isUploading ? <Loader2 className="size-5 animate-spin" /> : <Paperclip className="size-5" />}
               </button>
-                <div className="min-w-0 flex-1 overflow-hidden rounded-[20px] border border-slate-200 bg-white px-3 py-1.5 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-[0_20px_50px_-40px_rgba(2,6,23,0.65)] sm:rounded-[24px] sm:px-4 sm:py-2.5">
+                <div className="min-w-0 flex-1 overflow-hidden rounded-[20px] border border-slate-200 bg-white px-3 py-1 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-[0_20px_50px_-40px_rgba(2,6,23,0.65)] sm:rounded-[24px] sm:px-4 sm:py-2.5">
                   <textarea
                     ref={composerTextareaRef}
                     rows={1}
@@ -1566,7 +1590,7 @@ export function CommunityChatClient() {
                     onFocus={() => resizeComposer(44)}
                     onBlur={() => notifyTyping(false)}
                     placeholder={`Message ${activeGroup.name}... Use @name for mentions`}
-                    className="block max-h-28 min-h-[40px] w-full resize-none overflow-y-auto bg-transparent pt-1 text-[14px] leading-5 text-slate-900 outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 sm:min-h-[44px] sm:text-[15px] sm:leading-6"
+                    className="block max-h-28 min-h-[38px] w-full resize-none overflow-y-auto bg-transparent pt-1 text-[14px] leading-5 text-slate-900 outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 sm:min-h-[44px] sm:text-[15px] sm:leading-6"
                     onKeyDown={(event) => {
                       if (event.key === "Enter" && !event.shiftKey) {
                         event.preventDefault();
@@ -1575,11 +1599,11 @@ export function CommunityChatClient() {
                   }}
                 />
               </div>
-              <button
-                type="button"
-                onClick={() => void sendMessage()}
-                disabled={isSending || isUploading || (!composer.trim() && !attachment)}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.8)] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:text-slate-950 sm:size-12"
+                <button
+                  type="button"
+                  onClick={() => void sendMessage()}
+                  disabled={isSending || isUploading || (!composer.trim() && !attachment)}
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white shadow-[0_18px_45px_-30px_rgba(15,23,42,0.8)] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:text-slate-950 sm:size-12"
               >
                 {isSending ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5" />}
               </button>

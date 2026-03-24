@@ -4,6 +4,18 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "api.ociedutech.com"
+      },
+      {
+        protocol: "https",
+        hostname: "www.ociedutech.com"
+      },
+      {
+        protocol: "https",
+        hostname: "ociedutech.com"
+      },
+      {
+        protocol: "https",
         hostname: "lh3.googleusercontent.com"
       },
       {
