@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  deleteTeacherVerification,
   deleteUser,
   getAdminOverview,
   getTeacherVerifications,
@@ -30,6 +31,7 @@ router.put("/users/:id", updateUser);
 router.delete("/users/:id", deleteUser);
 router.get("/teacher-verifications", getTeacherVerifications);
 router.put("/teacher-verifications/:id", reviewTeacherVerification);
+router.delete("/teacher-verifications/:id", deleteTeacherVerification);
 router.get("/documents", getAdminDocuments);
 router.post("/upload-document", uploadPdf.single("file"), uploadDocument);
 router.put("/documents/:id", uploadPdf.single("file"), updateDocument);

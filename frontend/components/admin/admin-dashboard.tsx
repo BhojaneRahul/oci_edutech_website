@@ -345,6 +345,19 @@ export function AdminDashboard() {
     refetch();
   };
 
+  const deleteTeacherVerification = async (verificationId: number) => {
+    if (!window.confirm("Delete this approval request permanently?")) {
+      return;
+    }
+
+    setMessage("");
+    await api.delete(`/admin/teacher-verifications/${verificationId}`);
+    setMessage("Teacher verification request deleted successfully");
+    refetchTeacherVerifications();
+    refetchUsers();
+    refetch();
+  };
+
   const filteredUsers = useMemo(
     () =>
       users.filter((account) => {
@@ -686,6 +699,14 @@ export function AdminDashboard() {
                         className="rounded-full bg-rose-500 px-3 py-2 text-xs font-semibold text-white"
                       >
                         Reject
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void deleteTeacherVerification(verification.id)}
+                        className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 dark:border-rose-500/20 dark:text-rose-300"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
                       </button>
                     </div>
                   </td>

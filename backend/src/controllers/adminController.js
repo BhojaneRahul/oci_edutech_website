@@ -213,6 +213,39 @@ export const reviewTeacherVerification = asyncHandler(async (req, res) => {
   });
 });
 
+export const deleteTeacherVerification = asyncHandler(async (req, res) => {
+  const verificationId = Number(req.params.id);
+
+  const verification = await prisma.teacherVerification.findUnique({
+    where: { id: verificationId }
+  });
+
+  if (!verification) {
+    res.status(404);
+    throw new Error("Teacher verification request not found");
+  }
+
+  await prisma.teacherVerification.delete({
+    where: { id: verificationId }
+  });
+
+  if (verification.userId) {
+    await prisma.user.update({
+      where: { id: verification.userId },
+      data: {
+        role: "student",
+        verifiedTeacher: false,
+        communityGroupId: null
+      }
+    });
+  }
+
+  res.json({
+    success: true,
+    message: "Teacher verification request deleted successfully"
+  });
+});
+
 export const deleteUser = asyncHandler(async (req, res) => {
   const userId = Number(req.params.id);
 
