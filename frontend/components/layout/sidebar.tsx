@@ -75,25 +75,25 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col border-r border-slate-200 bg-white transition-transform dark:border-slate-800 dark:bg-slate-950 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-[min(84vw,19rem)] flex-col border-r border-slate-200 bg-white transition-transform dark:border-slate-800 dark:bg-slate-950 lg:h-screen lg:w-64 lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-20 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800">
-          <Link href="/" onClick={onClose} className="flex items-center gap-3">
+        <div className="flex min-h-20 items-start gap-3 border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:px-5">
+          <Link href="/" onClick={onClose} className="flex min-w-0 flex-1 items-start gap-3 pr-1">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-primary to-brand-secondary text-sm font-bold text-white shadow-lg shadow-amber-500/20">
               OCI
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 pt-0.5">
               <p className="truncate text-[1.05rem] font-semibold leading-5 text-slate-900 dark:text-white">OCI - EduTech</p>
-              <p className="mt-0.5 text-xs leading-4 text-slate-500 dark:text-slate-400">Study resources app</p>
+              <p className="mt-1 text-xs leading-4 text-slate-500 dark:text-slate-400">Study resources</p>
             </div>
           </Link>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 p-2 text-slate-500 dark:border-slate-800 dark:text-slate-300 lg:hidden"
+            className="mt-1 shrink-0 rounded-2xl border border-slate-200 p-2.5 text-slate-500 transition hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 lg:hidden"
             aria-label="Close sidebar"
           >
             <X className="h-4 w-4" />
@@ -101,7 +101,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="sidebar-scroll flex-1 overflow-y-auto px-3 py-4">
+          <div className="sidebar-scroll flex-1 overflow-y-auto px-3 py-4 sm:px-4">
             <div className="space-y-2">
               {items.map((item) => {
                 const Icon = item.icon;
@@ -159,7 +159,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             </div>
           </div>
 
-          <div className="border-t border-slate-200 px-3 py-4 dark:border-slate-800">
+          <div className="sticky bottom-0 mt-auto border-t border-slate-200 bg-white/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:px-4">
             <button
               type="button"
               onClick={() => setSettingsOpen(true)}
@@ -171,7 +171,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
               </span>
               <ChevronRight className="h-4 w-4 text-slate-400" />
             </button>
-            <p className="mt-3 px-4 text-xs font-medium text-slate-400">v1.0.0</p>
+            <p className="mt-2 px-4 text-[11px] font-medium text-slate-400">v1.0.0</p>
           </div>
         </div>
       </aside>
