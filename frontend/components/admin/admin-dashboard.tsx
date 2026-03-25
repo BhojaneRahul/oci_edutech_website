@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import {
   BookOpenText,
@@ -109,6 +109,7 @@ const validSections = new Set([
 
 export function AdminDashboard() {
   const { user, loading } = useAuth();
+  const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mockTestError, setMockTestError] = useState("");
@@ -201,7 +202,8 @@ export function AdminDashboard() {
       const response = await api.get<{ success: true; requests: AdminSyllabusRequest[] }>("/syllabus/admin/requests");
       return response.data.requests ?? [];
     },
-    enabled: user?.role === "admin"
+    enabled: user?.role === "admin",
+    refetchInterval: 15000
   });
 
   useEffect(() => {
@@ -366,6 +368,15 @@ export function AdminDashboard() {
     refetchTeacherVerifications();
     refetchUsers();
     refetch();
+  };
+
+  const deleteSyllabusRequest = async (requestId: number | string) => {
+    await api.delete(`/syllabus/${requestId}`);
+    setMessage("Syllabus request deleted successfully");
+    queryClient.setQueryData<AdminSyllabusRequest[] | undefined>(["admin-syllabus-requests"], (current) =>
+      (current ?? []).filter((request) => String(request._id) !== String(requestId))
+    );
+    refetchSyllabusRequests();
   };
 
   const filteredUsers = useMemo(
@@ -858,15 +869,11 @@ export function AdminDashboard() {
                         rel="noreferrer"
                         className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-800"
                       >
-                        Open syllabus
+                        View
                       </a>
                       <button
                         type="button"
-                        onClick={async () => {
-                          await api.delete(`/syllabus/${request._id}`);
-                          setMessage("Syllabus request deleted successfully");
-                          refetchSyllabusRequests();
-                        }}
+                        onClick={() => void deleteSyllabusRequest(request._id)}
                         className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 dark:border-rose-500/20 dark:text-rose-300"
                       >
                         <Trash2 className="h-3.5 w-3.5" />

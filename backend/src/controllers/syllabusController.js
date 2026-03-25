@@ -3,17 +3,7 @@ import { prisma } from "../config/db.js";
 import { withMongoStyleId } from "../utils/serializers.js";
 import { removeGeneratedAsset } from "../services/syllabusGeneratorService.js";
 
-const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
-
-const selectMatchedDocuments = {
-  id: true,
-  title: true,
-  subject: true,
-  stream: true,
-  type: true,
-  fileUrl: true,
-  createdAt: true
-};
+const TEN_YEARS_IN_MS = 10 * 365 * 24 * 60 * 60 * 1000;
 
 const normalizeGeneration = (generation) => ({
   ...withMongoStyleId(generation),
@@ -23,27 +13,6 @@ const normalizeGeneration = (generation) => ({
   generatedPdfUrl: generation.generatedPdfUrl,
   structuredContent: generation.structuredContent
 });
-
-const buildRecentDocumentFilters = ({ subject, course, semester }) => {
-  const filters = [];
-
-  if (subject) {
-    filters.push({ subject: { contains: subject } });
-    filters.push({ title: { contains: subject } });
-  }
-
-  if (course) {
-    filters.push({ stream: { contains: course } });
-    filters.push({ title: { contains: course } });
-  }
-
-  if (semester) {
-    filters.push({ title: { contains: semester } });
-    filters.push({ subject: { contains: semester } });
-  }
-
-  return filters;
-};
 
 export const generateSyllabusNotes = asyncHandler(async (req, res) => {
   if (!req.file) {
@@ -61,14 +30,7 @@ export const generateSyllabusNotes = asyncHandler(async (req, res) => {
     .filter(Boolean);
 
   const sourceFileUrl = `${req.protocol}://${req.get("host")}/uploads/syllabus-source/${req.file.filename}`;
-  const expiresAt = new Date(Date.now() + ONE_DAY_IN_MS);
-  const filters = buildRecentDocumentFilters({ subject, course, semester });
-  const matchedDocuments = await prisma.document.findMany({
-    where: filters.length ? { OR: filters } : undefined,
-    orderBy: { createdAt: "desc" },
-    take: 8,
-    select: selectMatchedDocuments
-  });
+  const expiresAt = new Date(Date.now() + TEN_YEARS_IN_MS);
 
   const generation = await prisma.syllabusGeneration.create({
     data: {
@@ -85,9 +47,8 @@ export const generateSyllabusNotes = asyncHandler(async (req, res) => {
       structuredContent: {
         requestStatus: "pending",
         requestMessage:
-          "Your syllabus was received. Our team can review it and prepare recent notes or study materials based on the uploaded syllabus.",
-        manualTopics,
-        matchedDocuments
+          "Your syllabus was received and sent to the admin panel for review. Our team, verified teachers, or students can now prepare notes from it.",
+        manualTopics
       },
       expiresAt
     }
@@ -112,7 +73,7 @@ export const generateSyllabusNotes = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: "Syllabus uploaded successfully. Recent matching notes are ready below and the request is now visible in the admin panel.",
+    message: "Syllabus uploaded successfully. Your request is now visible in the admin panel.",
     generation: normalizeGeneration(generation)
   });
 });
@@ -120,10 +81,7 @@ export const generateSyllabusNotes = asyncHandler(async (req, res) => {
 export const getMySyllabusGenerations = asyncHandler(async (req, res) => {
   const generations = await prisma.syllabusGeneration.findMany({
     where: {
-      userId: req.user.id,
-      expiresAt: {
-        gt: new Date()
-      }
+      userId: req.user.id
     },
     orderBy: {
       createdAt: "desc"
