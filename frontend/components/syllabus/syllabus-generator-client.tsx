@@ -176,141 +176,138 @@ export function SyllabusGeneratorClient() {
 
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-soft dark:border-slate-800 dark:bg-slate-900">
-        <div className="grid gap-0 xl:grid-cols-[1.08fr_0.92fr]">
-          <div className="relative p-7 sm:p-8 lg:p-9">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,140,0,0.16),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(255,195,0,0.18),_transparent_30%)]" />
-            <div className="relative space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-                <Wand2 className="h-4 w-4" />
-                Syllabus to Smart Notes
-              </div>
-              <div className="space-y-3">
-                <h1 className="text-[1.45rem] font-semibold tracking-tight text-slate-950 sm:text-[1.65rem] lg:text-[1.8rem] dark:text-white">
-                  Upload a syllabus copy and build a cleaner study-ready PDF.
-                </h1>
-                <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-                  The generator reads your syllabus, organizes topics into a structured draft, adds revision support,
-                  and prepares a PDF you can view or download for the next 24 hours.
-                </p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <MiniInfo icon={FileUp} label="Upload syllabus PDF" />
-                <MiniInfo icon={Sparkles} label="Generate structured notes" />
-                <MiniInfo icon={Download} label="View or download PDF" />
-              </div>
+      <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900 sm:p-7 lg:p-8">
+        <div className="max-w-3xl space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+            <Wand2 className="h-4 w-4" />
+            Syllabus to Smart Notes
+          </div>
+          <h1 className="text-[1.2rem] font-semibold tracking-tight text-slate-950 sm:text-[1.35rem] lg:text-[1.45rem] dark:text-white">
+            Upload a syllabus and generate a cleaner AI study PDF.
+          </h1>
+          <p className="max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+            Start with the form below. Upload a syllabus PDF or image, choose the output type, and generate units,
+            revision points, keywords, and likely exam questions in one downloadable file.
+          </p>
+          <div className="flex flex-wrap gap-2.5">
+            <MiniInfo icon={FileUp} label="PDF or image upload" />
+            <MiniInfo icon={Sparkles} label="AI notes extraction" />
+            <MiniInfo icon={Download} label="View and download PDF" />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900 sm:p-7 lg:p-8">
+        <form
+          className="space-y-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setActionError(null);
+            generateMutation.mutate();
+          }}
+        >
+          <div>
+            <label className="text-sm font-semibold text-slate-900 dark:text-white">Syllabus upload</label>
+            <label className="mt-3 flex cursor-pointer flex-col items-center justify-center rounded-[24px] border border-dashed border-slate-300 bg-slate-50/55 px-5 py-8 text-center transition hover:border-amber-300 hover:bg-amber-50/60 dark:border-slate-700 dark:bg-slate-950 dark:hover:border-amber-400/30 dark:hover:bg-amber-500/5">
+              <FileUp className="h-7 w-7 text-amber-500" />
+              <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">
+                {selectedFile ? selectedFile.name : "Choose syllabus PDF or image"}
+              </p>
+              <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
+                PDF, JPG, PNG, or WEBP. Uploaded syllabus and generated notes are auto-deleted after 24 hours.
+              </p>
+              <input
+                type="file"
+                accept="application/pdf,image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+              />
+            </label>
+            {selectedFileSummary ? (
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Selected file size: {selectedFileSummary}</p>
+            ) : null}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Field label="Subject" value={subject} onChange={setSubject} placeholder="Programming in C" />
+            <Field label="Course" value={course} onChange={setCourse} placeholder="BCA" />
+            <Field label="Semester" value={semester} onChange={setSemester} placeholder="3rd Semester" />
+            <div>
+              <label className="text-sm font-semibold text-slate-900 dark:text-white">Output type</label>
+              <select
+                value={outputType}
+                onChange={(event) => setOutputType(event.target.value as SyllabusOutputType)}
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              >
+                {outputOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          <div className="border-t border-slate-200 bg-slate-50/55 p-6 dark:border-slate-800 dark:bg-slate-950/40 xl:border-l xl:border-t-0 xl:p-7">
-            <form
-              className="space-y-5"
-              onSubmit={(event) => {
-                event.preventDefault();
-                setActionError(null);
-                generateMutation.mutate();
-              }}
-            >
-              <div>
-                <label className="text-sm font-semibold text-slate-900 dark:text-white">Syllabus upload</label>
-                <label className="mt-3 flex cursor-pointer flex-col items-center justify-center rounded-[24px] border border-dashed border-slate-300 bg-white px-5 py-8 text-center transition hover:border-amber-300 hover:bg-amber-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-400/30 dark:hover:bg-amber-500/5">
-                  <FileUp className="h-7 w-7 text-amber-500" />
-                  <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">
-                    {selectedFile ? selectedFile.name : "Choose syllabus PDF or image"}
-                  </p>
-                  <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                    PDF, JPG, PNG, or WEBP. The uploaded syllabus and generated notes are automatically deleted after 24
-                    hours.
-                  </p>
-                  <input
-                    type="file"
-                    accept="application/pdf,image/png,image/jpeg,image/webp"
-                    className="hidden"
-                    onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
-                  />
-                </label>
-                {selectedFileSummary ? (
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Selected file size: {selectedFileSummary}</p>
-                ) : null}
-              </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-900 dark:text-white">Optional key topics or units</label>
+            <textarea
+              value={topics}
+              onChange={(event) => setTopics(event.target.value)}
+              placeholder={"Unit 1 - Basics\nUnit 2 - Core concepts\nUnit 3 - Applications"}
+              rows={5}
+              className="mt-2 w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm leading-7 text-slate-900 outline-none transition focus:border-amber-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            />
+          </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Subject" value={subject} onChange={setSubject} placeholder="Programming in C" />
-                <Field label="Course" value={course} onChange={setCourse} placeholder="BCA" />
-                <Field label="Semester" value={semester} onChange={setSemester} placeholder="3rd Semester" />
-                <div>
-                  <label className="text-sm font-semibold text-slate-900 dark:text-white">Output type</label>
-                  <select
-                    value={outputType}
-                    onChange={(event) => setOutputType(event.target.value as SyllabusOutputType)}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                  >
-                    {outputOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+          {actionError ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
+              {actionError}
+            </div>
+          ) : null}
+
+          {isGenerating && uploadStatusLabel ? (
+            <div className="rounded-[24px] border border-amber-200 bg-amber-50 px-4 py-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-200">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {uploadStatusLabel}
                 </div>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
+                  {generationStage === "uploading" ? `${uploadProgress}%` : "Processing"}
+                </span>
               </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-900 dark:text-white">Optional key topics or units</label>
-                <textarea
-                  value={topics}
-                  onChange={(event) => setTopics(event.target.value)}
-                  placeholder={"Unit 1 - Basics\nUnit 2 - Core concepts\nUnit 3 - Applications"}
-                  rows={5}
-                  className="mt-2 w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm leading-7 text-slate-900 outline-none transition focus:border-amber-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/80 dark:bg-slate-900/80">
+                <div
+                  className="h-full rounded-full bg-amber-500 transition-all duration-300"
+                  style={{ width: `${generationStage === "uploading" ? uploadProgress : 100}%` }}
                 />
               </div>
-
-              {actionError ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
-                  {actionError}
-                </div>
-              ) : null}
-
-              {isGenerating && uploadStatusLabel ? (
-                <div className="rounded-[24px] border border-amber-200 bg-amber-50 px-4 py-4 dark:border-amber-500/20 dark:bg-amber-500/10">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-200">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {uploadStatusLabel}
-                    </div>
-                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
-                      {generationStage === "uploading" ? `${uploadProgress}%` : "Processing"}
-                    </span>
-                  </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/80 dark:bg-slate-900/80">
-                    <div
-                      className="h-full rounded-full bg-amber-500 transition-all duration-300"
-                      style={{ width: `${generationStage === "uploading" ? uploadProgress : 100}%` }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs leading-6 text-amber-700/80 dark:text-amber-200/80">
-                    {generationStage === "uploading"
-                      ? "Your syllabus PDF is being uploaded to the generator."
-                      : "The syllabus has been uploaded. We are extracting topics and preparing the PDF now."}
-                  </p>
-                </div>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={isGenerating}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
-              >
-                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+              <p className="mt-2 text-xs leading-6 text-amber-700/80 dark:text-amber-200/80">
                 {generationStage === "uploading"
-                  ? `Uploading... ${uploadProgress}%`
-                  : generationStage === "processing"
-                    ? "Generating smart notes..."
-                    : "Generate smart notes PDF"}
-              </button>
-            </form>
+                  ? "Your syllabus file is being uploaded to the generator."
+                  : "The upload is done. We are extracting units, key concepts, and exam questions now."}
+              </p>
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <button
+              type="submit"
+              disabled={isGenerating}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
+            >
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+              {generationStage === "uploading"
+                ? `Uploading... ${uploadProgress}%`
+                : generationStage === "processing"
+                  ? "Generating smart notes..."
+                  : "Generate smart notes PDF"}
+            </button>
+            <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+              Works best with clear syllabus PDFs or readable images.
+            </div>
           </div>
-        </div>
+        </form>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -493,9 +490,9 @@ function MiniInfo({
   label: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white/85 px-4 py-4 text-sm font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-950/85 dark:text-slate-200">
-      <Icon className="h-5 w-5 text-amber-500" />
-      <p className="mt-3">{label}</p>
+    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+      <Icon className="h-4 w-4 text-amber-500" />
+      <p>{label}</p>
     </div>
   );
 }
