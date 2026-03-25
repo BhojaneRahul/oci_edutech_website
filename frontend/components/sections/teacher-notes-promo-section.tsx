@@ -3,35 +3,41 @@ import { ArrowUpRight, ShieldCheck, BookText } from "lucide-react";
 
 export function TeacherNotesPromoSection() {
   return (
-    <section className="border-y border-slate-200/80 bg-transparent py-5 dark:border-slate-800/80 sm:py-6">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] border border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-            <BookText className="h-7 w-7" />
+    <section className="py-3 sm:py-4">
+      <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,rgba(237,255,247,0.96),rgba(255,248,237,0.96)_48%,rgba(255,229,214,0.98))] px-6 py-6 shadow-[0_26px_70px_-45px_rgba(15,23,42,0.3)] dark:border-slate-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.18),transparent_30%),linear-gradient(180deg,rgba(15,23,42,0.98),rgba(15,23,42,0.94))] sm:px-8 sm:py-7">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4 sm:gap-5">
+            <div className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-[24px] border border-white/80 bg-white/80 text-emerald-600 shadow-[0_18px_45px_-28px_rgba(16,185,129,0.4)] backdrop-blur dark:border-white/10 dark:bg-slate-900/80 dark:text-emerald-300">
+              <BookText className="h-7 w-7" />
+            </div>
+
+            <div className="max-w-3xl pt-1">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
+                Verified Teacher Notes
+              </p>
+              <h3 className="mt-2 text-xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-[1.65rem]">
+                Learn from complete notes uploaded by approved verified teachers.
+              </h3>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-700 dark:text-slate-200 sm:text-[0.98rem]">
+                Explore a cleaner trusted notes library where verified teachers publish full subject-wise PDFs for
+                serious preparation, quick revision, and better concept clarity. Students get fresher study support in
+                one reliable place, while teacher uploads unlock only after college ID verification is approved.
+              </p>
+            </div>
           </div>
 
-          <div className="max-w-3xl pt-1">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-950 dark:text-white">
-              Verified Teacher Notes
-            </p>
-            <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-200 sm:text-[0.95rem]">
-              Browse full complete notes uploaded only by approved verified teachers. Students get a cleaner trusted
-              note library, while teachers can publish subject-wise PDFs after their college ID verification is approved.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[320px]">
-          <Link
-            href="/teacher-notes"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-4 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-          >
-            Open teacher notes
-            <ArrowUpRight className="h-4 w-4" />
-          </Link>
-          <div className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            Teacher uploads unlock after verification
+          <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[330px]">
+            <Link
+              href="/teacher-notes"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-4 text-sm font-semibold text-white shadow-[0_22px_46px_-26px_rgba(15,23,42,0.45)] transition hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+            >
+              Open teacher notes
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
+            <div className="inline-flex items-center justify-center gap-2 rounded-full border border-white/80 bg-white/80 px-4 py-2.5 text-xs font-medium text-slate-700 backdrop-blur dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              Teacher uploads unlock after verification
+            </div>
           </div>
         </div>
       </div>
