@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
   ChevronRight,
-  FileUp,
+  ScrollText,
   MessagesSquare,
   FolderKanban,
   Globe,
@@ -36,7 +36,7 @@ const items = [
   { href: "/community", label: "Community", icon: MessagesSquare },
   { href: "/mock-tests", label: "Mock Tests", icon: ListChecks },
   { href: "/projects", label: "Projects", icon: FolderKanban },
-  { href: "/syllabus-to-notes", label: "Syllabus Upload", icon: FileUp }
+  { href: "/syllabus-to-notes", label: "Syllabus Upload", icon: ScrollText }
 ];
 
 const socialLinks = [
