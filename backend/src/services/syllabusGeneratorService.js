@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import PDFDocument from "pdfkit";
 import { PDFParse } from "pdf-parse";
-import { createPartFromUri, createUserContent, GoogleGenAI } from "@google/genai";
+import { createPartFromUri, GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import { syllabusGeneratedDir } from "../middleware/uploadMiddleware.js";
 
@@ -79,6 +79,33 @@ const chunk = (items, size) => {
     groups.push(items.slice(index, index + size));
   }
   return groups;
+};
+
+const normalizeQuestionSet = (items) =>
+  Array.isArray(items)
+    ? items
+        .map((item) => ({
+          question: String(item?.question || "").trim(),
+          answer: String(item?.answer || "").trim()
+        }))
+        .filter((item) => item.question && item.answer)
+        .slice(0, 10)
+    : [];
+
+const stringifyError = (error) => {
+  if (!error) return "Unknown error";
+  if (typeof error === "string") return error;
+  return JSON.stringify(
+    {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+      details: error.details,
+      stack: error.stack
+    },
+    null,
+    2
+  );
 };
 
 const getAiClient = () => {
@@ -260,7 +287,12 @@ const buildStructuredNotesWithGemini = async ({
   const outputLabel = outputType.replace(/_/g, " ");
   const manualTopicText = manualTopics.length ? manualTopics.join(", ") : "No manual topic hints provided.";
   const trimmedSyllabus = extractedText.replace(/\s+/g, " ").trim().slice(0, 32000);
-  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const modelsToTry = dedupe([
+    sourceFilePath ? process.env.GEMINI_FILE_MODEL : null,
+    process.env.GEMINI_MODEL,
+    sourceFilePath ? "gemini-2.0-flash" : "gemini-2.5-flash",
+    sourceFilePath ? "gemini-1.5-flash" : null
+  ]);
   const prompt = [
     `Create a high-quality ${outputLabel} study pack from this uploaded syllabus.`,
     `Subject: ${subject || "Not provided"}`,
@@ -281,6 +313,7 @@ const buildStructuredNotesWithGemini = async ({
   ].join("\n");
 
   let uploadedFile = null;
+  let lastError = null;
 
   try {
     if (sourceFilePath) {
@@ -295,25 +328,36 @@ const buildStructuredNotesWithGemini = async ({
       uploadedFile = await waitForGeminiFileActive(client, uploadedFile.name);
     }
 
-    const contents = uploadedFile
-      ? createUserContent([createPartFromUri(uploadedFile.uri, uploadedFile.mimeType), prompt])
-      : [prompt];
-    const response = await client.models.generateContent({
-      model,
-      contents
-    });
+    const contents =
+      uploadedFile?.uri && uploadedFile?.mimeType
+        ? [prompt, createPartFromUri(uploadedFile.uri, uploadedFile.mimeType)]
+        : [prompt];
 
-    const parsedNotes = JSON.parse(extractJsonBlock(extractGeminiText(response)));
+    for (const model of modelsToTry) {
+      try {
+        const response = await client.models.generateContent({
+          model,
+          contents
+        });
 
-    return normalizeStructuredNotes(parsedNotes, {
-      extractedText,
-      subject,
-      course,
-      semester,
-      outputType,
-      manualTopics,
-      sourceFileName
-    });
+        const parsedNotes = JSON.parse(extractJsonBlock(extractGeminiText(response)));
+
+        return normalizeStructuredNotes(parsedNotes, {
+          extractedText,
+          subject,
+          course,
+          semester,
+          outputType,
+          manualTopics,
+          sourceFileName
+        });
+      } catch (error) {
+        lastError = error;
+        console.error(`Gemini model ${model} failed for syllabus generation:`, stringifyError(error));
+      }
+    }
+
+    throw lastError || new Error("Gemini could not generate notes for this syllabus.");
   } finally {
     if (uploadedFile?.name) {
       await client.files.delete({ name: uploadedFile.name }).catch(() => undefined);
@@ -447,13 +491,43 @@ const buildStructuredNotesFallback = ({
 
   const likelyQuestions = units.slice(0, 5).map((unit) => `Explain the main ideas, applications, and important discussion points from ${unit.title}.`);
 
+  const definitions = keywords.slice(0, 6).map((keyword) => ({
+    term: keyword,
+    meaning: `${keyword} is an important syllabus concept that should be explained with definition, features, examples, and practical relevance.`
+  }));
+
+  const keyPoints = dedupe([
+    ...units.flatMap((unit) => unit.points.slice(0, 2)),
+    ...revisionChecklist
+  ]).slice(0, 10);
+
+  const probableQuestions2Mark = units.slice(0, 5).map((unit) => ({
+    question: `Write a short note on ${unit.title}.`,
+    answer: unit.points[0] || `Explain the core meaning and exam importance of ${unit.title}.`
+  }));
+
+  const probableQuestions5Mark = units.slice(0, 5).map((unit) => ({
+    question: `Explain ${unit.title} with key features and applications.`,
+    answer: dedupe(unit.points).slice(0, 4).join(" ")
+  }));
+
+  const probableQuestions10Mark = units.slice(0, 4).map((unit) => ({
+    question: `Discuss ${unit.title} in detail with definitions, concepts, features, and examples.`,
+    answer: `A strong 10-mark answer should cover ${unit.title}, including definition, major concepts, core features, applications, and a short conclusion. ${dedupe(unit.points).join(" ")}`
+  }));
+
   return {
     title: `${normalizedSubject} ${outputType.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())}`,
     overview,
     units,
     keywords,
+    definitions,
+    keyPoints,
     revisionChecklist,
-    likelyQuestions
+    likelyQuestions,
+    probableQuestions2Mark,
+    probableQuestions5Mark,
+    probableQuestions10Mark
   };
 };
 
@@ -481,6 +555,20 @@ const normalizeStructuredNotes = (rawNotes, fallbackInput) => {
       Array.isArray(notes.keywords) && notes.keywords.length
         ? dedupe(notes.keywords.map((keyword) => String(keyword || "").trim())).slice(0, 10)
         : fallback.keywords,
+    definitions:
+      Array.isArray(notes.definitions) && notes.definitions.length
+        ? notes.definitions
+            .map((item) => ({
+              term: String(item?.term || "").trim(),
+              meaning: String(item?.meaning || "").trim()
+            }))
+            .filter((item) => item.term && item.meaning)
+            .slice(0, 12)
+        : fallback.definitions,
+    keyPoints:
+      Array.isArray(notes.keyPoints) && notes.keyPoints.length
+        ? dedupe(notes.keyPoints.map((item) => String(item || "").trim())).slice(0, 12)
+        : fallback.keyPoints,
     revisionChecklist:
       Array.isArray(notes.revisionChecklist) && notes.revisionChecklist.length
         ? dedupe(notes.revisionChecklist.map((item) => String(item || "").trim())).slice(0, 8)
@@ -488,7 +576,16 @@ const normalizeStructuredNotes = (rawNotes, fallbackInput) => {
     likelyQuestions:
       Array.isArray(notes.likelyQuestions) && notes.likelyQuestions.length
         ? dedupe(notes.likelyQuestions.map((item) => String(item || "").trim())).slice(0, 8)
-        : fallback.likelyQuestions
+        : fallback.likelyQuestions,
+    probableQuestions2Mark: normalizeQuestionSet(notes.probableQuestions2Mark).length
+      ? normalizeQuestionSet(notes.probableQuestions2Mark)
+      : fallback.probableQuestions2Mark,
+    probableQuestions5Mark: normalizeQuestionSet(notes.probableQuestions5Mark).length
+      ? normalizeQuestionSet(notes.probableQuestions5Mark)
+      : fallback.probableQuestions5Mark,
+    probableQuestions10Mark: normalizeQuestionSet(notes.probableQuestions10Mark).length
+      ? normalizeQuestionSet(notes.probableQuestions10Mark)
+      : fallback.probableQuestions10Mark
   };
 };
 
