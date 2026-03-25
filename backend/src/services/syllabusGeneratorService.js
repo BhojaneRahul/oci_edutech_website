@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import PDFDocument from "pdfkit";
 import { PDFParse } from "pdf-parse";
-import { GoogleGenAI } from "@google/genai";
+import { createPartFromUri, createUserContent, GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import { syllabusGeneratedDir } from "../middleware/uploadMiddleware.js";
 
@@ -295,7 +295,9 @@ const buildStructuredNotesWithGemini = async ({
       uploadedFile = await waitForGeminiFileActive(client, uploadedFile.name);
     }
 
-    const contents = uploadedFile ? [uploadedFile, prompt] : [prompt];
+    const contents = uploadedFile
+      ? createUserContent([createPartFromUri(uploadedFile.uri, uploadedFile.mimeType), prompt])
+      : [prompt];
     const response = await client.models.generateContent({
       model,
       contents
@@ -519,6 +521,7 @@ const buildStructuredNotesWithAi = async ({
         sourceMimeType
       });
     } catch (error) {
+      console.error("Gemini syllabus generation failed:", error);
       if (!extractedTextStrongEnough) {
         if (error?.status === 429) {
           throw new Error(
