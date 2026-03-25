@@ -63,6 +63,7 @@ export const registerUser = asyncHandler(async (req, res) => {
       communityGroupId: communityGroupId ? Number(communityGroupId) : null
     }
   });
+
   const token = generateToken({ id: user.id, role: user.role });
   setAuthCookie(res, token);
   await safelyRunGamification(() => awardDailyLogin(user.id));

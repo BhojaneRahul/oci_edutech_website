@@ -3,7 +3,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, KeyRound, Mail, Phone, Shield, User2 } from "lucide-react";
+import { BadgeCheck, Building2, KeyRound, Mail, Phone, Shield, User2 } from "lucide-react";
 import { useAuth } from "../providers/auth-provider";
 import { FormSelect } from "../ui/form-select";
 
@@ -292,11 +292,20 @@ export function AuthForm() {
                 onChange={(event) => setForm((current) => ({ ...current, semester: event.target.value }))}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
               />
+
             </>
           ) : null}
         </div>
 
         {error ? <p className="text-sm text-rose-500">{error}</p> : null}
+
+        {mode === "signup" && form.role === "teacher" ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+            Teacher accounts are created first as normal accounts. Inside Community, upload your college ID card and
+            submit teacher verification when you are ready to join teacher chat. After admin approval, the verified
+            teacher badge and Teacher Notes upload access will unlock automatically.
+          </div>
+        ) : null}
 
         <button
           type="submit"
