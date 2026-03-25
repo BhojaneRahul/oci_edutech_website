@@ -337,15 +337,19 @@ export type CommunityMessagesResponse = {
 export type SyllabusOutputType = "smart_notes" | "unit_summary" | "question_bank" | "study_plan";
 
 export type SyllabusStructuredContent = {
-  title: string;
-  overview: string;
-  units: {
+  requestStatus?: "pending" | "reviewed" | "completed";
+  requestMessage?: string;
+  manualTopics?: string[];
+  matchedDocuments?: Document[];
+  title?: string;
+  overview?: string;
+  units?: {
     title: string;
     points: string[];
   }[];
-  keywords: string[];
-  revisionChecklist: string[];
-  likelyQuestions: string[];
+  keywords?: string[];
+  revisionChecklist?: string[];
+  likelyQuestions?: string[];
 };
 
 export type SyllabusGeneration = {
@@ -364,5 +368,16 @@ export type SyllabusGeneration = {
   expiresAt: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type AdminSyllabusRequest = SyllabusGeneration & {
+  user: {
+    id: number;
+    name: string | null;
+    email: string;
+    university?: string | null;
+    course?: string | null;
+    semester?: string | null;
+  };
 };
 

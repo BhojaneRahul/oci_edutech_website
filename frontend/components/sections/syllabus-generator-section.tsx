@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowUpRight, FileImage, FileText, Sparkles, Wand2 } from "lucide-react";
+import { ArrowUpRight, FileImage, FileText, Send } from "lucide-react";
 
-const miniHighlights = ["PDF or image upload", "AI smart notes", "Questions and revision PDF"];
+const miniHighlights = ["PDF or image upload", "Recent matching notes", "Admin review request"];
 
 export function SyllabusGeneratorSection() {
   return (
@@ -11,17 +11,17 @@ export function SyllabusGeneratorSection() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,140,0,0.12),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(255,195,0,0.15),_transparent_28%)]" />
           <div className="relative">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-              <Wand2 className="h-4 w-4" />
-              AI Study Builder
+              <Send className="h-4 w-4" />
+              Syllabus Requests
             </div>
 
             <div className="mt-5 max-w-3xl space-y-3">
               <h2 className="text-[1.35rem] font-semibold tracking-tight text-slate-950 sm:text-[1.55rem] lg:text-[1.7rem] dark:text-white">
-                Turn one syllabus into smart notes, likely questions, and a ready PDF.
+                Upload a syllabus and get the latest matching notes faster.
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-                Upload a syllabus PDF or image and generate a cleaner study pack with extracted units, important
-                concepts, revision points, and exam-focused questions.
+                Send your syllabus to the platform, surface recent matching materials immediately, and let the team
+                review it from the admin panel for better note preparation.
               </p>
             </div>
 
@@ -41,12 +41,12 @@ export function SyllabusGeneratorSection() {
                 href="/syllabus-to-notes"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
               >
-                Open generator
+                Open request form
                 <ArrowUpRight className="h-4 w-4" />
               </Link>
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                Best for notes, unit summary, and question-bank prep
+                <FileText className="h-4 w-4 text-amber-500" />
+                Best for getting recent notes and requesting fresh study material
               </div>
             </div>
           </div>
@@ -64,8 +64,8 @@ export function SyllabusGeneratorSection() {
 
             <div className="space-y-2">
               <PromoRow icon={FileImage} label="Reads PDF and image uploads" />
-              <PromoRow icon={Sparkles} label="Builds smart notes with AI" />
-              <PromoRow icon={Wand2} label="Exports a downloadable study PDF" />
+              <PromoRow icon={FileText} label="Shows recent matching notes" />
+              <PromoRow icon={Send} label="Sends the request to admin" />
             </div>
           </div>
         </div>

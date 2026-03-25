@@ -15,7 +15,7 @@ import {
   Users as UsersIcon
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { Degree, Document, MockTest, Settings, TeacherVerification } from "@/lib/types";
+import { AdminSyllabusRequest, Degree, Document, MockTest, Settings, TeacherVerification } from "@/lib/types";
 import { FormSelect } from "../ui/form-select";
 import { useAuth } from "../providers/auth-provider";
 import { AdminSidebar } from "./admin-sidebar";
@@ -101,6 +101,7 @@ const validSections = new Set([
   "mock-tests",
   "mock-test-editor",
   "teacher-approvals",
+  "syllabus-requests",
   "community-reports",
   "users",
   "user-editor"
@@ -190,6 +191,15 @@ export function AdminDashboard() {
     queryFn: async () => {
       const response = await api.get<{ success: true; reports: CommunityReportRow[] }>("/community/reports");
       return response.data.reports ?? [];
+    },
+    enabled: user?.role === "admin"
+  });
+
+  const { data: syllabusRequests = [], refetch: refetchSyllabusRequests } = useQuery({
+    queryKey: ["admin-syllabus-requests"],
+    queryFn: async () => {
+      const response = await api.get<{ success: true; requests: AdminSyllabusRequest[] }>("/syllabus/admin/requests");
+      return response.data.requests ?? [];
     },
     enabled: user?.role === "admin"
   });
@@ -375,6 +385,7 @@ export function AdminDashboard() {
   const pendingTeacherCount = teacherVerifications.filter((item) => item.status === "pending").length;
   const verifiedTeacherCount = users.filter((account) => account.verifiedTeacher).length;
   const recentDocumentCount = documents.length;
+  const syllabusRequestCount = syllabusRequests.length;
   const liveYoutubeMembers = data?.settings?.siteStats?.youtubeMembers ?? "0";
   const openCommunityReportsCount = communityReports.length;
 
@@ -801,6 +812,82 @@ export function AdminDashboard() {
         </div>
       </section>
     );
+  } else if (activeSection === "syllabus-requests") {
+    sectionContent = (
+      <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-600">Syllabus requests</p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Uploaded syllabus requests</h3>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Review syllabus uploads from users and use them to prepare notes, model QPs, or other study material.
+          </p>
+        </div>
+
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="text-slate-500 dark:text-slate-400">
+              <tr className="border-b border-slate-200 dark:border-slate-800">
+                <th className="px-3 py-3 font-medium">Student</th>
+                <th className="px-3 py-3 font-medium">Subject</th>
+                <th className="px-3 py-3 font-medium">Course</th>
+                <th className="px-3 py-3 font-medium">Semester</th>
+                <th className="px-3 py-3 font-medium">Topics</th>
+                <th className="px-3 py-3 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {syllabusRequests.map((request) => (
+                <tr key={request._id} className="border-b border-slate-100 dark:border-slate-900">
+                  <td className="px-3 py-4">
+                    <p className="font-medium text-slate-900 dark:text-white">{request.user?.name || "Unknown user"}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{request.user?.email}</p>
+                  </td>
+                  <td className="px-3 py-4 font-medium text-slate-900 dark:text-white">{request.subject}</td>
+                  <td className="px-3 py-4">{request.course || "Not set"}</td>
+                  <td className="px-3 py-4">{request.semester || "Not set"}</td>
+                  <td className="px-3 py-4">
+                    <div className="max-w-sm rounded-2xl bg-slate-50 px-3 py-3 text-sm text-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                      {(request.structuredContent?.manualTopics || []).slice(0, 3).join(", ") || "No extra topics added"}
+                    </div>
+                  </td>
+                  <td className="px-3 py-4">
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={request.sourceFileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-800"
+                      >
+                        Open syllabus
+                      </a>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await api.delete(`/syllabus/${request._id}`);
+                          setMessage("Syllabus request deleted successfully");
+                          refetchSyllabusRequests();
+                        }}
+                        className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 dark:border-rose-500/20 dark:text-rose-300"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!syllabusRequests.length ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
+                    No syllabus requests yet.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    );
   } else if (activeSection === "users") {
     sectionContent = (
       <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -1019,6 +1106,15 @@ export function AdminDashboard() {
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Visible study materials in the library</p>
                 </div>
                 <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">{recentDocumentCount}</span>
+              </div>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Syllabus requests</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Uploads waiting for note preparation</p>
+                </div>
+                <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">{syllabusRequestCount}</span>
               </div>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">

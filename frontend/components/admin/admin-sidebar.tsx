@@ -1,4 +1,4 @@
-import { FileText, FolderKanban, LayoutDashboard, ShieldAlert, ShieldCheck, Sparkles, SquarePen, Upload, Users } from "lucide-react";
+import { FileText, FolderKanban, LayoutDashboard, Send, ShieldAlert, ShieldCheck, Sparkles, SquarePen, Upload, Users } from "lucide-react";
 
 const items = [
   { label: "Dashboard", value: "dashboard", icon: LayoutDashboard },
@@ -8,6 +8,7 @@ const items = [
   { label: "Mock Tests", value: "mock-tests", icon: Sparkles },
   { label: "Mock Test Editor", value: "mock-test-editor", icon: SquarePen },
   { label: "Approvals", value: "teacher-approvals", icon: ShieldCheck },
+  { label: "Syllabus Requests", value: "syllabus-requests", icon: Send },
   { label: "Community Reports", value: "community-reports", icon: ShieldAlert },
   { label: "User Management", value: "users", icon: Users },
   { label: "User Editor", value: "user-editor", icon: SquarePen }
