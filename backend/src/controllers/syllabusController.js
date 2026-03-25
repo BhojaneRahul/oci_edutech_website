@@ -53,7 +53,7 @@ export const generateSyllabusNotes = asyncHandler(async (req, res) => {
       throw new Error("We could not extract readable text from this syllabus PDF.");
     }
 
-    const structuredNotes = buildStructuredNotes({
+    const structuredNotes = await buildStructuredNotes({
       extractedText,
       subject,
       course,

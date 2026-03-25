@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import PDFDocument from "pdfkit";
 import { PDFParse } from "pdf-parse";
+import OpenAI from "openai";
 import { syllabusGeneratedDir } from "../middleware/uploadMiddleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -77,6 +78,38 @@ const chunk = (items, size) => {
     groups.push(items.slice(index, index + size));
   }
   return groups;
+};
+
+const getAiClient = () => {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  });
+};
+
+const toJsonString = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return JSON.stringify(value);
+};
+
+const extractJsonBlock = (value) => {
+  const text = value.trim();
+  const fencedMatch = text.match(/```json\s*([\s\S]*?)```/i) || text.match(/```\s*([\s\S]*?)```/i);
+  if (fencedMatch?.[1]) {
+    return fencedMatch[1].trim();
+  }
+
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return text.slice(firstBrace, lastBrace + 1);
+  }
+
+  return text;
 };
 
 export const extractTextFromSyllabusPdf = async (filePath) => {
@@ -181,7 +214,7 @@ const extractUnits = (text, manualTopics = []) => {
   }));
 };
 
-export const buildStructuredNotes = ({
+const buildStructuredNotesFallback = ({
   extractedText,
   subject,
   course,
@@ -214,6 +247,122 @@ export const buildStructuredNotes = ({
     likelyQuestions
   };
 };
+
+const normalizeStructuredNotes = (rawNotes, fallbackInput) => {
+  const fallback = buildStructuredNotesFallback(fallbackInput);
+  const notes = rawNotes && typeof rawNotes === "object" ? rawNotes : {};
+
+  const normalizedUnits = Array.isArray(notes.units)
+    ? notes.units
+        .map((unit) => ({
+          title: String(unit?.title || "").trim(),
+          points: Array.isArray(unit?.points)
+            ? unit.points.map((point) => String(point || "").trim()).filter(Boolean).slice(0, 6)
+            : []
+        }))
+        .filter((unit) => unit.title && unit.points.length)
+        .slice(0, 8)
+    : [];
+
+  return {
+    title: String(notes.title || fallback.title).trim() || fallback.title,
+    overview: String(notes.overview || fallback.overview).trim() || fallback.overview,
+    units: normalizedUnits.length ? normalizedUnits : fallback.units,
+    keywords:
+      Array.isArray(notes.keywords) && notes.keywords.length
+        ? dedupe(notes.keywords.map((keyword) => String(keyword || "").trim())).slice(0, 10)
+        : fallback.keywords,
+    revisionChecklist:
+      Array.isArray(notes.revisionChecklist) && notes.revisionChecklist.length
+        ? dedupe(notes.revisionChecklist.map((item) => String(item || "").trim())).slice(0, 8)
+        : fallback.revisionChecklist,
+    likelyQuestions:
+      Array.isArray(notes.likelyQuestions) && notes.likelyQuestions.length
+        ? dedupe(notes.likelyQuestions.map((item) => String(item || "").trim())).slice(0, 8)
+        : fallback.likelyQuestions
+  };
+};
+
+const buildStructuredNotesWithAi = async ({
+  extractedText,
+  subject,
+  course,
+  semester,
+  outputType,
+  manualTopics = [],
+  sourceFileName
+}) => {
+  const client = getAiClient();
+  if (!client) {
+    return buildStructuredNotesFallback({
+      extractedText,
+      subject,
+      course,
+      semester,
+      outputType,
+      manualTopics,
+      sourceFileName
+    });
+  }
+
+  const trimmedSyllabus = extractedText.replace(/\s+/g, " ").trim().slice(0, 24000);
+  const manualTopicText = manualTopics.length ? manualTopics.join(", ") : "No manual topic hints provided.";
+  const outputLabel = outputType.replace(/_/g, " ");
+  const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+
+  try {
+    const response = await client.responses.create({
+      model,
+      input: [
+        {
+          role: "system",
+          content: [
+            {
+              type: "input_text",
+              text:
+                "You are an academic content generator for a study platform. Read syllabus text carefully and return only valid JSON with keys: title, overview, units, keywords, revisionChecklist, likelyQuestions. Keep the content accurate to the provided syllabus, cover as many meaningful points as possible, and make the notes practical, exam-oriented, and student-friendly. Each unit should have a concise title and 3 to 6 bullet points. Do not include markdown fences."
+            }
+          ]
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `Create ${outputLabel} from this syllabus.\nSubject: ${subject || "Not provided"}\nCourse: ${course || "Not provided"}\nSemester: ${semester || "Not provided"}\nManual topics: ${manualTopicText}\nSource file: ${sourceFileName}\n\nSyllabus text:\n${trimmedSyllabus}`
+            }
+          ]
+        }
+      ]
+    });
+
+    const outputText = extractJsonBlock(toJsonString(response.output_text));
+    const parsedNotes = JSON.parse(outputText);
+
+    return normalizeStructuredNotes(parsedNotes, {
+      extractedText,
+      subject,
+      course,
+      semester,
+      outputType,
+      manualTopics,
+      sourceFileName
+    });
+  } catch (error) {
+    console.error("AI syllabus generation failed, falling back to heuristic generation:", error);
+    return buildStructuredNotesFallback({
+      extractedText,
+      subject,
+      course,
+      semester,
+      outputType,
+      manualTopics,
+      sourceFileName
+    });
+  }
+};
+
+export const buildStructuredNotes = async (input) => buildStructuredNotesWithAi(input);
 
 const ensureParentDir = async (filePath) => {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
