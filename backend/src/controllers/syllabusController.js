@@ -22,7 +22,7 @@ const normalizeGeneration = (generation) => ({
 export const generateSyllabusNotes = asyncHandler(async (req, res) => {
   if (!req.file) {
     res.status(400);
-    throw new Error("Syllabus PDF is required");
+    throw new Error("Syllabus PDF or image is required");
   }
 
   const subject = String(req.body.subject || "").trim();
@@ -46,12 +46,7 @@ export const generateSyllabusNotes = asyncHandler(async (req, res) => {
   let generatedPdfUrl = null;
 
   try {
-    const extractedText = await extractTextFromSyllabusPdf(req.file.path);
-
-    if (!extractedText.trim()) {
-      res.status(400);
-      throw new Error("We could not extract readable text from this syllabus PDF.");
-    }
+    const extractedText = req.file.mimetype === "application/pdf" ? await extractTextFromSyllabusPdf(req.file.path) : "";
 
     const structuredNotes = await buildStructuredNotes({
       extractedText,
@@ -60,7 +55,9 @@ export const generateSyllabusNotes = asyncHandler(async (req, res) => {
       semester,
       outputType,
       manualTopics,
-      sourceFileName: req.file.originalname
+      sourceFileName: req.file.originalname,
+      sourceFilePath: req.file.path,
+      sourceMimeType: req.file.mimetype
     });
 
     const generatedPdf = await generateStructuredPdf({

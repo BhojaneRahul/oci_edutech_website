@@ -187,10 +187,12 @@ const syllabusStorage = multer.diskStorage({
 });
 
 const syllabusFilter = (req, file, cb) => {
-  const isPdf = file.mimetype === "application/pdf" || file.originalname.toLowerCase().endsWith(".pdf");
+  const lowerName = file.originalname.toLowerCase();
+  const isPdf = file.mimetype === "application/pdf" || lowerName.endsWith(".pdf");
+  const isImage = ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype);
 
-  if (!isPdf) {
-    cb(new Error("Only PDF syllabus files are allowed"));
+  if (!isPdf && !isImage) {
+    cb(new Error("Only PDF, JPG, PNG, or WEBP syllabus files are allowed"));
     return;
   }
 

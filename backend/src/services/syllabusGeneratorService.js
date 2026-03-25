@@ -112,6 +112,87 @@ const extractJsonBlock = (value) => {
   return text;
 };
 
+const getMimeTypeFromPath = (filePath) => {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === ".pdf") return "application/pdf";
+  if (ext === ".png") return "image/png";
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".webp") return "image/webp";
+  return "application/octet-stream";
+};
+
+const buildAiInputContent = async ({
+  extractedText,
+  subject,
+  course,
+  semester,
+  outputType,
+  manualTopics,
+  sourceFileName,
+  sourceFilePath,
+  sourceMimeType
+}) => {
+  const manualTopicText = manualTopics.length ? manualTopics.join(", ") : "No manual topic hints provided.";
+  const outputLabel = outputType.replace(/_/g, " ");
+  const trimmedSyllabus = extractedText.replace(/\s+/g, " ").trim().slice(0, 32000);
+  const textPrompt = [
+    `Create a high-quality ${outputLabel} study pack from this uploaded syllabus.`,
+    `Subject: ${subject || "Not provided"}`,
+    `Course: ${course || "Not provided"}`,
+    `Semester: ${semester || "Not provided"}`,
+    `Manual topics: ${manualTopicText}`,
+    `Source file: ${sourceFileName}`,
+    "",
+    "Use the uploaded file as the primary source of truth. Read every visible point, heading, topic, unit, outcome, and instruction from it before generating the notes.",
+    "If extracted text is incomplete, recover as much as possible from the visual file itself.",
+    "",
+    "Extracted text (may be partial for scanned PDFs/images):",
+    trimmedSyllabus || "No reliable plain text was extracted."
+  ].join("\n");
+
+  const content = [
+    {
+      type: "input_text",
+      text: textPrompt
+    }
+  ];
+
+  if (!sourceFilePath) {
+    return { content, uploadedFileId: null };
+  }
+
+  const mimeType = sourceMimeType || getMimeTypeFromPath(sourceFilePath);
+  const client = getAiClient();
+  if (!client) {
+    return { content, uploadedFileId: null };
+  }
+
+  const uploadedFile = await client.files.create({
+    file: fsSync.createReadStream(sourceFilePath),
+    purpose: "user_data"
+  });
+
+  await client.files.waitForProcessing(uploadedFile.id, {
+    pollInterval: 1000,
+    maxWait: 60 * 1000
+  });
+
+  if (mimeType === "application/pdf") {
+    content.push({
+      type: "input_file",
+      file_id: uploadedFile.id
+    });
+  } else if (mimeType.startsWith("image/")) {
+    content.push({
+      type: "input_image",
+      file_id: uploadedFile.id,
+      detail: "high"
+    });
+  }
+
+  return { content, uploadedFileId: uploadedFile.id };
+};
+
 export const extractTextFromSyllabusPdf = async (filePath) => {
   const buffer = await fs.readFile(filePath);
   const parser = new PDFParse({ data: buffer });
@@ -283,6 +364,8 @@ const normalizeStructuredNotes = (rawNotes, fallbackInput) => {
   };
 };
 
+const hasEnoughExtractedTextForFallback = (value) => value.replace(/\s+/g, " ").trim().length >= 250;
+
 const buildStructuredNotesWithAi = async ({
   extractedText,
   subject,
@@ -290,10 +373,19 @@ const buildStructuredNotesWithAi = async ({
   semester,
   outputType,
   manualTopics = [],
-  sourceFileName
+  sourceFileName,
+  sourceFilePath,
+  sourceMimeType
 }) => {
   const client = getAiClient();
+  const extractedTextStrongEnough = hasEnoughExtractedTextForFallback(extractedText);
   if (!client) {
+    if (!extractedTextStrongEnough) {
+      throw new Error(
+        "This syllabus looks like a scanned PDF or image. A working OpenAI key with available quota is required to extract it correctly."
+      );
+    }
+
     return buildStructuredNotesFallback({
       extractedText,
       subject,
@@ -305,14 +397,31 @@ const buildStructuredNotesWithAi = async ({
     });
   }
 
-  const trimmedSyllabus = extractedText.replace(/\s+/g, " ").trim().slice(0, 24000);
-  const manualTopicText = manualTopics.length ? manualTopics.join(", ") : "No manual topic hints provided.";
   const outputLabel = outputType.replace(/_/g, " ");
-  const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+  const model =
+    sourceMimeType === "application/pdf" || sourceMimeType?.startsWith("image/")
+      ? process.env.OPENAI_VISION_MODEL || "gpt-4o-mini"
+      : process.env.OPENAI_MODEL || "gpt-4o-mini";
+  let uploadedFileId = null;
 
   try {
+    const buildResult = await buildAiInputContent({
+      extractedText,
+      subject,
+      course,
+      semester,
+      outputType,
+      manualTopics,
+      sourceFileName,
+      sourceFilePath,
+      sourceMimeType
+    });
+    const aiContent = buildResult.content;
+    uploadedFileId = buildResult.uploadedFileId;
+
     const response = await client.responses.create({
       model,
+      temperature: 0.3,
       input: [
         {
           role: "system",
@@ -320,21 +429,20 @@ const buildStructuredNotesWithAi = async ({
             {
               type: "input_text",
               text:
-                "You are an academic content generator for a study platform. Read syllabus text carefully and return only valid JSON with keys: title, overview, units, keywords, revisionChecklist, likelyQuestions. Keep the content accurate to the provided syllabus, cover as many meaningful points as possible, and make the notes practical, exam-oriented, and student-friendly. Each unit should have a concise title and 3 to 6 bullet points. Do not include markdown fences."
+                "You are an academic content generator for a study platform. Study the uploaded syllabus carefully and return only valid JSON with keys: title, overview, units, keywords, revisionChecklist, likelyQuestions. Cover every meaningful point from the syllabus. Build an exam-oriented study pack, not a generic summary. Each unit should have a concise title and 4 to 8 specific bullet points based on the actual syllabus content. Keywords should be useful revision terms. Revision checklist should be actionable. Likely questions should be realistic university exam questions. Do not include markdown fences or explanation outside JSON."
             }
           ]
         },
         {
           role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: `Create ${outputLabel} from this syllabus.\nSubject: ${subject || "Not provided"}\nCourse: ${course || "Not provided"}\nSemester: ${semester || "Not provided"}\nManual topics: ${manualTopicText}\nSource file: ${sourceFileName}\n\nSyllabus text:\n${trimmedSyllabus}`
-            }
-          ]
+          content: aiContent
         }
       ]
     });
+
+    if (uploadedFileId) {
+      await client.files.delete(uploadedFileId).catch(() => undefined);
+    }
 
     const outputText = extractJsonBlock(toJsonString(response.output_text));
     const parsedNotes = JSON.parse(outputText);
@@ -349,6 +457,22 @@ const buildStructuredNotesWithAi = async ({
       sourceFileName
     });
   } catch (error) {
+    if (uploadedFileId) {
+      await client.files.delete(uploadedFileId).catch(() => undefined);
+    }
+
+    if (!extractedTextStrongEnough) {
+      if (error?.status === 429 || error?.code === "insufficient_quota") {
+        throw new Error(
+          "OpenAI quota is exhausted for syllabus generation. Please check billing/quota, then try the scanned PDF or image again."
+        );
+      }
+
+      throw new Error(
+        "We could not extract this scanned PDF/image with AI right now. Please check the OpenAI key/model setup and try again."
+      );
+    }
+
     console.error("AI syllabus generation failed, falling back to heuristic generation:", error);
     return buildStructuredNotesFallback({
       extractedText,

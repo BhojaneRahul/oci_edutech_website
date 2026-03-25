@@ -216,14 +216,15 @@ export function SyllabusGeneratorClient() {
                 <label className="mt-3 flex cursor-pointer flex-col items-center justify-center rounded-[24px] border border-dashed border-slate-300 bg-white px-5 py-8 text-center transition hover:border-amber-300 hover:bg-amber-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-400/30 dark:hover:bg-amber-500/5">
                   <FileUp className="h-7 w-7 text-amber-500" />
                   <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">
-                    {selectedFile ? selectedFile.name : "Choose syllabus PDF"}
+                    {selectedFile ? selectedFile.name : "Choose syllabus PDF or image"}
                   </p>
                   <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                    PDF only. The uploaded syllabus and generated notes are automatically deleted after 24 hours.
+                    PDF, JPG, PNG, or WEBP. The uploaded syllabus and generated notes are automatically deleted after 24
+                    hours.
                   </p>
                   <input
                     type="file"
-                    accept="application/pdf"
+                    accept="application/pdf,image/png,image/jpeg,image/webp"
                     className="hidden"
                     onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
                   />
@@ -313,11 +314,11 @@ export function SyllabusGeneratorClient() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900 sm:p-7">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-600">Generated preview</p>
-              <h2 className="mt-3 text-[1.2rem] font-semibold tracking-tight text-slate-950 sm:text-[1.35rem] dark:text-white">
+              <h2 className="mt-3 text-[1.05rem] font-semibold tracking-tight text-slate-950 sm:text-[1.2rem] dark:text-white">
                 {visibleGeneration ? visibleGeneration.title : "Your generated notes will appear here"}
               </h2>
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
@@ -394,9 +395,9 @@ export function SyllabusGeneratorClient() {
           )}
         </div>
 
-        <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900 sm:p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-600">Recent generations</p>
-          <h2 className="mt-3 text-[1.2rem] font-semibold tracking-tight text-slate-950 sm:text-[1.35rem] dark:text-white">
+          <h2 className="mt-3 text-[1.05rem] font-semibold tracking-tight text-slate-950 sm:text-[1.2rem] dark:text-white">
             Your latest syllabus-to-notes outputs
           </h2>
 
