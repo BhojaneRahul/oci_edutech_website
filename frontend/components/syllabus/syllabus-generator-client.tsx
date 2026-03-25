@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { ExternalLink, FileUp, Loader2, Send } from "lucide-react";
+import { ArrowUpRight, ExternalLink, FileUp, Loader2, Send } from "lucide-react";
 import { api } from "@/lib/api";
 import type { SyllabusGeneration } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
