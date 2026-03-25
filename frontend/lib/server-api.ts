@@ -22,5 +22,6 @@ export const serverApi = {
   getProjects: () => getJson<Project[]>("/projects"),
   getProjectById: (id: string) => getJson<Project>(`/project/${id}`),
   getDocuments: () => getJson<Document[]>("/documents"),
-  getDocumentsByStream: (stream: string) => getJson<Document[]>(`/documents?stream=${encodeURIComponent(stream)}`)
+  getDocumentsByStream: (stream: string) => getJson<Document[]>(`/documents?stream=${encodeURIComponent(stream)}`),
+  getTeacherNotes: () => getJson<Document[]>("/documents/teacher-notes")
 };

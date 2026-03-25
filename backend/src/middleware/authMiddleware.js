@@ -57,3 +57,12 @@ export const adminOnly = (req, res, next) => {
 
   next();
 };
+
+export const verifiedTeacherOnly = (req, res, next) => {
+  if (!req.user?.verifiedTeacher || req.user?.role !== USER_ROLES.TEACHER) {
+    res.status(403);
+    throw new Error("Verified teacher access required");
+  }
+
+  next();
+};

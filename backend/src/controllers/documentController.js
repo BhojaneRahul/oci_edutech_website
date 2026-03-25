@@ -9,7 +9,13 @@ export const normalizeDocument = (document) => ({
   ...withMongoStyleId(document),
   canDownload: document.type === "model_qp",
   viewCount: document.viewCount ?? 0,
-  downloadCount: document.downloadCount ?? 0
+  downloadCount: document.downloadCount ?? 0,
+  uploader: document.uploader
+    ? {
+        ...document.uploader,
+        verifiedTeacher: Boolean(document.uploader.verifiedTeacher)
+      }
+    : undefined
 });
 
 export const getDocuments = asyncHandler(async (req, res) => {
@@ -25,6 +31,44 @@ export const getDocuments = asyncHandler(async (req, res) => {
 
   const documents = await prisma.document.findMany({
     where,
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(documents.map(normalizeDocument));
+});
+
+export const getTeacherNotes = asyncHandler(async (req, res) => {
+  const where = {
+    type: "notes",
+    uploader: {
+      verifiedTeacher: true
+    }
+  };
+
+  if (req.query.stream) {
+    where.stream = String(req.query.stream);
+  }
+
+  if (req.query.subject) {
+    where.subject = {
+      contains: String(req.query.subject),
+      mode: "insensitive"
+    };
+  }
+
+  const documents = await prisma.document.findMany({
+    where,
+    include: {
+      uploader: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          verifiedTeacher: true
+        }
+      }
+    },
     orderBy: { createdAt: "desc" }
   });
 
@@ -147,6 +191,50 @@ export const uploadDocument = asyncHandler(async (req, res) => {
   });
 });
 
+export const uploadTeacherNote = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    res.status(400);
+    throw new Error("PDF file is required");
+  }
+
+  const { title, subject, stream } = req.body;
+
+  if (!title || !subject || !stream) {
+    res.status(400);
+    throw new Error("Title, subject, and stream are required");
+  }
+
+  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/pdfs/${req.file.filename}`;
+
+  const createdDocument = await prisma.document.create({
+    data: {
+      title,
+      subject,
+      stream,
+      type: "notes",
+      fileUrl,
+      uploadedBy: req.user.id
+    },
+    include: {
+      uploader: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          verifiedTeacher: true
+        }
+      }
+    }
+  });
+
+  res.status(201).json({
+    success: true,
+    message: "Teacher note uploaded successfully.",
+    document: normalizeDocument(createdDocument)
+  });
+});
+
 export const updateDocument = asyncHandler(async (req, res) => {
   const documentId = Number(req.params.id);
   const existingDocument = await prisma.document.findUnique({
@@ -208,6 +296,54 @@ export const deleteDocument = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: "Document deleted successfully"
+  });
+});
+
+export const deleteTeacherNote = asyncHandler(async (req, res) => {
+  const documentId = Number(req.params.id);
+  const existingDocument = await prisma.document.findUnique({
+    where: { id: documentId },
+    include: {
+      uploader: {
+        select: {
+          id: true,
+          verifiedTeacher: true
+        }
+      }
+    }
+  });
+
+  if (!existingDocument || existingDocument.type !== "notes" || !existingDocument.uploader?.verifiedTeacher) {
+    res.status(404);
+    throw new Error("Teacher note not found");
+  }
+
+  const canDelete = req.user.role === "admin" || existingDocument.uploadedBy === req.user.id;
+
+  if (!canDelete) {
+    res.status(403);
+    throw new Error("You can only delete your own teacher notes");
+  }
+
+  await prisma.document.delete({
+    where: { id: documentId }
+  });
+
+  try {
+    const filename = String(existingDocument.fileUrl).split("/uploads/pdfs/")[1];
+    if (filename) {
+      const filePath = path.resolve(process.cwd(), "backend", "uploads", "pdfs", filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+  } catch {
+    // Keep the database delete successful even if file cleanup fails.
+  }
+
+  res.json({
+    success: true,
+    message: "Teacher note deleted successfully"
   });
 });
 

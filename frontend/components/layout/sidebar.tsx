@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
+  BookText,
   ChevronRight,
   ScrollText,
   MessagesSquare,
@@ -36,6 +37,7 @@ const items = [
   { href: "/community", label: "Community", icon: MessagesSquare },
   { href: "/mock-tests", label: "Mock Tests", icon: ListChecks },
   { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/teacher-notes", label: "Teacher Notes", icon: BookText },
   { href: "/syllabus-to-notes", label: "Syllabus Upload", icon: ScrollText }
 ];
 

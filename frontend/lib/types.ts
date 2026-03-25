@@ -154,6 +154,8 @@ export type Document = {
     id: number;
     name: string | null;
     email: string;
+    profilePhoto?: string | null;
+    verifiedTeacher?: boolean;
   };
 };
 

@@ -3,7 +3,7 @@ import { HeroSection } from "@/components/sections/hero-section";
 import { SavedDocumentsSection } from "@/components/sections/saved-documents-section";
 import { RecentContentSection } from "@/components/sections/recent-content-section";
 import { HomeStatsSection } from "@/components/sections/home-stats-section";
-import { SyllabusGeneratorSection } from "@/components/sections/syllabus-generator-section";
+import { TeacherNotesPromoSection } from "@/components/sections/teacher-notes-promo-section";
 import { ReviewsSection } from "@/components/sections/reviews-section";
 import { SectionHeading } from "@/components/sections/section-heading";
 import { DegreeCard } from "@/components/cards/degree-card";
@@ -22,7 +22,7 @@ export default async function HomePage() {
     <DashboardShell>
       <div className="space-y-10">
         <HeroSection />
-        <SyllabusGeneratorSection />
+        <TeacherNotesPromoSection />
         <SavedDocumentsSection />
         <RecentContentSection documents={documents} projects={projects} mockTests={mockTests} />
         <section>
