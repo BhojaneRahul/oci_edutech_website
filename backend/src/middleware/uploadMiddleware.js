@@ -10,12 +10,16 @@ const avatarDir = path.resolve(__dirname, "../../uploads/avatars");
 const teacherIdDir = path.resolve(__dirname, "../../uploads/teacher-ids");
 const projectDir = path.resolve(__dirname, "../../uploads/projects");
 const communityChatDir = path.resolve(__dirname, "../../uploads/community-chat");
+const syllabusSourceDir = path.resolve(__dirname, "../../uploads/syllabus-source");
+const syllabusGeneratedDir = path.resolve(__dirname, "../../uploads/syllabus-generated");
 
 fs.mkdirSync(uploadDir, { recursive: true });
 fs.mkdirSync(avatarDir, { recursive: true });
 fs.mkdirSync(teacherIdDir, { recursive: true });
 fs.mkdirSync(projectDir, { recursive: true });
 fs.mkdirSync(communityChatDir, { recursive: true });
+fs.mkdirSync(syllabusSourceDir, { recursive: true });
+fs.mkdirSync(syllabusGeneratedDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
@@ -173,3 +177,32 @@ export const uploadCommunityChatFile = multer({
     fileSize: 25 * 1024 * 1024
   }
 });
+
+const syllabusStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, syllabusSourceDir),
+  filename: (req, file, cb) => {
+    const safeName = file.originalname.replace(/\s+/g, "-").toLowerCase();
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}-${safeName}`);
+  }
+});
+
+const syllabusFilter = (req, file, cb) => {
+  const isPdf = file.mimetype === "application/pdf" || file.originalname.toLowerCase().endsWith(".pdf");
+
+  if (!isPdf) {
+    cb(new Error("Only PDF syllabus files are allowed"));
+    return;
+  }
+
+  cb(null, true);
+};
+
+export const uploadSyllabusPdf = multer({
+  storage: syllabusStorage,
+  fileFilter: syllabusFilter,
+  limits: {
+    fileSize: 50 * 1024 * 1024
+  }
+});
+
+export { syllabusSourceDir, syllabusGeneratedDir };

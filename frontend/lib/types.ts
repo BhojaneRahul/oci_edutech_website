@@ -334,3 +334,35 @@ export type CommunityMessagesResponse = {
   };
 };
 
+export type SyllabusOutputType = "smart_notes" | "unit_summary" | "question_bank" | "study_plan";
+
+export type SyllabusStructuredContent = {
+  title: string;
+  overview: string;
+  units: {
+    title: string;
+    points: string[];
+  }[];
+  keywords: string[];
+  revisionChecklist: string[];
+  likelyQuestions: string[];
+};
+
+export type SyllabusGeneration = {
+  _id: number;
+  userId: number;
+  title: string;
+  subject: string;
+  course?: string | null;
+  semester?: string | null;
+  outputType: SyllabusOutputType;
+  sourceFileUrl: string;
+  sourceFileName: string;
+  generatedPdfUrl: string;
+  extractedText: string;
+  structuredContent: SyllabusStructuredContent;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+

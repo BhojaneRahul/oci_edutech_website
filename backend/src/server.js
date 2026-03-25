@@ -21,10 +21,12 @@ import searchRoutes from "./routes/searchRoutes.js";
 import gamificationRoutes from "./routes/gamificationRoutes.js";
 import communityRoutes from "./routes/communityRoutes.js";
 import siteStatsRoutes from "./routes/siteStatsRoutes.js";
+import syllabusRoutes from "./routes/syllabusRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import passport from "./config/passport.js";
 import { initSocket } from "./config/socket.js";
 import { startCommunityCleanupJob } from "./jobs/communityCleanupJob.js";
+import { startSyllabusCleanupJob } from "./jobs/syllabusCleanupJob.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -97,6 +99,7 @@ app.use("/api/search", searchRoutes);
 app.use("/api/gamification", gamificationRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/site", siteStatsRoutes);
+app.use("/api/syllabus", syllabusRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -104,6 +107,7 @@ app.use(errorHandler);
 const port = process.env.PORT || 5000;
 initSocket(server);
 startCommunityCleanupJob();
+startSyllabusCleanupJob();
 server.listen(port, () => {
   console.log(`Backend running on port ${port}`);
 });

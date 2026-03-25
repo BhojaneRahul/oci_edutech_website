@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import {
+  BookOpen,
   ChevronRight,
   MessagesSquare,
   FolderKanban,
@@ -14,10 +15,10 @@ import {
   Settings2,
   ShieldAlert,
   ShieldQuestion,
-  School2,
   Sparkles,
   Trash2,
   X,
+  Send,
   Youtube
 } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -29,7 +30,7 @@ import { useAuth } from "../providers/auth-provider";
 
 const items = [
   { href: "/", label: "Home", icon: House },
-  { href: "/puc", label: "PUC", icon: School2 },
+  { href: "/puc", label: "PUC", icon: BookOpen },
   { href: "/degree", label: "Degree", icon: GraduationCap },
   { href: "/community", label: "Community", icon: MessagesSquare },
   { href: "/mock-tests", label: "Mock Tests", icon: ListChecks },
@@ -37,9 +38,9 @@ const items = [
 ];
 
 const socialLinks = [
-  { href: "https://www.youtube.com/@ocistudyresources", label: "YouTube Channel", icon: Youtube },
-  { href: "https://www.ourcreativeinfo.in/", label: "Official Website", icon: Globe },
-  { href: "https://t.me/oci_studio", label: "Telegram Join", icon: Sparkles }
+  { href: "https://www.youtube.com/@ocistudyresources", label: "YouTube", icon: Youtube },
+  { href: "https://www.ourcreativeinfo.in/", label: "Website", icon: Globe },
+  { href: "https://t.me/oci_studio", label: "Telegram", icon: Send }
 ];
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {

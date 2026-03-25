@@ -71,6 +71,13 @@ enum ReportReason {
   inappropriate
 }
 
+enum SyllabusOutputType {
+  smart_notes
+  unit_summary
+  question_bank
+  study_plan
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   name         String?  @db.VarChar(100)
@@ -109,6 +116,7 @@ model User {
   muteSettings  UserMuteSetting[]
   teacherVerifications TeacherVerification[]
   testAttempts  TestAttempt[]
+  syllabusGenerations SyllabusGeneration[]
 
   @@map("users")
 }
@@ -533,5 +541,28 @@ model UserActivity {
   @@index([userId, type, createdAt])
   @@index([userId, documentId])
   @@map("user_activity")
+}
+
+model SyllabusGeneration {
+  id             Int                @id @default(autoincrement())
+  userId         Int                @map("user_id")
+  title          String             @db.VarChar(255)
+  subject        String             @db.VarChar(255)
+  course         String?            @db.VarChar(120)
+  semester       String?            @db.VarChar(50)
+  outputType     SyllabusOutputType @map("output_type")
+  sourceFileUrl  String             @map("source_file_url") @db.VarChar(255)
+  sourceFileName String             @map("source_file_name") @db.VarChar(255)
+  generatedPdfUrl String            @map("generated_pdf_url") @db.VarChar(255)
+  extractedText  String             @map("extracted_text") @db.LongText
+  structuredContent Json            @map("structured_content")
+  expiresAt      DateTime           @map("expires_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+  @@map("syllabus_generations")
 }
 
