@@ -4,8 +4,8 @@ import { SavedDocumentsSection } from "@/components/sections/saved-documents-sec
 import { RecentContentSection } from "@/components/sections/recent-content-section";
 import { HomeStatsSection } from "@/components/sections/home-stats-section";
 import { SyllabusGeneratorSection } from "@/components/sections/syllabus-generator-section";
+import { ReviewsSection } from "@/components/sections/reviews-section";
 import { SectionHeading } from "@/components/sections/section-heading";
-import { TestimonialsSection } from "@/components/sections/testimonials-section";
 import { DegreeCard } from "@/components/cards/degree-card";
 import { serverApi } from "@/lib/server-api";
 import { Download, Play, Smartphone, Youtube } from "lucide-react";
@@ -134,7 +134,7 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-        <TestimonialsSection />
+        <ReviewsSection />
       </div>
     </DashboardShell>
   );
