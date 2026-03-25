@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import PDFDocument from "pdfkit";
 import { PDFParse } from "pdf-parse";
+import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import { syllabusGeneratedDir } from "../middleware/uploadMiddleware.js";
 
@@ -90,6 +91,16 @@ const getAiClient = () => {
   });
 };
 
+const getGeminiClient = () => {
+  if (!process.env.GEMINI_API_KEY) {
+    return null;
+  }
+
+  return new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY
+  });
+};
+
 const toJsonString = (value) => {
   if (!value) return "";
   if (typeof value === "string") return value;
@@ -119,6 +130,43 @@ const getMimeTypeFromPath = (filePath) => {
   if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
   if (ext === ".webp") return "image/webp";
   return "application/octet-stream";
+};
+
+const extractGeminiText = (response) => {
+  if (typeof response?.text === "string" && response.text.trim()) {
+    return response.text.trim();
+  }
+
+  const candidates = Array.isArray(response?.candidates) ? response.candidates : [];
+  for (const candidate of candidates) {
+    const parts = Array.isArray(candidate?.content?.parts) ? candidate.content.parts : [];
+    const text = parts
+      .map((part) => (typeof part?.text === "string" ? part.text : ""))
+      .join("\n")
+      .trim();
+    if (text) {
+      return text;
+    }
+  }
+
+  return "";
+};
+
+const waitForGeminiFileActive = async (client, uploadedFileName) => {
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    const current = await client.files.get({ name: uploadedFileName });
+    if (current?.state === "ACTIVE") {
+      return current;
+    }
+
+    if (current?.state && current.state !== "PROCESSING") {
+      throw new Error(`Gemini file processing failed with state: ${current.state}`);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+  }
+
+  throw new Error("Gemini file processing timed out.");
 };
 
 const buildAiInputContent = async ({
@@ -191,6 +239,84 @@ const buildAiInputContent = async ({
   }
 
   return { content, uploadedFileId: uploadedFile.id };
+};
+
+const buildStructuredNotesWithGemini = async ({
+  extractedText,
+  subject,
+  course,
+  semester,
+  outputType,
+  manualTopics = [],
+  sourceFileName,
+  sourceFilePath,
+  sourceMimeType
+}) => {
+  const client = getGeminiClient();
+  if (!client) {
+    return null;
+  }
+
+  const outputLabel = outputType.replace(/_/g, " ");
+  const manualTopicText = manualTopics.length ? manualTopics.join(", ") : "No manual topic hints provided.";
+  const trimmedSyllabus = extractedText.replace(/\s+/g, " ").trim().slice(0, 32000);
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const prompt = [
+    `Create a high-quality ${outputLabel} study pack from this uploaded syllabus.`,
+    `Subject: ${subject || "Not provided"}`,
+    `Course: ${course || "Not provided"}`,
+    `Semester: ${semester || "Not provided"}`,
+    `Manual topics: ${manualTopicText}`,
+    `Source file: ${sourceFileName}`,
+    "",
+    "Use the uploaded file as the primary source of truth. Read every visible point, heading, topic, unit, outcome, and instruction from it before generating the notes.",
+    "If extracted text is incomplete, recover the missing details from the visual document itself.",
+    "",
+    "Return only valid JSON with keys: title, overview, units, keywords, revisionChecklist, likelyQuestions.",
+    "Each unit should have a concise title and 4 to 8 specific bullet points based on the actual syllabus content.",
+    "Likely questions should feel like realistic university exam questions, not generic placeholders.",
+    "",
+    "Extracted text (may be partial for scanned PDFs/images):",
+    trimmedSyllabus || "No reliable plain text was extracted."
+  ].join("\n");
+
+  let uploadedFile = null;
+
+  try {
+    if (sourceFilePath) {
+      uploadedFile = await client.files.upload({
+        file: sourceFilePath,
+        config: {
+          mimeType: sourceMimeType || getMimeTypeFromPath(sourceFilePath),
+          displayName: sourceFileName
+        }
+      });
+
+      uploadedFile = await waitForGeminiFileActive(client, uploadedFile.name);
+    }
+
+    const contents = uploadedFile ? [uploadedFile, prompt] : [prompt];
+    const response = await client.models.generateContent({
+      model,
+      contents
+    });
+
+    const parsedNotes = JSON.parse(extractJsonBlock(extractGeminiText(response)));
+
+    return normalizeStructuredNotes(parsedNotes, {
+      extractedText,
+      subject,
+      course,
+      semester,
+      outputType,
+      manualTopics,
+      sourceFileName
+    });
+  } finally {
+    if (uploadedFile?.name) {
+      await client.files.delete({ name: uploadedFile.name }).catch(() => undefined);
+    }
+  }
 };
 
 export const extractTextFromSyllabusPdf = async (filePath) => {
@@ -377,12 +503,43 @@ const buildStructuredNotesWithAi = async ({
   sourceFilePath,
   sourceMimeType
 }) => {
-  const client = getAiClient();
   const extractedTextStrongEnough = hasEnoughExtractedTextForFallback(extractedText);
+
+  if (getGeminiClient()) {
+    try {
+      return await buildStructuredNotesWithGemini({
+        extractedText,
+        subject,
+        course,
+        semester,
+        outputType,
+        manualTopics,
+        sourceFileName,
+        sourceFilePath,
+        sourceMimeType
+      });
+    } catch (error) {
+      if (!extractedTextStrongEnough) {
+        if (error?.status === 429) {
+          throw new Error(
+            "Gemini quota is exhausted for syllabus generation. Please wait for quota reset or reduce requests, then try again."
+          );
+        }
+
+        throw new Error(
+          "We could not extract this scanned PDF/image with Gemini right now. Please check the Gemini key/model setup and try again."
+        );
+      }
+
+      console.error("Gemini syllabus generation failed, trying OpenAI/fallback path:", error);
+    }
+  }
+
+  const client = getAiClient();
   if (!client) {
     if (!extractedTextStrongEnough) {
       throw new Error(
-        "This syllabus looks like a scanned PDF or image. A working OpenAI key with available quota is required to extract it correctly."
+        "This syllabus looks like a scanned PDF or image. Add a working Gemini or OpenAI key with available quota to extract it correctly."
       );
     }
 
