@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, ChevronDown, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud } from "lucide-react";
+import { BadgeCheck, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud } from "lucide-react";
 import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
@@ -395,7 +395,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   };
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 overflow-x-hidden">
       <section className="min-w-0 bg-white dark:bg-slate-950">
         <div className="space-y-5 px-4 pb-8 pt-2 sm:px-6 lg:px-8">
           {uploadMessage ? (
@@ -418,15 +418,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
           <div className="sticky top-20 z-20 -mx-4 border-b border-slate-200 bg-white/95 px-4 pb-4 pt-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">Teacher notes</h1>
-                  <p className="mt-2 max-w-3xl text-sm text-slate-500 dark:text-slate-400">
-                    Teacher notes Search notes by title, subject, teacher, or stream - view approved PDFs.
-                  </p>
-                </div>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div />
                 <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{filteredNotes.length} notes in view</p>
                   {isTeacher ? (
                     <button
                       type="button"
@@ -456,15 +450,14 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   <select
                     value={sortBy}
                     onChange={(event) => setSortBy(event.target.value as (typeof sortOptions)[number]["value"])}
-                    className="h-12 w-full bg-transparent text-sm font-medium text-slate-700 outline-none dark:text-slate-100"
+                    className="h-12 w-full appearance-none bg-transparent text-sm font-medium text-slate-700 outline-none dark:text-slate-100"
                   >
                     {sortOptions.map((option) => (
                       <option key={option.value} value={option.value}>
-                        Sort: {option.label}
+                        {option.label}
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
                 </label>
               </div>
 
@@ -677,7 +670,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             ) : null}
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
 
@@ -719,6 +712,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     <div className="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
                       <p className="line-clamp-1">
                         <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
+                      </p>
+                      <p className="line-clamp-1">
+                        <span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}
                       </p>
                       <p className="line-clamp-1">
                         <span className="font-semibold text-slate-900 dark:text-white">Teacher:</span>{" "}
@@ -773,14 +769,22 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         </div>
 
           {!filteredNotes.length ? (
-            <div className="mt-6 border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-              No teacher notes match your current search or filter. Try another subject or teacher name.
+            <div className="mt-6 flex min-h-[220px] items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-slate-50/70 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="mx-auto max-w-md space-y-2">
+                <p className="text-base font-semibold text-slate-800 dark:text-slate-100">No teacher notes found</p>
+                <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+                  Try another subject, teacher name, or filter to see more approved notes.
+                </p>
+              </div>
             </div>
           ) : null}
 
-          <div className="sticky bottom-4 z-10 mt-8">
-            <div className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
-              <div className="flex min-w-max items-center gap-3 rounded-[22px] border border-slate-200 bg-white/95 p-2 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+          <div className="fixed bottom-4 left-0 right-0 z-30">
+            <div
+              className="overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden sm:px-6 lg:pl-[20rem] lg:pr-8"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              <div className="mx-auto flex min-w-max items-center gap-3 rounded-[22px] border border-slate-200 bg-white/95 p-2 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
                 <button
                   type="button"
                   onClick={() => setActiveTeacher("All")}
@@ -833,6 +837,8 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               </div>
             </div>
           </div>
+
+          <div className="h-24" />
         </div>
       </section>
     </div>
