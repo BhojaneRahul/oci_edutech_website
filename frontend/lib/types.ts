@@ -144,6 +144,7 @@ export type Document = {
   title: string;
   subject: string;
   stream: string;
+  noteCategory?: string | null;
   type: "notes" | "model_qp";
   fileUrl: string;
   createdAt: string;

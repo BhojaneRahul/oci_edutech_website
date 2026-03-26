@@ -24,6 +24,10 @@ const sortOptions = [
 ] as const;
 
 function getTeacherNoteCategory(note: Document) {
+  if (note.noteCategory && categoryOptions.includes(note.noteCategory as (typeof categoryOptions)[number])) {
+    return note.noteCategory;
+  }
+
   const title = `${note.title} ${note.subject}`.toLowerCase();
 
   if (title.includes("question") || title.includes("important question") || title.includes("2 mark") || title.includes("5 mark") || title.includes("10 mark")) {
@@ -63,6 +67,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [stream, setStream] = useState("BCA");
+  const [noteCategory, setNoteCategory] = useState("Full Notes");
   const [editingNoteId, setEditingNoteId] = useState<string | number | null>(null);
   const [activeStream, setActiveStream] = useState("All");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -254,6 +259,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         setTitle("");
         setSubject("");
         setStream("BCA");
+        setNoteCategory("Full Notes");
         setSelectedFile(null);
       }
       setShowUploadForm(true);
@@ -284,6 +290,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       formData.append("title", title);
       formData.append("subject", subject);
       formData.append("stream", stream);
+      formData.append("noteCategory", noteCategory);
       if (selectedFile) {
         formData.append("file", selectedFile);
       }
@@ -304,6 +311,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       setTitle("");
       setSubject("");
       setStream("BCA");
+      setNoteCategory("Full Notes");
       setEditingNoteId(null);
       setSelectedFile(null);
       closeSidePanel();
@@ -328,6 +336,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     setTitle(note.title);
     setSubject(note.subject);
     setStream(note.stream);
+    setNoteCategory(getTeacherNoteCategory(note));
     setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -692,7 +701,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       </section>
 
       {isSidePanelOpen ? (
-        <div className="fixed inset-0 z-40">
+        <div className="fixed inset-x-0 bottom-0 top-[74px] z-40 sm:top-[86px]">
           <button
             type="button"
             aria-label="Close teacher notes panel"
@@ -849,7 +858,18 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       />
                     </label>
 
-                    <label className="block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-slate-50/70 p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900/70">
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note category</span>
+                      <FormSelect
+                        value={noteCategory}
+                        onChange={setNoteCategory}
+                        options={categoryOptions
+                          .filter((option) => option !== "All")
+                          .map((option) => ({ label: option, value: option }))}
+                      />
+                    </label>
+
+                    <label className="block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-slate-50/70 p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900/70 lg:col-span-2">
                       <input
                         ref={fileInputRef}
                         type="file"

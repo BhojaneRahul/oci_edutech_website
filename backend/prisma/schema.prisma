@@ -281,6 +281,7 @@ model Document {
   title      String       @db.VarChar(255)
   subject    String       @db.VarChar(255)
   stream     String       @db.VarChar(50)
+  noteCategory String?    @map("note_category") @db.VarChar(80)
   type       DocumentType
   fileUrl    String       @map("file_url") @db.VarChar(255)
   uploadedBy Int          @map("uploaded_by")

@@ -10,6 +10,7 @@ export const normalizeDocument = (document) => ({
   canDownload: document.type === "model_qp",
   isFeatured: Boolean(document.isFeatured),
   isHidden: Boolean(document.isHidden),
+  noteCategory: document.noteCategory ?? null,
   viewCount: document.viewCount ?? 0,
   downloadCount: document.downloadCount ?? 0,
   uploader: document.uploader
@@ -225,11 +226,11 @@ export const uploadTeacherNote = asyncHandler(async (req, res) => {
     throw new Error("PDF file is required");
   }
 
-  const { title, subject, stream } = req.body;
+  const { title, subject, stream, noteCategory } = req.body;
 
-  if (!title || !subject || !stream) {
+  if (!title || !subject || !stream || !noteCategory) {
     res.status(400);
-    throw new Error("Title, subject, and stream are required");
+    throw new Error("Title, subject, stream, and note category are required");
   }
 
   const fileUrl = `${req.protocol}://${req.get("host")}/uploads/pdfs/${req.file.filename}`;
@@ -239,6 +240,7 @@ export const uploadTeacherNote = asyncHandler(async (req, res) => {
       title,
       subject,
       stream,
+      noteCategory,
       type: "notes",
       fileUrl,
       uploadedBy: req.user.id
@@ -287,7 +289,7 @@ export const updateTeacherNote = asyncHandler(async (req, res) => {
     throw new Error("You can only edit your own teacher notes");
   }
 
-  const { title, subject, stream } = req.body;
+  const { title, subject, stream, noteCategory } = req.body;
 
   const updatedDocument = await prisma.document.update({
     where: { id: documentId },
@@ -295,6 +297,7 @@ export const updateTeacherNote = asyncHandler(async (req, res) => {
       title: title ?? existingDocument.title,
       subject: subject ?? existingDocument.subject,
       stream: stream ?? existingDocument.stream,
+      noteCategory: noteCategory ?? existingDocument.noteCategory,
       fileUrl: req.file ? `${req.protocol}://${req.get("host")}/uploads/pdfs/${req.file.filename}` : existingDocument.fileUrl
     },
     include: {
