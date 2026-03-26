@@ -438,11 +438,11 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           ) : null}
 
           <div
-            className={`sticky top-[72px] z-20 -mx-4 border-b border-slate-200/80 bg-white/95 px-4 pt-4 backdrop-blur transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8 ${
+            className={`sticky top-[72px] z-20 -mx-4 bg-white/95 px-4 pt-4 backdrop-blur transition-all duration-300 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8 ${
               isToolbarPinned ? "shadow-[0_14px_35px_-26px_rgba(15,23,42,0.28)]" : ""
             }`}
           >
-            <div className="flex flex-col gap-4 pb-4">
+            <div className="flex flex-col gap-4 pb-5">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -487,7 +487,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 </label>
               </div>
               <div
-                className="relative z-10 overflow-x-auto overscroll-x-contain px-1 pb-4 pt-1 [&::-webkit-scrollbar]:hidden"
+                className="relative z-10 overflow-x-auto overscroll-x-contain px-1 pb-2 pt-1 [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
                 <div className="flex min-w-max gap-2 lg:min-w-0 lg:justify-center">
@@ -510,7 +510,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 pt-6 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 border-t border-slate-100 pt-8 dark:border-slate-900 lg:grid-cols-2 xl:grid-cols-3">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
             const profilePhotoSrc = getProfilePhotoSrc(note.uploader?.profilePhoto);
