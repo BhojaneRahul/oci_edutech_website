@@ -369,11 +369,6 @@ export const joinCommunityGroup = asyncHandler(async (req, res) => {
       throw new Error("Teachers must submit verification and wait for admin approval before entering community chat");
     }
 
-    if (approvedVerification.communityGroupId !== groupId) {
-      res.status(400);
-      throw new Error(`Your approved teacher access is available in ${approvedVerification.communityGroup?.name || "your assigned community"} only`);
-    }
-
     const teacherUser = await prisma.user.update({
       where: { id: req.user.id },
       data: {
@@ -425,12 +420,16 @@ export const leaveCommunityGroup = asyncHandler(async (req, res) => {
 });
 
 export const submitTeacherVerification = asyncHandler(async (req, res) => {
-  const { fullName, university, subjectExpertise, communityGroupId } = req.body;
-  const groupId = Number(communityGroupId);
+  const { fullName, collegeName, universityBoard, university, subjectExpertise, communityGroupId } = req.body;
+  const availableGroups = await ensureCommunityGroups();
+  const fallbackGroupId = availableGroups[0]?.id ?? null;
+  const requestedGroupId = Number(communityGroupId);
+  const groupId = requestedGroupId || fallbackGroupId;
+  const normalizedUniversity = [collegeName?.trim(), universityBoard?.trim() || university?.trim()].filter(Boolean).join(" | ");
 
-  if (!fullName || !university || !subjectExpertise || !groupId || !req.file) {
+  if (!fullName || !normalizedUniversity || !subjectExpertise || !groupId || !req.file) {
     res.status(400);
-    throw new Error("Full name, university, subject expertise, community, and ID card are required");
+    throw new Error("Full name, college name, university or board, subject expertise, and ID card are required");
   }
 
   const group = await prisma.communityGroup.findUnique({ where: { id: groupId } });
@@ -459,7 +458,7 @@ export const submitTeacherVerification = asyncHandler(async (req, res) => {
         data: {
           communityGroupId: groupId,
           fullName,
-          university,
+          university: normalizedUniversity,
           subjectExpertise,
           idCardUrl,
           status: "pending",
@@ -472,7 +471,7 @@ export const submitTeacherVerification = asyncHandler(async (req, res) => {
           userId: req.user.id,
           communityGroupId: groupId,
           fullName,
-          university,
+          university: normalizedUniversity,
           subjectExpertise,
           idCardUrl,
           status: "pending"

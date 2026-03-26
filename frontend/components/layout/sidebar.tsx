@@ -7,7 +7,7 @@ import {
   BookOpen,
   BookText,
   ChevronRight,
-  ScrollText,
+  FileUp,
   MessagesSquare,
   FolderKanban,
   Globe,
@@ -38,7 +38,7 @@ const items = [
   { href: "/mock-tests", label: "Mock Tests", icon: ListChecks },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/teacher-notes", label: "Teacher Notes", icon: BookText },
-  { href: "/syllabus-to-notes", label: "Syllabus Upload", icon: ScrollText }
+  { href: "/syllabus-to-notes", label: "Syllabus Upload", icon: FileUp }
 ];
 
 const socialLinks = [

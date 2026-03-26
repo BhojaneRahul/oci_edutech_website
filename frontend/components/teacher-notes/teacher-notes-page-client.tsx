@@ -2,24 +2,46 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
+  BookOpenText,
   Download,
   FileText,
+  FolderOpen,
   GraduationCap,
   Loader2,
   Search,
   ShieldCheck,
+  Sparkles,
   UploadCloud
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { CommunityGroup, Document } from "@/lib/types";
+import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
 import { FormSelect } from "../ui/form-select";
 
 const streamOptions = ["BCA", "B.Com", "BSc", "BA", "BBA", "1st PUC", "2nd PUC"];
+const categoryOptions = ["All", "Full Notes", "Revision", "Important Questions", "Unit Notes"];
+
+function getTeacherNoteCategory(note: Document) {
+  const title = `${note.title} ${note.subject}`.toLowerCase();
+
+  if (title.includes("question") || title.includes("important question") || title.includes("2 mark") || title.includes("5 mark") || title.includes("10 mark")) {
+    return "Important Questions";
+  }
+
+  if (title.includes("revision") || title.includes("summary") || title.includes("quick")) {
+    return "Revision";
+  }
+
+  if (title.includes("unit") || title.includes("chapter") || title.includes("module")) {
+    return "Unit Notes";
+  }
+
+  return "Full Notes";
+}
 
 export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Document[] }) {
   const { user, loading } = useAuth();
@@ -32,6 +54,8 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const [subject, setSubject] = useState("");
   const [stream, setStream] = useState("BCA");
   const [activeStream, setActiveStream] = useState("All");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeTeacher, setActiveTeacher] = useState("All");
   const [search, setSearch] = useState("");
   const [uploadMessage, setUploadMessage] = useState("");
   const [verificationMessage, setVerificationMessage] = useState("");
@@ -42,9 +66,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const [verificationFile, setVerificationFile] = useState<File | null>(null);
   const [verificationForm, setVerificationForm] = useState({
     fullName: user?.name || "",
-    university: user?.university || "",
-    subjectExpertise: "",
-    communityGroupId: ""
+    collegeName: "",
+    universityBoard: user?.university || "",
+    subjectExpertise: ""
   });
 
   const { data: teacherNotes = [] } = useQuery({
@@ -56,25 +80,76 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     initialData: initialNotes
   });
 
-  const { data: communityGroups = [] } = useQuery({
-    queryKey: ["community-groups"],
+  const { data: communityBootstrap } = useQuery({
+    queryKey: ["teacher-notes-community-bootstrap"],
     queryFn: async () => {
-      const response = await api.get<{ success: true; groups: CommunityGroup[] }>("/community/groups");
-      return response.data.groups || [];
-    }
+      const response = await api.get<CommunityBootstrap>("/community");
+      return response.data;
+    },
+    enabled: Boolean(user && isTeacher)
   });
 
   const isTeacher = user?.role === "teacher";
   const isVerifiedTeacher = isTeacher && user?.verifiedTeacher;
+  const latestVerification = communityBootstrap?.verification || null;
+  const verificationStatus = latestVerification?.status || null;
+  const hasPendingVerification = verificationStatus === "pending";
+  const showTeacherHero = !isVerifiedTeacher;
 
   const streamChips = useMemo(() => {
     const uniqueStreams = Array.from(new Set(teacherNotes.map((note) => note.stream))).filter(Boolean);
     return ["All", ...uniqueStreams];
   }, [teacherNotes]);
 
+  useEffect(() => {
+    if (user) {
+      setVerificationForm((current) => ({
+        ...current,
+        fullName: current.fullName || user.name || "",
+        universityBoard: current.universityBoard || user.university || ""
+      }));
+    }
+  }, [user]);
+
+  const teacherFolders = useMemo(() => {
+    const grouped = new Map<
+      string,
+      {
+        key: string;
+        name: string;
+        email: string;
+        profilePhoto?: string | null;
+        noteCount: number;
+      }
+    >();
+
+    teacherNotes.forEach((note) => {
+      const key = String(note.uploader?.id ?? note.uploader?.email ?? note._id);
+      const existing = grouped.get(key);
+
+      if (existing) {
+        existing.noteCount += 1;
+        return;
+      }
+
+      grouped.set(key, {
+        key,
+        name: note.uploader?.name || "Verified teacher",
+        email: note.uploader?.email || "",
+        profilePhoto: note.uploader?.profilePhoto ?? null,
+        noteCount: 1
+      });
+    });
+
+    return Array.from(grouped.values()).sort((left, right) => left.name.localeCompare(right.name));
+  }, [teacherNotes]);
+
   const filteredNotes = useMemo(() => {
     return teacherNotes.filter((note) => {
       const matchesStream = activeStream === "All" ? true : note.stream === activeStream;
+      const matchesCategory = activeCategory === "All" ? true : getTeacherNoteCategory(note) === activeCategory;
+      const teacherKey = String(note.uploader?.id ?? note.uploader?.email ?? note._id);
+      const matchesTeacher = activeTeacher === "All" ? true : teacherKey === activeTeacher;
       const query = search.trim().toLowerCase();
       const matchesSearch = !query
         ? true
@@ -82,9 +157,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             .filter(Boolean)
             .some((value) => String(value).toLowerCase().includes(query));
 
-      return matchesStream && matchesSearch;
+      return matchesStream && matchesCategory && matchesTeacher && matchesSearch;
     });
-  }, [activeStream, search, teacherNotes]);
+  }, [activeCategory, activeStream, activeTeacher, search, teacherNotes]);
 
   const openUploadFlow = () => {
     setUploadMessage("");
@@ -92,6 +167,13 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
     if (!user) {
       window.location.href = "/auth";
+      return;
+    }
+
+    if (hasPendingVerification) {
+      setShowUploadForm(false);
+      setShowVerificationForm(false);
+      setVerificationMessage("Your teacher verification is already pending admin review. Upload access will unlock automatically after approval.");
       return;
     }
 
@@ -164,9 +246,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     try {
       const formData = new FormData();
       formData.append("fullName", verificationForm.fullName.trim());
-      formData.append("university", verificationForm.university.trim());
+      formData.append("collegeName", verificationForm.collegeName.trim());
+      formData.append("universityBoard", verificationForm.universityBoard.trim());
       formData.append("subjectExpertise", verificationForm.subjectExpertise.trim());
-      formData.append("communityGroupId", verificationForm.communityGroupId);
       formData.append("idCard", verificationFile);
 
       const response = await api.post<{ success: true; message: string }>("/community/teacher-verification", formData, {
@@ -204,11 +286,13 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
   return (
     <div className="space-y-6">
+      {showTeacherHero ? (
       <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="rounded-[28px] border border-slate-200/70 bg-[linear-gradient(135deg,rgba(255,247,214,0.9),rgba(255,255,255,0.96),rgba(226,255,244,0.82))] px-5 py-5 dark:border-slate-800/80 dark:bg-[linear-gradient(135deg,rgba(38,38,14,0.42),rgba(15,23,42,0.94),rgba(4,120,87,0.18))]">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-              <ShieldCheck className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700 shadow-sm dark:border-emerald-500/20 dark:bg-slate-950/60 dark:text-emerald-300">
+              <BookOpenText className="h-4 w-4" />
               Teacher Notes
             </div>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">
@@ -218,6 +302,23 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               Browse cleaner subject-wise PDFs from approved teachers, search by stream or subject, and open trusted notes
               without mixing them into the general uploads library.
             </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-200">
+                <Sparkles className="h-4 w-4 text-amber-500" />
+                Full notes only
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-200">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                Verified teacher uploads
+              </span>
+              {hasPendingVerification ? (
+                <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 shadow-sm dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
+                  <BadgeCheck className="h-4 w-4" />
+                  Verification pending
+                </span>
+              ) : null}
+            </div>
           </div>
 
           <div className="flex flex-col items-stretch gap-3 sm:flex-row lg:flex-col lg:items-end">
@@ -225,21 +326,25 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               <button
                 type="button"
                 onClick={openUploadFlow}
+                disabled={hasPendingVerification}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
               >
                 {isVerifiedTeacher ? <UploadCloud className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4" />}
-                {isVerifiedTeacher ? "Upload teacher note" : "Verify to upload"}
+                {isVerifiedTeacher ? "Upload teacher note" : hasPendingVerification ? "Verification pending" : "Verify to upload"}
               </button>
             ) : null}
             <div className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 dark:border-slate-800 dark:text-slate-300">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
               {isVerifiedTeacher
                 ? "Verified teacher access active"
+                : hasPendingVerification
+                  ? "Admin review is in progress"
                 : isTeacher
                   ? "Verify once to unlock uploads later"
                   : "Students can browse teacher notes only"}
             </div>
           </div>
+        </div>
         </div>
 
         {uploadMessage ? (
@@ -362,14 +467,25 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               />
             </label>
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">University / college</span>
+              <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">College name</span>
               <input
                 required
-                value={verificationForm.university}
-                onChange={(event) => setVerificationForm((current) => ({ ...current, university: event.target.value }))}
+                value={verificationForm.collegeName}
+                onChange={(event) => setVerificationForm((current) => ({ ...current, collegeName: event.target.value }))}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                placeholder="Your college or university"
+                placeholder="Your college name"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">University / Board</span>
+              <input
+                required
+                value={verificationForm.universityBoard}
+                onChange={(event) => setVerificationForm((current) => ({ ...current, universityBoard: event.target.value }))}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                placeholder="Your university or board"
               />
             </label>
 
@@ -383,16 +499,6 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 }
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
                 placeholder="Commerce, Mathematics, Physics..."
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Community for verification</span>
-              <FormSelect
-                value={verificationForm.communityGroupId}
-                onChange={(value) => setVerificationForm((current) => ({ ...current, communityGroupId: value }))}
-                options={communityGroups.map((group) => ({ label: group.name, value: String(group.id) }))}
-                placeholder="Select a community"
               />
             </label>
 
@@ -439,6 +545,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </form>
         ) : null}
       </section>
+      ) : null}
 
       <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -449,7 +556,19 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               Search by note title, subject, teacher, or stream and open full PDFs uploaded by approved teachers.
             </p>
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{filteredNotes.length} notes in view</p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-slate-500 dark:text-slate-400">{filteredNotes.length} notes in view</p>
+            {isVerifiedTeacher ? (
+              <button
+                type="button"
+                onClick={openUploadFlow}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+              >
+                <UploadCloud className="h-4 w-4" />
+                Upload teacher note
+              </button>
+            ) : null}
+          </div>
         </div>
 
         <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
@@ -469,6 +588,23 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          {categoryOptions.map((chip) => (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => setActiveCategory(chip)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                activeCategory === chip
+                  ? "bg-slate-950 text-white shadow-sm dark:bg-emerald-500 dark:text-slate-950"
+                  : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
           {streamChips.map((chip) => (
             <button
               key={chip}
@@ -483,6 +619,51 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               {chip}
             </button>
           ))}
+        </div>
+
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Teacher folders</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveTeacher("All")}
+              className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                activeTeacher === "All"
+                  ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
+            >
+              <FolderOpen className="h-4 w-4" />
+              All teacher folders
+            </button>
+
+            {teacherFolders.map((teacher) => (
+              <button
+                key={teacher.key}
+                type="button"
+                onClick={() => setActiveTeacher(teacher.key)}
+                className={`inline-flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                  activeTeacher === teacher.key
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                }`}
+              >
+                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                  {teacher.profilePhoto ? (
+                    <Image src={teacher.profilePhoto} alt={teacher.name} fill sizes="36px" className="object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs font-semibold">
+                      {teacher.name.slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <span className="flex flex-col">
+                  <span className="font-semibold">{teacher.name}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</span>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
