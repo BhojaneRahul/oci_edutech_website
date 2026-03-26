@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -42,6 +41,18 @@ function getTeacherNoteCategory(note: Document) {
   return "Full Notes";
 }
 
+function getProfilePhotoSrc(profilePhoto?: string | null) {
+  if (!profilePhoto) {
+    return null;
+  }
+
+  if (profilePhoto.startsWith("http://") || profilePhoto.startsWith("https://") || profilePhoto.startsWith("/")) {
+    return profilePhoto;
+  }
+
+  return `/${profilePhoto.replace(/^\/+/, "")}`;
+}
+
 export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Document[] }) {
   const { user, loading } = useAuth();
   const queryClient = useQueryClient();
@@ -59,6 +70,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const [activeTeacher, setActiveTeacher] = useState("All");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<(typeof sortOptions)[number]["value"]>("latest");
+  const [isToolbarPinned, setIsToolbarPinned] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
   const [verificationMessage, setVerificationMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -129,6 +141,17 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
     return () => window.clearTimeout(timeout);
   }, [showUploadForm, showVerificationForm]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsToolbarPinned(window.scrollY > 140);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const teacherFolders = useMemo(() => {
     const grouped = new Map<
@@ -416,57 +439,75 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           ) : null}
 
-          <div className="sticky top-20 z-20 -mx-4 bg-white/95 px-4 pb-0 pt-3 backdrop-blur dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
-            <div className="flex flex-col gap-4">
+          <div
+            className={`sticky top-[72px] z-20 -mx-4 border-b border-slate-200/80 bg-white/95 px-4 pt-3 backdrop-blur transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8 ${
+              isToolbarPinned ? "shadow-[0_14px_35px_-26px_rgba(15,23,42,0.28)]" : ""
+            }`}
+          >
+            <div className="flex flex-col gap-3">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
-                  <label className="relative block">
-                    <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Search teacher notes, subjects, or teacher names"
-                      className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition focus:border-amber-400 focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950 dark:placeholder:text-slate-500"
-                    />
-                  </label>
-                  <label className="relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <SlidersHorizontal className="h-4 w-4 shrink-0 text-slate-400" />
-                    <select
-                      value={sortBy}
-                      onChange={(event) => setSortBy(event.target.value as (typeof sortOptions)[number]["value"])}
-                      className="h-12 w-full appearance-none bg-transparent pr-8 text-sm font-medium text-slate-700 outline-none dark:text-slate-100"
-                    >
-                      {sortOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  </label>
-              </div>
-
-              <div className="relative z-10 translate-y-4">
-                <div
-                  className="mx-auto overflow-x-auto overscroll-x-contain px-1 py-1 [&::-webkit-scrollbar]:hidden"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  <div className="flex min-w-max gap-2 lg:min-w-0 lg:flex-wrap lg:justify-center">
-                    {categoryOptions.map((chip) => (
-                      <button
-                        key={chip}
-                        type="button"
-                        onClick={() => setActiveCategory(chip)}
-                        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                          activeCategory === chip
-                            ? "bg-slate-950 text-white shadow-sm dark:bg-emerald-500 dark:text-slate-950"
-                            : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                        }`}
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search teacher notes, subjects, or teacher names"
+                    className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-14 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition focus:border-amber-400 focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950 dark:placeholder:text-slate-500 lg:pr-4"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 lg:hidden">
+                    <label className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                      <SlidersHorizontal className="h-4 w-4 text-slate-500" />
+                      <select
+                        value={sortBy}
+                        onChange={(event) => setSortBy(event.target.value as (typeof sortOptions)[number]["value"])}
+                        className="absolute inset-0 appearance-none opacity-0"
+                        aria-label="Sort teacher notes"
                       >
-                        {chip}
-                      </button>
-                    ))}
+                        {sortOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
                 </div>
+                <label className="relative hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:flex">
+                  <SlidersHorizontal className="h-4 w-4 shrink-0 text-slate-400" />
+                  <select
+                    value={sortBy}
+                    onChange={(event) => setSortBy(event.target.value as (typeof sortOptions)[number]["value"])}
+                    className="h-12 w-full appearance-none bg-transparent pr-8 text-sm font-medium text-slate-700 outline-none dark:text-slate-100"
+                  >
+                    {sortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                </label>
+              </div>
+            </div>
+            <div
+              className="relative z-10 mt-2 overflow-x-auto overscroll-x-contain px-1 pb-3 pt-1 [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              <div className="flex min-w-max gap-2 lg:min-w-0 lg:justify-center">
+                {categoryOptions.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setActiveCategory(chip)}
+                    className={`rounded-full px-4 py-2 text-sm font-medium shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] transition ${
+                      activeCategory === chip
+                        ? "bg-slate-950 text-white dark:bg-emerald-500 dark:text-slate-950"
+                        : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                    }`}
+                  >
+                    {chip}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -656,25 +697,26 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             ) : null}
           </div>
 
-          <div className="mt-10 space-y-5">
+          <div className="space-y-5 pt-6">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
+            const profilePhotoSrc = getProfilePhotoSrc(note.uploader?.profilePhoto);
 
             return (
               <article
                 key={note._id}
-                className="group flex min-w-0 flex-col rounded-[26px] border border-slate-200 bg-white p-4 transition hover:border-amber-200 hover:shadow-[0_18px_50px_-34px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+                className="group w-full min-w-0 overflow-hidden rounded-[28px] border border-slate-200 bg-white p-4 transition hover:border-amber-200 hover:shadow-[0_22px_55px_-36px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
               >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                  <div className="w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 sm:w-40 dark:border-slate-800 dark:bg-slate-950">
+                <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+                  <div className="w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
                     <iframe
                       src={`/api/pdf?src=${encodeURIComponent(note.fileUrl)}#page=1&toolbar=0&navpanes=0&scrollbar=0`}
                       title={`${note.title} first page preview`}
-                      className="pointer-events-none h-48 w-full sm:h-52"
+                      className="pointer-events-none h-56 w-full lg:h-full lg:min-h-[220px]"
                     />
                   </div>
 
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0">
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-2">
                         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
@@ -685,8 +727,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       </div>
 
                       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-                        {note.uploader?.profilePhoto ? (
-                          <Image src={note.uploader.profilePhoto} alt={note.uploader.name || "Teacher"} fill sizes="40px" className="object-cover" />
+                        {profilePhotoSrc ? (
+                          // Use a direct image element here so account-uploaded photos render reliably from local or remote URLs.
+                          <img src={profilePhotoSrc} alt={note.uploader?.name || "Teacher"} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-slate-500 dark:text-slate-300">
                             {(note.uploader?.name || "T").slice(0, 1).toUpperCase()}
@@ -695,7 +738,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       </div>
                     </div>
 
-                    <div className="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
+                    <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
                       <p className="line-clamp-1">
                         <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
                       </p>
@@ -755,7 +798,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         </div>
 
           {!filteredNotes.length ? (
-            <div className="mt-8 flex min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-200/80 bg-slate-50/40 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
+            <div className="mt-6 flex min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-200/80 bg-slate-50/40 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
               <div className="mx-auto max-w-md space-y-2">
                 <p className="text-base font-semibold text-slate-800 dark:text-slate-100">No teacher notes found</p>
                 <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
@@ -799,8 +842,8 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       className="inline-flex items-center gap-3 text-left"
                     >
                       <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
-                        {teacher.profilePhoto ? (
-                          <Image src={teacher.profilePhoto} alt={teacher.name} fill sizes="36px" className="object-cover" />
+                        {getProfilePhotoSrc(teacher.profilePhoto) ? (
+                          <img src={getProfilePhotoSrc(teacher.profilePhoto)!} alt={teacher.name} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-xs font-semibold">
                             {teacher.name.slice(0, 1).toUpperCase()}
