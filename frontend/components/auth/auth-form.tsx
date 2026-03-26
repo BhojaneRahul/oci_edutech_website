@@ -301,9 +301,11 @@ export function AuthForm() {
 
         {mode === "signup" && form.role === "teacher" ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-            Teacher accounts are created first as normal accounts. Inside Community, upload your college ID card and
-            submit teacher verification when you are ready to join teacher chat. After admin approval, the verified
-            teacher badge and Teacher Notes upload access will unlock automatically.
+            Teacher accounts are created first as normal accounts. If you want, you can skip verification for now and
+            complete it later. Inside Community, you can upload your college ID card and submit teacher verification when
+            you are ready to join teacher chat. The same teacher verification will also unlock Teacher Notes uploads.
+            Once admin approves your ID, the verified teacher badge appears automatically and you will not need to verify
+            again.
           </div>
         ) : null}
 
