@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Download, FileText, ShieldCheck } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { serverApi } from "@/lib/server-api";
@@ -7,12 +8,16 @@ import { serverApi } from "@/lib/server-api";
 export default async function TeacherProfilePage({
   params
 }: {
-  params: Promise<{ teacherId: string }>;
+  params: { teacherId: string };
 }) {
-  const { teacherId } = await params;
+  const { teacherId } = params;
   const teacherNotes = await serverApi.getTeacherNotes().catch(() => []);
   const notes = teacherNotes.filter((note) => String(note.uploader?.id ?? note.uploader?.email ?? note._id) === teacherId);
   const teacher = notes[0]?.uploader;
+
+  if (!teacherId) {
+    notFound();
+  }
 
   return (
     <DashboardShell fullBleed>
