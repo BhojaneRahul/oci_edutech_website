@@ -284,6 +284,8 @@ model Document {
   type       DocumentType
   fileUrl    String       @map("file_url") @db.VarChar(255)
   uploadedBy Int          @map("uploaded_by")
+  isFeatured Boolean      @default(false) @map("is_featured")
+  isHidden   Boolean      @default(false) @map("is_hidden")
   viewCount  Int          @default(0) @map("view_count")
   downloadCount Int       @default(0) @map("download_count")
   createdAt  DateTime     @default(now()) @map("created_at")

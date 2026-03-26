@@ -96,6 +96,7 @@ const statConfig: Record<
 const validSections = new Set([
   "dashboard",
   "documents",
+  "teacher-notes",
   "document-manager",
   "projects",
   "mock-tests",
@@ -146,6 +147,15 @@ export function AdminDashboard() {
     queryKey: ["admin-documents"],
     queryFn: async () => {
       const response = await api.get<Document[]>("/admin/documents");
+      return response.data;
+    },
+    enabled: user?.role === "admin"
+  });
+
+  const { data: adminTeacherNotes = [], refetch: refetchTeacherNotes } = useQuery({
+    queryKey: ["admin-teacher-notes"],
+    queryFn: async () => {
+      const response = await api.get<Document[]>("/documents/admin/teacher-notes");
       return response.data;
     },
     enabled: user?.role === "admin"
@@ -379,6 +389,30 @@ export function AdminDashboard() {
     refetchSyllabusRequests();
   };
 
+  const updateTeacherNoteStatus = async (
+    documentId: string | number,
+    updates: {
+      isFeatured?: boolean;
+      isHidden?: boolean;
+    }
+  ) => {
+    setMessage("");
+    await api.put(`/documents/admin/teacher-notes/${documentId}/status`, updates);
+    setMessage("Teacher note status updated successfully");
+    refetchTeacherNotes();
+  };
+
+  const deleteAdminTeacherNote = async (documentId: string | number) => {
+    if (!window.confirm("Delete this teacher note permanently?")) {
+      return;
+    }
+
+    setMessage("");
+    await api.delete(`/documents/teacher-notes/${documentId}`);
+    setMessage("Teacher note deleted successfully");
+    refetchTeacherNotes();
+  };
+
   const filteredUsers = useMemo(
     () =>
       users.filter((account) => {
@@ -530,6 +564,98 @@ export function AdminDashboard() {
                 <tr>
                   <td colSpan={5} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
                     No documents uploaded yet.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    );
+  } else if (activeSection === "teacher-notes") {
+    sectionContent = (
+      <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-600">Teacher Notes</p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Verified teacher uploads</h3>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Review all verified-teacher PDFs, open teacher profile pages, and manage note visibility from one place.
+          </p>
+        </div>
+
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="text-slate-500 dark:text-slate-400">
+              <tr className="border-b border-slate-200 dark:border-slate-800">
+                <th className="px-3 py-3 font-medium">Note</th>
+                <th className="px-3 py-3 font-medium">Teacher</th>
+                <th className="px-3 py-3 font-medium">Stream</th>
+                <th className="px-3 py-3 font-medium">Status</th>
+                <th className="px-3 py-3 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {adminTeacherNotes.map((document) => {
+                const statusLabel = document.isHidden ? "Hidden" : document.isFeatured ? "Featured" : "New";
+                const statusClassName = document.isHidden
+                  ? "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  : document.isFeatured
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                    : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300";
+
+                return (
+                  <tr key={String(document._id)} className="border-b border-slate-100 dark:border-slate-900">
+                    <td className="px-3 py-4">
+                      <p className="font-medium text-slate-900 dark:text-white">{document.title}</p>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{document.subject}</p>
+                    </td>
+                    <td className="px-3 py-4">
+                      <p className="font-medium text-slate-900 dark:text-white">{document.uploader?.name || "Verified teacher"}</p>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{document.uploader?.email}</p>
+                    </td>
+                    <td className="px-3 py-4">{document.stream}</td>
+                    <td className="px-3 py-4">
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClassName}`}>{statusLabel}</span>
+                    </td>
+                    <td className="px-3 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        <a
+                          href={`/teacher-notes/teacher/${document.uploader?.id ?? document.uploader?.email ?? document._id}`}
+                          className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-800"
+                        >
+                          Teacher profile
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => updateTeacherNoteStatus(document._id, { isFeatured: !document.isFeatured, isHidden: false })}
+                          className="rounded-full bg-emerald-500 px-3 py-2 text-xs font-semibold text-white"
+                        >
+                          {document.isFeatured ? "Unfeature" : "Feature"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateTeacherNoteStatus(document._id, { isHidden: !document.isHidden })}
+                          className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold dark:border-slate-800"
+                        >
+                          {document.isHidden ? "Unhide" : "Hide"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteAdminTeacherNote(document._id)}
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 dark:border-rose-500/20 dark:text-rose-300"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {!adminTeacherNotes.length ? (
+                <tr>
+                  <td colSpan={5} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
+                    No teacher notes uploaded yet.
                   </td>
                 </tr>
               ) : null}

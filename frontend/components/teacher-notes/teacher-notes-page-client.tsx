@@ -4,17 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  BadgeCheck,
-  Download,
-  FileText,
-  FolderOpen,
-  GraduationCap,
-  Loader2,
-  Search,
-  ShieldCheck,
-  UploadCloud
-} from "lucide-react";
+import { BadgeCheck, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud } from "lucide-react";
 import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
@@ -22,6 +12,17 @@ import { FormSelect } from "../ui/form-select";
 
 const streamOptions = ["BCA", "B.Com", "BSc", "BA", "BBA", "1st PUC", "2nd PUC"];
 const categoryOptions = ["All", "Full Notes", "Revision", "Important Questions", "Unit Notes"];
+const sortOptions = [
+  { label: "Latest", value: "latest" },
+  { label: "Oldest", value: "oldest" },
+  { label: "A to Z", value: "title-asc" },
+  { label: "Z to A", value: "title-desc" },
+  { label: "Names A-Z", value: "teacher-asc" },
+  { label: "Names Z-A", value: "teacher-desc" },
+  { label: "Numbers first", value: "numeric-first" },
+  { label: "Most viewed", value: "views" },
+  { label: "Most downloaded", value: "downloads" }
+] as const;
 
 function getTeacherNoteCategory(note: Document) {
   const title = `${note.title} ${note.subject}`.toLowerCase();
@@ -56,6 +57,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeTeacher, setActiveTeacher] = useState("All");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<(typeof sortOptions)[number]["value"]>("latest");
   const [uploadMessage, setUploadMessage] = useState("");
   const [verificationMessage, setVerificationMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -157,7 +159,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   }, [teacherNotes]);
 
   const filteredNotes = useMemo(() => {
-    return teacherNotes.filter((note) => {
+    const nextNotes = teacherNotes.filter((note) => {
       const matchesStream = activeStream === "All" ? true : note.stream === activeStream;
       const matchesCategory = activeCategory === "All" ? true : getTeacherNoteCategory(note) === activeCategory;
       const teacherKey = String(note.uploader?.id ?? note.uploader?.email ?? note._id);
@@ -171,7 +173,37 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
       return matchesStream && matchesCategory && matchesTeacher && matchesSearch;
     });
-  }, [activeCategory, activeStream, activeTeacher, search, teacherNotes]);
+
+    return nextNotes.sort((left, right) => {
+      switch (sortBy) {
+        case "oldest":
+          return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
+        case "title-asc":
+          return left.title.localeCompare(right.title);
+        case "title-desc":
+          return right.title.localeCompare(left.title);
+        case "teacher-asc":
+          return String(left.uploader?.name || left.uploader?.email || "").localeCompare(String(right.uploader?.name || right.uploader?.email || ""));
+        case "teacher-desc":
+          return String(right.uploader?.name || right.uploader?.email || "").localeCompare(String(left.uploader?.name || left.uploader?.email || ""));
+        case "numeric-first": {
+          const leftStartsNumeric = /^\d/.test(left.title.trim());
+          const rightStartsNumeric = /^\d/.test(right.title.trim());
+          if (leftStartsNumeric === rightStartsNumeric) {
+            return left.title.localeCompare(right.title, undefined, { numeric: true });
+          }
+          return leftStartsNumeric ? -1 : 1;
+        }
+        case "views":
+          return (right.viewCount ?? 0) - (left.viewCount ?? 0);
+        case "downloads":
+          return (right.downloadCount ?? 0) - (left.downloadCount ?? 0);
+        case "latest":
+        default:
+          return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+      }
+    });
+  }, [activeCategory, activeStream, activeTeacher, search, sortBy, teacherNotes]);
 
   const openUploadFlow = () => {
     setUploadMessage("");
@@ -297,9 +329,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   };
 
   return (
-    <div className="-mx-4 sm:-mx-6 xl:-mx-8">
-      <section className="border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-        <div className="space-y-5 px-6 py-6 xl:px-8">
+    <div className="min-w-0">
+      <section className="min-w-0 bg-white dark:bg-slate-950">
+        <div className="space-y-5 px-4 pb-8 pt-2 sm:px-6 lg:px-8">
           {uploadMessage ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
               {uploadMessage}
@@ -318,17 +350,16 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           ) : null}
 
-          <div className="sticky top-20 z-20 -mx-6 border-b border-slate-200 bg-white/95 px-6 pb-4 pt-1 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 xl:-mx-8 xl:px-8">
+          <div className="sticky top-20 z-20 -mx-4 border-b border-slate-200 bg-white/95 px-4 pb-4 pt-1 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">Library</p>
-                  <h1 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">Teacher notes</h1>
-                  <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                    Search by note title, subject, teacher, or stream and open full PDFs uploaded by approved teachers.
+                  <h1 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">Teacher notes</h1>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-500 dark:text-slate-400">
+                    Teacher notes Search notes by title, subject, teacher, or stream - view approved PDFs.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 lg:justify-end">
                   <p className="text-sm text-slate-500 dark:text-slate-400">{filteredNotes.length} notes in view</p>
                   {isTeacher ? (
                     <button
@@ -344,64 +375,78 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 </div>
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
-                <label className="relative block">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_250px]">
+                <div className="flex items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition focus-within:border-amber-400 focus-within:bg-white dark:border-slate-800 dark:bg-slate-900 dark:focus-within:bg-slate-950">
+                  <Search className="h-4 w-4 shrink-0 text-slate-400" />
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Search teacher notes, subjects, or teacher names"
-                    className="w-full rounded-2xl border border-slate-200 bg-transparent px-11 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800"
+                    className="h-14 w-full bg-transparent px-3 text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
                   />
-                </label>
-                <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600 dark:border-slate-800 dark:text-slate-300">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  Verified teacher uploads only
                 </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {categoryOptions.map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => setActiveCategory(chip)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                      activeCategory === chip
-                        ? "bg-slate-950 text-white shadow-sm dark:bg-emerald-500 dark:text-slate-950"
-                        : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                    }`}
+                <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
+                  <SlidersHorizontal className="h-4 w-4 shrink-0 text-slate-400" />
+                  <select
+                    value={sortBy}
+                    onChange={(event) => setSortBy(event.target.value as (typeof sortOptions)[number]["value"])}
+                    className="h-14 w-full bg-transparent text-sm font-medium text-slate-700 outline-none dark:text-slate-100"
                   >
-                    {chip}
-                  </button>
-                ))}
+                    {sortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        Sort: {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {streamChips.map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => setActiveStream(chip)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                      activeStream === chip
-                        ? "bg-amber-500 text-white shadow-sm"
-                        : "border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                    }`}
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
+              <div className="space-y-4">
+                <div className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
+                  <div className="flex min-w-max gap-2 lg:min-w-0 lg:flex-wrap lg:justify-center">
+                    {categoryOptions.map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => setActiveCategory(chip)}
+                        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                          activeCategory === chip
+                            ? "bg-slate-950 text-white shadow-sm dark:bg-emerald-500 dark:text-slate-950"
+                            : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                        }`}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Teacher folders</p>
-                <div className="mt-3 flex flex-wrap gap-3">
+                <div className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
+                  <div className="flex min-w-max gap-2 lg:min-w-0 lg:flex-wrap lg:justify-center">
+                    {streamChips.map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => setActiveStream(chip)}
+                        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                          activeStream === chip
+                            ? "bg-amber-500 text-white shadow-sm"
+                            : "border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                        }`}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="-mx-4 overflow-x-auto border-t border-slate-200 px-4 pt-4 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8 dark:border-slate-800">
+                  <div className="flex min-w-max gap-3 rounded-2xl bg-slate-50/90 p-2 shadow-[0_12px_24px_-20px_rgba(15,23,42,0.22)] dark:bg-slate-900/90">
                   <button
                     type="button"
                     onClick={() => setActiveTeacher("All")}
-                    className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                      activeTeacher === "All"
+                      className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                        activeTeacher === "All"
                         ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
                         : "border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
                     }`}
@@ -411,31 +456,42 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   </button>
 
                   {teacherFolders.map((teacher) => (
-                    <button
+                    <div
                       key={teacher.key}
-                      type="button"
-                      onClick={() => setActiveTeacher(teacher.key)}
                       className={`inline-flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
                         activeTeacher === teacher.key
                           ? "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
                           : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
                       }`}
                     >
-                      <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
-                        {teacher.profilePhoto ? (
-                          <Image src={teacher.profilePhoto} alt={teacher.name} fill sizes="36px" className="object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-xs font-semibold">
-                            {teacher.name.slice(0, 1).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <span className="flex flex-col">
-                        <span className="font-semibold">{teacher.name}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</span>
-                      </span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTeacher(teacher.key)}
+                        className="inline-flex items-center gap-3 text-left"
+                      >
+                        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                          {teacher.profilePhoto ? (
+                            <Image src={teacher.profilePhoto} alt={teacher.name} fill sizes="36px" className="object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs font-semibold">
+                              {teacher.name.slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <span className="flex flex-col">
+                          <span className="font-semibold">{teacher.name}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</span>
+                        </span>
+                      </button>
+                      <Link
+                        href={`/teacher-notes/teacher/${teacher.key}`}
+                        className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:text-slate-300"
+                      >
+                        Profile
+                      </Link>
+                    </div>
                   ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -445,13 +501,12 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             {showVerificationForm && isTeacher && !isVerifiedTeacher ? (
               <form
                 onSubmit={submitTeacherVerification}
-                className="grid gap-4 border-b border-slate-200 bg-slate-50/80 px-0 py-6 dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2"
+                className="grid gap-4 border-b border-slate-200 bg-slate-50/80 py-6 dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2"
               >
             <div className="lg:col-span-2">
               <p className="text-sm font-semibold text-slate-950 dark:text-white">Verify once, then upload anytime</p>
               <p className="mt-1 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                Submit your college ID and subject details here when you are ready to upload teacher notes. You can also
-                complete this same verification later inside Community when you are ready to join teacher chat. Once admin
+                Submit your college ID and subject details here when you are ready to upload teacher notes. Once admin
                 approves your ID, the verified teacher badge and Teacher Notes upload access unlock automatically, and you
                 will not need to verify again.
               </p>
@@ -547,7 +602,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             ) : null}
 
             {showUploadForm && isVerifiedTeacher ? (
-          <form onSubmit={uploadTeacherNote} className="mt-5 grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950/70 lg:grid-cols-2">
+          <form onSubmit={uploadTeacherNote} className="mt-5 grid gap-4 border-b border-slate-200 bg-slate-50/80 py-6 dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2">
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note title</span>
               <input
@@ -623,14 +678,14 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             ) : null}
           </div>
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <div className="mt-6 grid gap-4 xl:grid-cols-2">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
 
             return (
               <article
                 key={note._id}
-                className="group flex h-full flex-col rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_18px_50px_-34px_rgba(15,23,42,0.32)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+                className="group flex h-full flex-col border border-slate-200 bg-white p-5 transition hover:border-amber-200 hover:shadow-[0_18px_50px_-34px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-3">
@@ -706,7 +761,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         </div>
 
           {!filteredNotes.length ? (
-            <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+            <div className="mt-6 border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
               No teacher notes match your current search or filter. Try another stream, subject, or teacher name.
             </div>
           ) : null}

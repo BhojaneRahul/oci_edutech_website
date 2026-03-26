@@ -8,6 +8,8 @@ import { buildDocumentTargetPath, createNotifications } from "../services/notifi
 export const normalizeDocument = (document) => ({
   ...withMongoStyleId(document),
   canDownload: document.type === "model_qp",
+  isFeatured: Boolean(document.isFeatured),
+  isHidden: Boolean(document.isHidden),
   viewCount: document.viewCount ?? 0,
   downloadCount: document.downloadCount ?? 0,
   uploader: document.uploader
@@ -40,6 +42,7 @@ export const getDocuments = asyncHandler(async (req, res) => {
 export const getTeacherNotes = asyncHandler(async (req, res) => {
   const where = {
     type: "notes",
+    isHidden: false,
     uploader: {
       verifiedTeacher: true
     }
@@ -58,6 +61,31 @@ export const getTeacherNotes = asyncHandler(async (req, res) => {
 
   const documents = await prisma.document.findMany({
     where,
+    include: {
+      uploader: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          verifiedTeacher: true
+        }
+      }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(documents.map(normalizeDocument));
+});
+
+export const getAdminTeacherNotes = asyncHandler(async (req, res) => {
+  const documents = await prisma.document.findMany({
+    where: {
+      type: "notes",
+      uploader: {
+        verifiedTeacher: true
+      }
+    },
     include: {
       uploader: {
         select: {
@@ -232,6 +260,52 @@ export const uploadTeacherNote = asyncHandler(async (req, res) => {
     success: true,
     message: "Teacher note uploaded successfully.",
     document: normalizeDocument(createdDocument)
+  });
+});
+
+export const updateTeacherNoteStatus = asyncHandler(async (req, res) => {
+  const documentId = Number(req.params.id);
+  const { isFeatured, isHidden } = req.body;
+
+  const existingDocument = await prisma.document.findUnique({
+    where: { id: documentId },
+    include: {
+      uploader: {
+        select: {
+          verifiedTeacher: true
+        }
+      }
+    }
+  });
+
+  if (!existingDocument || existingDocument.type !== "notes" || !existingDocument.uploader?.verifiedTeacher) {
+    res.status(404);
+    throw new Error("Teacher note not found");
+  }
+
+  const updatedDocument = await prisma.document.update({
+    where: { id: documentId },
+    data: {
+      isFeatured: typeof isFeatured === "boolean" ? isFeatured : existingDocument.isFeatured,
+      isHidden: typeof isHidden === "boolean" ? isHidden : existingDocument.isHidden
+    },
+    include: {
+      uploader: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          verifiedTeacher: true
+        }
+      }
+    }
+  });
+
+  res.json({
+    success: true,
+    message: "Teacher note status updated successfully",
+    document: normalizeDocument(updatedDocument)
   });
 });
 

@@ -148,6 +148,8 @@ export type Document = {
   fileUrl: string;
   createdAt: string;
   canDownload?: boolean;
+  isFeatured?: boolean;
+  isHidden?: boolean;
   viewCount?: number;
   downloadCount?: number;
   uploader?: {

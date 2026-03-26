@@ -3,6 +3,7 @@ import { FileText, FolderKanban, LayoutDashboard, Send, ShieldAlert, ShieldCheck
 const items = [
   { label: "Dashboard", value: "dashboard", icon: LayoutDashboard },
   { label: "Documents", value: "documents", icon: FileText },
+  { label: "Teacher Notes", value: "teacher-notes", icon: ShieldCheck },
   { label: "Document Manager", value: "document-manager", icon: Upload },
   { label: "Projects", value: "projects", icon: FolderKanban },
   { label: "Mock Tests", value: "mock-tests", icon: Sparkles },
