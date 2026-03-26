@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
-  BookOpenText,
   Download,
   FileText,
   FolderOpen,
@@ -14,7 +13,6 @@ import {
   Loader2,
   Search,
   ShieldCheck,
-  Sparkles,
   UploadCloud
 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -48,6 +46,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const verificationFileRef = useRef<HTMLInputElement | null>(null);
+  const actionPanelRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
@@ -93,7 +92,6 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const latestVerification = communityBootstrap?.verification || null;
   const verificationStatus = latestVerification?.status || null;
   const hasPendingVerification = verificationStatus === "pending";
-  const showTeacherHero = !isVerifiedTeacher;
 
   const streamChips = useMemo(() => {
     const uniqueStreams = Array.from(new Set(teacherNotes.map((note) => note.stream))).filter(Boolean);
@@ -109,6 +107,21 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       }));
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!showUploadForm && !showVerificationForm) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      actionPanelRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }, 80);
+
+    return () => window.clearTimeout(timeout);
+  }, [showUploadForm, showVerificationForm]);
 
   const teacherFolders = useMemo(() => {
     const grouped = new Map<
@@ -284,73 +297,156 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   };
 
   return (
-    <div className="space-y-6">
-      {showTeacherHero ? (
-      <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
-        <div className="rounded-[28px] border border-slate-200/70 bg-[linear-gradient(135deg,rgba(255,247,214,0.9),rgba(255,255,255,0.96),rgba(226,255,244,0.82))] px-5 py-5 dark:border-slate-800/80 dark:bg-[linear-gradient(135deg,rgba(38,38,14,0.42),rgba(15,23,42,0.94),rgba(4,120,87,0.18))]">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700 shadow-sm dark:border-emerald-500/20 dark:bg-slate-950/60 dark:text-emerald-300">
-              <BookOpenText className="h-4 w-4" />
-              Teacher Notes
+    <div className="-mx-4 sm:-mx-6 xl:-mx-8">
+      <section className="border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+        <div className="space-y-5 px-6 py-6 xl:px-8">
+          {uploadMessage ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+              {uploadMessage}
             </div>
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">
-              Full notes from verified teachers
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-8 text-slate-500 dark:text-slate-400">
-              Browse cleaner subject-wise PDFs from approved teachers, search by stream or subject, and open trusted notes
-              without mixing them into the general uploads library.
-            </p>
+          ) : null}
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-200">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                Full notes only
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-200">
-                <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                Verified teacher uploads
-              </span>
-              {hasPendingVerification ? (
-                <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 shadow-sm dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
-                  <BadgeCheck className="h-4 w-4" />
-                  Verification pending
-                </span>
-              ) : null}
+          {verificationMessage ? (
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
+              {verificationMessage}
+            </div>
+          ) : null}
+
+          {loading ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
+              Checking your teacher access...
+            </div>
+          ) : null}
+
+          <div className="sticky top-20 z-20 -mx-6 border-b border-slate-200 bg-white/95 px-6 pb-4 pt-1 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 xl:-mx-8 xl:px-8">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">Library</p>
+                  <h1 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">Teacher notes</h1>
+                  <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
+                    Search by note title, subject, teacher, or stream and open full PDFs uploaded by approved teachers.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{filteredNotes.length} notes in view</p>
+                  {isTeacher ? (
+                    <button
+                      type="button"
+                      onClick={openUploadFlow}
+                      disabled={hasPendingVerification}
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                    >
+                      {isVerifiedTeacher ? <UploadCloud className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4" />}
+                      {isVerifiedTeacher ? "Upload teacher note" : hasPendingVerification ? "Verification pending" : "Verify to upload"}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
+                <label className="relative block">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search teacher notes, subjects, or teacher names"
+                    className="w-full rounded-2xl border border-slate-200 bg-transparent px-11 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800"
+                  />
+                </label>
+                <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600 dark:border-slate-800 dark:text-slate-300">
+                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                  Verified teacher uploads only
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {categoryOptions.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setActiveCategory(chip)}
+                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                      activeCategory === chip
+                        ? "bg-slate-950 text-white shadow-sm dark:bg-emerald-500 dark:text-slate-950"
+                        : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                    }`}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {streamChips.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setActiveStream(chip)}
+                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                      activeStream === chip
+                        ? "bg-amber-500 text-white shadow-sm"
+                        : "border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                    }`}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Teacher folders</p>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTeacher("All")}
+                    className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                      activeTeacher === "All"
+                        ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                    }`}
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                    All teacher folders
+                  </button>
+
+                  {teacherFolders.map((teacher) => (
+                    <button
+                      key={teacher.key}
+                      type="button"
+                      onClick={() => setActiveTeacher(teacher.key)}
+                      className={`inline-flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                        activeTeacher === teacher.key
+                          ? "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                      }`}
+                    >
+                      <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                        {teacher.profilePhoto ? (
+                          <Image src={teacher.profilePhoto} alt={teacher.name} fill sizes="36px" className="object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs font-semibold">
+                            {teacher.name.slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <span className="flex flex-col">
+                        <span className="font-semibold">{teacher.name}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-stretch gap-3 sm:flex-row lg:flex-col lg:items-end">
-            {isTeacher ? (
-              <button
-                type="button"
-                onClick={openUploadFlow}
-                disabled={hasPendingVerification}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+          <div ref={actionPanelRef}>
+            {showVerificationForm && isTeacher && !isVerifiedTeacher ? (
+              <form
+                onSubmit={submitTeacherVerification}
+                className="grid gap-4 border-b border-slate-200 bg-slate-50/80 px-0 py-6 dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2"
               >
-                {isVerifiedTeacher ? <UploadCloud className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4" />}
-                {isVerifiedTeacher ? "Upload teacher note" : hasPendingVerification ? "Verification pending" : "Verify to upload"}
-              </button>
-            ) : null}
-            <div className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 dark:border-slate-800 dark:text-slate-300">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              {isVerifiedTeacher
-                ? "Verified teacher access active"
-                : hasPendingVerification
-                  ? "Admin review is in progress"
-                : isTeacher
-                  ? "Verify once to unlock uploads later"
-                  : "Students can browse teacher notes only"}
-            </div>
-          </div>
-        </div>
-        </div>
-
-        {showVerificationForm && isTeacher && !isVerifiedTeacher ? (
-          <form
-            onSubmit={submitTeacherVerification}
-            className="mt-5 grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950/70 lg:grid-cols-2"
-          >
             <div className="lg:col-span-2">
               <p className="text-sm font-semibold text-slate-950 dark:text-white">Verify once, then upload anytime</p>
               <p className="mt-1 text-sm leading-7 text-slate-500 dark:text-slate-400">
@@ -447,54 +543,10 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 Cancel
               </button>
             </div>
-          </form>
-        ) : null}
-      </section>
-      ) : null}
-
-      <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
-        {uploadMessage ? (
-          <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-            {uploadMessage}
-          </div>
-        ) : null}
-
-        {verificationMessage ? (
-          <div className="mb-5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
-            {verificationMessage}
-          </div>
-        ) : null}
-
-        {loading ? (
-          <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
-            Checking your teacher access...
-          </div>
-        ) : null}
-
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">Library</p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">Teacher notes</h2>
-            <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
-              Search by note title, subject, teacher, or stream and open full PDFs uploaded by approved teachers.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <p className="text-sm text-slate-500 dark:text-slate-400">{filteredNotes.length} notes in view</p>
-            {isVerifiedTeacher ? (
-              <button
-                type="button"
-                onClick={openUploadFlow}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-              >
-                <UploadCloud className="h-4 w-4" />
-                Upload teacher note
-              </button>
+              </form>
             ) : null}
-          </div>
-        </div>
 
-        {showUploadForm && isVerifiedTeacher ? (
+            {showUploadForm && isVerifiedTeacher ? (
           <form onSubmit={uploadTeacherNote} className="mt-5 grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950/70 lg:grid-cols-2">
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note title</span>
@@ -568,104 +620,10 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               </button>
             </div>
           </form>
-        ) : null}
-
-        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
-          <label className="relative block">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search teacher notes, subjects, or teacher names"
-              className="w-full rounded-2xl border border-slate-200 bg-transparent px-11 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800"
-            />
-          </label>
-          <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600 dark:border-slate-800 dark:text-slate-300">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
-            Verified teacher uploads only
+            ) : null}
           </div>
-        </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {categoryOptions.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => setActiveCategory(chip)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                activeCategory === chip
-                  ? "bg-slate-950 text-white shadow-sm dark:bg-emerald-500 dark:text-slate-950"
-                  : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {streamChips.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => setActiveStream(chip)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                activeStream === chip
-                  ? "bg-amber-500 text-white shadow-sm"
-                  : "border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Teacher folders</p>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setActiveTeacher("All")}
-              className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                activeTeacher === "All"
-                  ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-              }`}
-            >
-              <FolderOpen className="h-4 w-4" />
-              All teacher folders
-            </button>
-
-            {teacherFolders.map((teacher) => (
-              <button
-                key={teacher.key}
-                type="button"
-                onClick={() => setActiveTeacher(teacher.key)}
-                className={`inline-flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                  activeTeacher === teacher.key
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                }`}
-              >
-                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
-                  {teacher.profilePhoto ? (
-                    <Image src={teacher.profilePhoto} alt={teacher.name} fill sizes="36px" className="object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs font-semibold">
-                      {teacher.name.slice(0, 1).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <span className="flex flex-col">
-                  <span className="font-semibold">{teacher.name}</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
 
@@ -747,11 +705,12 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           })}
         </div>
 
-        {!filteredNotes.length ? (
-          <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-            No teacher notes match your current search or filter. Try another stream, subject, or teacher name.
-          </div>
-        ) : null}
+          {!filteredNotes.length ? (
+            <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+              No teacher notes match your current search or filter. Try another stream, subject, or teacher name.
+            </div>
+          ) : null}
+        </div>
       </section>
     </div>
   );
