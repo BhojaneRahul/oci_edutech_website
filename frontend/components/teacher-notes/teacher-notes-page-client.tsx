@@ -440,11 +440,11 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           ) : null}
 
           <div
-            className={`sticky top-[72px] z-20 -mx-4 border-b border-slate-200/80 bg-white/95 px-4 pt-3 backdrop-blur transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8 ${
+            className={`sticky top-[72px] z-20 -mx-4 border-b border-slate-200/80 bg-white/95 px-4 pt-4 backdrop-blur transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8 ${
               isToolbarPinned ? "shadow-[0_14px_35px_-26px_rgba(15,23,42,0.28)]" : ""
             }`}
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4 pb-4">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -490,7 +490,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               </div>
             </div>
             <div
-              className="relative z-10 mt-2 overflow-x-auto overscroll-x-contain px-1 pb-3 pt-1 [&::-webkit-scrollbar]:hidden"
+              className="relative z-10 overflow-x-auto overscroll-x-contain px-1 pt-1 [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               <div className="flex min-w-max gap-2 lg:min-w-0 lg:justify-center">
@@ -512,11 +512,11 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           </div>
 
-          <div ref={actionPanelRef}>
+          <div ref={actionPanelRef} className="relative z-0 mt-6 space-y-6">
             {showVerificationForm && isTeacher && !isVerifiedTeacher ? (
               <form
                 onSubmit={submitTeacherVerification}
-                className="grid gap-4 border-b border-slate-200 bg-slate-50/80 py-6 dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2"
+                className="grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50/80 p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2"
               >
             <div className="lg:col-span-2">
               <p className="text-sm font-semibold text-slate-950 dark:text-white">Verify once, then upload anytime</p>
@@ -617,7 +617,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             ) : null}
 
             {showUploadForm && isVerifiedTeacher ? (
-          <form onSubmit={uploadTeacherNote} className="mt-5 grid gap-4 border-b border-slate-200 bg-slate-50/80 py-6 dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2">
+          <form onSubmit={uploadTeacherNote} className="grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50/80 p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2">
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note title</span>
               <input
@@ -697,7 +697,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             ) : null}
           </div>
 
-          <div className="space-y-5 pt-6">
+          <div className="grid grid-cols-1 gap-5 pt-2 lg:grid-cols-2 xl:grid-cols-3">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
             const profilePhotoSrc = getProfilePhotoSrc(note.uploader?.profilePhoto);
@@ -705,58 +705,53 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             return (
               <article
                 key={note._id}
-                className="group w-full min-w-0 overflow-hidden rounded-[28px] border border-slate-200 bg-white p-4 transition hover:border-amber-200 hover:shadow-[0_22px_55px_-36px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+                className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white p-4 transition hover:border-amber-200 hover:shadow-[0_22px_55px_-36px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
               >
-                <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-                  <div className="w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+                <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 px-4 py-3 dark:border-slate-800">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      Verified teacher
+                    </div>
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+                      {profilePhotoSrc ? (
+                        <img src={profilePhotoSrc} alt={note.uploader?.name || "Teacher"} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-slate-500 dark:text-slate-300">
+                          {(note.uploader?.name || "T").slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="overflow-hidden">
                     <iframe
                       src={`/api/pdf?src=${encodeURIComponent(note.fileUrl)}#page=1&toolbar=0&navpanes=0&scrollbar=0`}
                       title={`${note.title} first page preview`}
-                      className="pointer-events-none h-56 w-full lg:h-full lg:min-h-[220px]"
+                      className="pointer-events-none h-56 w-full"
                     />
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-2">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-                          <ShieldCheck className="h-3.5 w-3.5" />
-                          Verified teacher
-                        </div>
-                        <h3 className="line-clamp-2 text-base font-semibold leading-6 text-slate-950 dark:text-white">{note.title}</h3>
-                      </div>
-
-                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-                        {profilePhotoSrc ? (
-                          // Use a direct image element here so account-uploaded photos render reliably from local or remote URLs.
-                          <img src={profilePhotoSrc} alt={note.uploader?.name || "Teacher"} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-slate-500 dark:text-slate-300">
-                            {(note.uploader?.name || "T").slice(0, 1).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                      <p className="line-clamp-1">
-                        <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
-                      </p>
-                      <p className="line-clamp-1">
-                        <span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}
-                      </p>
-                      <p className="line-clamp-1">
-                        <span className="font-semibold text-slate-900 dark:text-white">Teacher:</span>{" "}
-                        {note.uploader?.name || note.uploader?.email || "Verified teacher"}
-                      </p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">
-                        {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
-                      </p>
-                    </div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="flex flex-1 flex-col px-1 pt-4">
+                  <h3 className="line-clamp-2 text-lg font-semibold leading-7 text-slate-950 dark:text-white">{note.title}</h3>
+
+                  <div className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                    <p className="line-clamp-1">
+                      <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
+                    </p>
+                    <p className="line-clamp-1">
+                      <span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}
+                    </p>
+                    <p className="line-clamp-1">
+                      <span className="font-semibold text-slate-900 dark:text-white">Teacher:</span>{" "}
+                      {note.uploader?.name || note.uploader?.email || "Verified teacher"}
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                      {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
+                    </p>
+                  </div>
+
+                <div className="mt-5 flex flex-wrap gap-2">
                   <Link
                     href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(note.fileUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
                     className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
@@ -792,13 +787,14 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     </button>
                   ) : null}
                 </div>
+                </div>
               </article>
             );
           })}
         </div>
 
           {!filteredNotes.length ? (
-            <div className="mt-6 flex min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-200/80 bg-slate-50/40 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
+            <div className="mt-4 flex min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-200/80 bg-slate-50/40 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
               <div className="mx-auto max-w-md space-y-2">
                 <p className="text-base font-semibold text-slate-800 dark:text-slate-100">No teacher notes found</p>
                 <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
