@@ -70,6 +70,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     universityBoard: user?.university || "",
     subjectExpertise: ""
   });
+  const isTeacher = user?.role === "teacher";
 
   const { data: teacherNotes = [] } = useQuery({
     queryKey: ["teacher-notes"],
@@ -88,8 +89,6 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     },
     enabled: Boolean(user && isTeacher)
   });
-
-  const isTeacher = user?.role === "teacher";
   const isVerifiedTeacher = isTeacher && user?.verifiedTeacher;
   const latestVerification = communityBootstrap?.verification || null;
   const verificationStatus = latestVerification?.status || null;
