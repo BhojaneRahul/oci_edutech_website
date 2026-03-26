@@ -346,100 +346,6 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         </div>
         </div>
 
-        {uploadMessage ? (
-          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-            {uploadMessage}
-          </div>
-        ) : null}
-
-        {verificationMessage ? (
-          <div className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
-            {verificationMessage}
-          </div>
-        ) : null}
-
-        {loading ? (
-          <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
-            Checking your teacher access...
-          </div>
-        ) : null}
-
-        {showUploadForm && isVerifiedTeacher ? (
-          <form onSubmit={uploadTeacherNote} className="mt-5 grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950/70 lg:grid-cols-2">
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note title</span>
-              <input
-                required
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                placeholder="Full Corporate Accounting Notes"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject</span>
-              <input
-                required
-                value={subject}
-                onChange={(event) => setSubject(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                placeholder="Corporate Accounting"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Stream</span>
-              <FormSelect
-                value={stream}
-                onChange={setStream}
-                options={streamOptions.map((option) => ({ label: option, value: option }))}
-              />
-            </label>
-
-            <label className="block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-white p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf"
-                className="sr-only"
-                onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
-              />
-              <div className="flex items-start gap-4">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-                  <UploadCloud className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                    {selectedFile ? selectedFile.name : "Choose full notes PDF"}
-                  </p>
-                  <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                    Upload one complete teacher note PDF for students to open and download.
-                  </p>
-                </div>
-              </div>
-            </label>
-
-            <div className="lg:col-span-2 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                disabled={busy}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-              >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-                {busy ? "Uploading teacher note..." : "Upload full teacher note"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowUploadForm(false)}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:text-slate-200"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        ) : null}
-
         {showVerificationForm && isTeacher && !isVerifiedTeacher ? (
           <form
             onSubmit={submitTeacherVerification}
@@ -547,6 +453,24 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       ) : null}
 
       <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+        {uploadMessage ? (
+          <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+            {uploadMessage}
+          </div>
+        ) : null}
+
+        {verificationMessage ? (
+          <div className="mb-5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
+            {verificationMessage}
+          </div>
+        ) : null}
+
+        {loading ? (
+          <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
+            Checking your teacher access...
+          </div>
+        ) : null}
+
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">Library</p>
@@ -569,6 +493,82 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             ) : null}
           </div>
         </div>
+
+        {showUploadForm && isVerifiedTeacher ? (
+          <form onSubmit={uploadTeacherNote} className="mt-5 grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950/70 lg:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note title</span>
+              <input
+                required
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                placeholder="Full Corporate Accounting Notes"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject</span>
+              <input
+                required
+                value={subject}
+                onChange={(event) => setSubject(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                placeholder="Corporate Accounting"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Stream</span>
+              <FormSelect
+                value={stream}
+                onChange={setStream}
+                options={streamOptions.map((option) => ({ label: option, value: option }))}
+              />
+            </label>
+
+            <label className="block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-white p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                className="sr-only"
+                onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+              />
+              <div className="flex items-start gap-4">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                  <UploadCloud className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {selectedFile ? selectedFile.name : "Choose full notes PDF"}
+                  </p>
+                  <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
+                    Upload one complete teacher note PDF for students to open and download.
+                  </p>
+                </div>
+              </div>
+            </label>
+
+            <div className="lg:col-span-2 flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={busy}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                {busy ? "Uploading teacher note..." : "Upload full teacher note"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUploadForm(false)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:text-slate-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : null}
 
         <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
           <label className="relative block">
