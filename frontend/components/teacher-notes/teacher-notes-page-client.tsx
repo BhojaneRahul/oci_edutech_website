@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, ChevronDown, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud } from "lucide-react";
+import { BadgeCheck, ChevronDown, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
@@ -58,7 +58,6 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const verificationFileRef = useRef<HTMLInputElement | null>(null);
-  const actionPanelRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
@@ -116,6 +115,20 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const latestVerification = communityBootstrap?.verification || null;
   const verificationStatus = latestVerification?.status || null;
   const hasPendingVerification = verificationStatus === "pending";
+  const isSidePanelOpen = showUploadForm || showVerificationForm;
+
+  const closeSidePanel = () => {
+    setShowUploadForm(false);
+    setShowVerificationForm(false);
+    setEditingNoteId(null);
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    if (verificationFileRef.current) {
+      verificationFileRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -126,21 +139,6 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       }));
     }
   }, [user]);
-
-  useEffect(() => {
-    if (!showUploadForm && !showVerificationForm) {
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      actionPanelRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    }, 80);
-
-    return () => window.clearTimeout(timeout);
-  }, [showUploadForm, showVerificationForm]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -258,13 +256,13 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         setStream("BCA");
         setSelectedFile(null);
       }
-      setShowUploadForm((current) => !current);
+      setShowUploadForm(true);
       return;
     }
 
     if (isTeacher) {
       setShowUploadForm(false);
-      setShowVerificationForm((current) => !current);
+      setShowVerificationForm(true);
       return;
     }
 
@@ -308,7 +306,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       setStream("BCA");
       setEditingNoteId(null);
       setSelectedFile(null);
-      setShowUploadForm(false);
+      closeSidePanel();
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -391,7 +389,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       });
 
       setVerificationMessage(response.data.message);
-      setShowVerificationForm(false);
+      closeSidePanel();
       setVerificationFile(null);
       if (verificationFileRef.current) {
         verificationFileRef.current.value = "";
@@ -420,7 +418,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   return (
     <div className="min-w-0 overflow-x-hidden">
       <section className="min-w-0 bg-white dark:bg-slate-950">
-        <div className="space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:px-8">
+        <div className="space-y-5 px-4 pb-28 pt-4 sm:px-6 lg:px-8">
           {uploadMessage ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
               {uploadMessage}
@@ -488,216 +486,31 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 </label>
               </div>
-            </div>
-            <div
-              className="relative z-10 overflow-x-auto overscroll-x-contain px-1 pt-1 [&::-webkit-scrollbar]:hidden"
+              <div
+                className="relative z-10 overflow-x-auto overscroll-x-contain px-1 pb-4 pt-1 [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              <div className="flex min-w-max gap-2 lg:min-w-0 lg:justify-center">
-                {categoryOptions.map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => setActiveCategory(chip)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] transition ${
-                      activeCategory === chip
-                        ? "bg-slate-950 text-white dark:bg-emerald-500 dark:text-slate-950"
-                        : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                    }`}
-                  >
-                    {chip}
-                  </button>
-                ))}
+              >
+                <div className="flex min-w-max gap-2 lg:min-w-0 lg:justify-center">
+                  {categoryOptions.map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => setActiveCategory(chip)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] transition ${
+                        activeCategory === chip
+                          ? "bg-slate-950 text-white dark:bg-emerald-500 dark:text-slate-950"
+                          : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                      }`}
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          <div ref={actionPanelRef} className="relative z-0 mt-6 space-y-6">
-            {showVerificationForm && isTeacher && !isVerifiedTeacher ? (
-              <form
-                onSubmit={submitTeacherVerification}
-                className="grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50/80 p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2"
-              >
-            <div className="lg:col-span-2">
-              <p className="text-sm font-semibold text-slate-950 dark:text-white">Verify once, then upload anytime</p>
-              <p className="mt-1 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                Submit your college ID and subject details here when you are ready to upload teacher notes. Once admin
-                approves your ID, the verified teacher badge and Teacher Notes upload access unlock automatically, and you
-                will not need to verify again.
-              </p>
-            </div>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Full name</span>
-              <input
-                required
-                value={verificationForm.fullName}
-                onChange={(event) => setVerificationForm((current) => ({ ...current, fullName: event.target.value }))}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                placeholder="Your full name"
-              />
-            </label>
-
-              <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">College name</span>
-              <input
-                required
-                value={verificationForm.collegeName}
-                onChange={(event) => setVerificationForm((current) => ({ ...current, collegeName: event.target.value }))}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                placeholder="Your college name"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">University / Board</span>
-              <input
-                required
-                value={verificationForm.universityBoard}
-                onChange={(event) => setVerificationForm((current) => ({ ...current, universityBoard: event.target.value }))}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                placeholder="Your university or board"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject expertise</span>
-              <input
-                required
-                value={verificationForm.subjectExpertise}
-                onChange={(event) =>
-                  setVerificationForm((current) => ({ ...current, subjectExpertise: event.target.value }))
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                placeholder="Commerce, Mathematics, Physics..."
-              />
-            </label>
-
-            <label className="lg:col-span-2 block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-white p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900">
-              <input
-                ref={verificationFileRef}
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp,.pdf"
-                className="sr-only"
-                onChange={(event) => setVerificationFile(event.target.files?.[0] ?? null)}
-              />
-              <div className="flex items-start gap-4">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-                  <GraduationCap className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                    {verificationFile ? verificationFile.name : "Upload college ID card"}
-                  </p>
-                  <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                    JPG, PNG, WEBP, or PDF. This is reviewed by admin and not shown publicly.
-                  </p>
-                </div>
-              </div>
-            </label>
-
-            <div className="lg:col-span-2 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                disabled={verificationBusy}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-              >
-                {verificationBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
-                {verificationBusy ? "Submitting verification..." : "Submit teacher verification"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowVerificationForm(false)}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:text-slate-200"
-              >
-                Cancel
-              </button>
-            </div>
-              </form>
-            ) : null}
-
-            {showUploadForm && isVerifiedTeacher ? (
-          <form onSubmit={uploadTeacherNote} className="grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50/80 p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950/40 lg:grid-cols-2">
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note title</span>
-              <input
-                required
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                placeholder="Full Corporate Accounting Notes"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject</span>
-              <input
-                required
-                value={subject}
-                onChange={(event) => setSubject(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                placeholder="Corporate Accounting"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Stream</span>
-              <FormSelect
-                value={stream}
-                onChange={setStream}
-                options={streamOptions.map((option) => ({ label: option, value: option }))}
-              />
-            </label>
-
-            <label className="block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-white p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf"
-                className="sr-only"
-                onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
-              />
-              <div className="flex items-start gap-4">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-                  <UploadCloud className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                    {selectedFile ? selectedFile.name : editingNoteId ? "Replace teacher notes PDF (optional)" : "Choose full notes PDF"}
-                  </p>
-                  <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                    Upload one complete teacher notes PDF for students to open, save, and download.
-                  </p>
-                </div>
-              </div>
-            </label>
-
-            <div className="lg:col-span-2 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                disabled={busy}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-              >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-                {busy ? (editingNoteId ? "Saving teacher notes..." : "Uploading teacher notes...") : editingNoteId ? "Save teacher notes" : "Upload teacher notes"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowUploadForm(false);
-                  setEditingNoteId(null);
-                  setSelectedFile(null);
-                }}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:text-slate-200"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-            ) : null}
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 pt-2 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 pt-6 lg:grid-cols-2 xl:grid-cols-3">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
             const profilePhotoSrc = getProfilePhotoSrc(note.uploader?.profilePhoto);
@@ -877,6 +690,212 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           <div className="h-28 md:h-32" />
         </div>
       </section>
+
+      {isSidePanelOpen ? (
+        <div className="fixed inset-0 z-40">
+          <button
+            type="button"
+            aria-label="Close teacher notes panel"
+            className="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px]"
+            onClick={closeSidePanel}
+          />
+          <aside className="absolute inset-y-0 right-0 flex w-full justify-end">
+            <div className="h-full w-full max-w-2xl overflow-y-auto border-l border-slate-200 bg-white shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-950">
+              <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:px-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">
+                      {showUploadForm ? "Upload notes" : "Teacher verification"}
+                    </p>
+                    <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
+                      {showUploadForm ? (editingNoteId ? "Edit teacher note" : "Upload teacher note") : "Verify lecturer profile"}
+                    </h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {showUploadForm
+                        ? "Upload one complete PDF in a clean format so students can open, save, and download it easily."
+                        : "Submit your academic details once. After admin approval, uploads unlock automatically everywhere."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeSidePanel}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-6 px-4 py-5 sm:px-6">
+                {showVerificationForm && isTeacher && !isVerifiedTeacher ? (
+                  <form onSubmit={submitTeacherVerification} className="grid gap-4 lg:grid-cols-2">
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Full name</span>
+                      <input
+                        required
+                        value={verificationForm.fullName}
+                        onChange={(event) => setVerificationForm((current) => ({ ...current, fullName: event.target.value }))}
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                        placeholder="Your full name"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">College name</span>
+                      <input
+                        required
+                        value={verificationForm.collegeName}
+                        onChange={(event) => setVerificationForm((current) => ({ ...current, collegeName: event.target.value }))}
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                        placeholder="Your college name"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">University / Board</span>
+                      <input
+                        required
+                        value={verificationForm.universityBoard}
+                        onChange={(event) => setVerificationForm((current) => ({ ...current, universityBoard: event.target.value }))}
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                        placeholder="Your university or board"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject expertise</span>
+                      <input
+                        required
+                        value={verificationForm.subjectExpertise}
+                        onChange={(event) => setVerificationForm((current) => ({ ...current, subjectExpertise: event.target.value }))}
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                        placeholder="Commerce, Mathematics, Physics..."
+                      />
+                    </label>
+
+                    <label className="lg:col-span-2 block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-slate-50/70 p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900/70">
+                      <input
+                        ref={verificationFileRef}
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,.pdf"
+                        className="sr-only"
+                        onChange={(event) => setVerificationFile(event.target.files?.[0] ?? null)}
+                      />
+                      <div className="flex items-start gap-4">
+                        <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                          <GraduationCap className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {verificationFile ? verificationFile.name : "Upload college ID card"}
+                          </p>
+                          <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
+                            JPG, PNG, WEBP, or PDF. This is reviewed by admin and not shown publicly.
+                          </p>
+                        </div>
+                      </div>
+                    </label>
+
+                    <div className="lg:col-span-2 flex flex-wrap gap-3 pt-2">
+                      <button
+                        type="submit"
+                        disabled={verificationBusy}
+                        className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                      >
+                        {verificationBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
+                        {verificationBusy ? "Submitting verification..." : "Submit teacher verification"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={closeSidePanel}
+                        className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:text-slate-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : null}
+
+                {showUploadForm && isVerifiedTeacher ? (
+                  <form onSubmit={uploadTeacherNote} className="grid gap-4 lg:grid-cols-2">
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note title</span>
+                      <input
+                        required
+                        value={title}
+                        onChange={(event) => setTitle(event.target.value)}
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                        placeholder="Full Corporate Accounting Notes"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject</span>
+                      <input
+                        required
+                        value={subject}
+                        onChange={(event) => setSubject(event.target.value)}
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                        placeholder="Corporate Accounting"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Stream</span>
+                      <FormSelect
+                        value={stream}
+                        onChange={setStream}
+                        options={streamOptions.map((option) => ({ label: option, value: option }))}
+                      />
+                    </label>
+
+                    <label className="block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-slate-50/70 p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900/70">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/pdf"
+                        className="sr-only"
+                        onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                      />
+                      <div className="flex items-start gap-4">
+                        <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                          <UploadCloud className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {selectedFile ? selectedFile.name : editingNoteId ? "Replace teacher notes PDF (optional)" : "Choose full notes PDF"}
+                          </p>
+                          <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
+                            Upload one complete teacher notes PDF for students to open, save, and download.
+                          </p>
+                        </div>
+                      </div>
+                    </label>
+
+                    <div className="lg:col-span-2 flex flex-wrap gap-3 pt-2">
+                      <button
+                        type="submit"
+                        disabled={busy}
+                        className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                      >
+                        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                        {busy ? (editingNoteId ? "Saving teacher notes..." : "Uploading teacher notes...") : editingNoteId ? "Save teacher notes" : "Upload teacher notes"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={closeSidePanel}
+                        className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:text-slate-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : null}
+              </div>
+            </div>
+          </aside>
+        </div>
+      ) : null}
     </div>
   );
 }
