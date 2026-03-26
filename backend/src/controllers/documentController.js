@@ -258,8 +258,62 @@ export const uploadTeacherNote = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: "Teacher note uploaded successfully.",
+    message: "Teacher notes uploaded successfully.",
     document: normalizeDocument(createdDocument)
+  });
+});
+
+export const updateTeacherNote = asyncHandler(async (req, res) => {
+  const documentId = Number(req.params.id);
+  const existingDocument = await prisma.document.findUnique({
+    where: { id: documentId },
+    include: {
+      uploader: {
+        select: {
+          id: true,
+          verifiedTeacher: true
+        }
+      }
+    }
+  });
+
+  if (!existingDocument || existingDocument.type !== "notes" || !existingDocument.uploader?.verifiedTeacher) {
+    res.status(404);
+    throw new Error("Teacher notes not found");
+  }
+
+  if (existingDocument.uploadedBy !== req.user.id && req.user.role !== "admin") {
+    res.status(403);
+    throw new Error("You can only edit your own teacher notes");
+  }
+
+  const { title, subject, stream } = req.body;
+
+  const updatedDocument = await prisma.document.update({
+    where: { id: documentId },
+    data: {
+      title: title ?? existingDocument.title,
+      subject: subject ?? existingDocument.subject,
+      stream: stream ?? existingDocument.stream,
+      fileUrl: req.file ? `${req.protocol}://${req.get("host")}/uploads/pdfs/${req.file.filename}` : existingDocument.fileUrl
+    },
+    include: {
+      uploader: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          verifiedTeacher: true
+        }
+      }
+    }
+  });
+
+  res.json({
+    success: true,
+    message: "Teacher notes updated successfully.",
+    document: normalizeDocument(updatedDocument)
   });
 });
 
@@ -417,7 +471,7 @@ export const deleteTeacherNote = asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    message: "Teacher note deleted successfully"
+    message: "Teacher notes deleted successfully"
   });
 });
 

@@ -7,6 +7,7 @@ import {
   getTeacherNotes,
   incrementDocumentDownload,
   incrementDocumentView,
+  updateTeacherNote,
   updateTeacherNoteStatus,
   uploadTeacherNote
 } from "../controllers/documentController.js";
@@ -18,6 +19,7 @@ const router = express.Router();
 router.get("/", getDocuments);
 router.get("/teacher-notes", getTeacherNotes);
 router.post("/teacher-notes", protect, verifiedTeacherOnly, uploadPdf.single("file"), uploadTeacherNote);
+router.put("/teacher-notes/:id", protect, verifiedTeacherOnly, uploadPdf.single("file"), updateTeacherNote);
 router.delete("/teacher-notes/:id", protect, deleteTeacherNote);
 router.get("/admin/teacher-notes", protect, adminOnly, getAdminTeacherNotes);
 router.put("/admin/teacher-notes/:id/status", protect, adminOnly, updateTeacherNoteStatus);
