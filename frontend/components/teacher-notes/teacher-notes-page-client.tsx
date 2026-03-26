@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud } from "lucide-react";
+import { BadgeCheck, ChevronDown, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud } from "lucide-react";
 import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
@@ -397,7 +397,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   return (
     <div className="min-w-0 overflow-x-hidden">
       <section className="min-w-0 bg-white dark:bg-slate-950">
-        <div className="space-y-5 px-4 pb-8 pt-2 sm:px-6 lg:px-8">
+        <div className="space-y-5 px-4 pb-8 pt-3 sm:px-6 lg:px-8">
           {uploadMessage ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
               {uploadMessage}
@@ -416,26 +416,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           ) : null}
 
-          <div className="sticky top-20 z-20 -mx-4 border-b border-slate-200 bg-white/95 px-4 pb-4 pt-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
+          <div className="sticky top-20 z-20 -mx-4 border-b border-slate-200 bg-white/95 px-4 pb-4 pt-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 lg:top-20 xl:-mx-8 xl:px-8">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div />
-                <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-                  {isTeacher ? (
-                    <button
-                      type="button"
-                      onClick={openUploadFlow}
-                      disabled={hasPendingVerification}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-                    >
-                      {isVerifiedTeacher ? <UploadCloud className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4" />}
-                      {isVerifiedTeacher ? "Upload teacher note" : hasPendingVerification ? "Verification pending" : "Verify to upload"}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px]">
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <label className="relative block">
                   <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
@@ -445,12 +428,12 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition focus:border-amber-400 focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950 dark:placeholder:text-slate-500"
                   />
                 </label>
-                <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <label className="relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <SlidersHorizontal className="h-4 w-4 shrink-0 text-slate-400" />
                   <select
                     value={sortBy}
                     onChange={(event) => setSortBy(event.target.value as (typeof sortOptions)[number]["value"])}
-                    className="h-12 w-full appearance-none bg-transparent text-sm font-medium text-slate-700 outline-none dark:text-slate-100"
+                    className="h-12 w-full appearance-none bg-transparent pr-8 text-sm font-medium text-slate-700 outline-none dark:text-slate-100"
                   >
                     {sortOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -458,12 +441,16 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       </option>
                     ))}
                   </select>
+                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 </label>
               </div>
 
               <div className="space-y-3">
-                <div className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
-                  <div className="flex min-w-max gap-2 lg:min-w-0 lg:flex-wrap lg:justify-center">
+                <div
+                  className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8 [&::-webkit-scrollbar]:hidden"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  <div className="flex min-w-max gap-2 py-1 lg:min-w-0 lg:flex-wrap lg:justify-center">
                     {categoryOptions.map((chip) => (
                       <button
                         key={chip}
@@ -670,21 +657,21 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             ) : null}
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
 
             return (
               <article
                 key={note._id}
-                className="group flex h-full flex-col rounded-[26px] border border-slate-200 bg-white p-4 transition hover:border-amber-200 hover:shadow-[0_18px_50px_-34px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+                className="group flex h-full min-w-0 flex-col rounded-[26px] border border-slate-200 bg-white p-4 transition hover:border-amber-200 hover:shadow-[0_18px_50px_-34px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
               >
-                <div className="flex gap-4">
-                  <div className="w-24 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+                <div className="flex flex-col gap-4 sm:flex-row">
+                  <div className="w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 sm:w-28 dark:border-slate-800 dark:bg-slate-950">
                     <iframe
                       src={`/api/pdf?src=${encodeURIComponent(note.fileUrl)}#page=1&toolbar=0&navpanes=0&scrollbar=0`}
                       title={`${note.title} first page preview`}
-                      className="h-32 w-full pointer-events-none"
+                      className="pointer-events-none h-44 w-full sm:h-36"
                     />
                   </div>
 
@@ -781,7 +768,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
           <div className="fixed bottom-4 left-0 right-0 z-30">
             <div
-              className="overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden sm:px-6 lg:pl-[20rem] lg:pr-8"
+              className="overflow-x-auto overscroll-x-contain px-4 [&::-webkit-scrollbar]:hidden sm:px-6 lg:pl-[20rem] lg:pr-8"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               <div className="mx-auto flex min-w-max items-center gap-3 rounded-[22px] border border-slate-200 bg-white/95 p-2 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
@@ -834,11 +821,22 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     </Link>
                   </div>
                 ))}
+                {isTeacher ? (
+                  <button
+                    type="button"
+                    onClick={openUploadFlow}
+                    disabled={hasPendingVerification}
+                    className="ml-1 inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                  >
+                    {isVerifiedTeacher ? <UploadCloud className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4" />}
+                    {isVerifiedTeacher ? "Upload teacher note" : hasPendingVerification ? "Verification pending" : "Verify to upload"}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
 
-          <div className="h-24" />
+          <div className="h-28 md:h-32" />
         </div>
       </section>
     </div>
