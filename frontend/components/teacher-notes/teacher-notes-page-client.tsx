@@ -7,7 +7,9 @@ import { BadgeCheck, ChevronDown, Download, FileText, FolderOpen, GraduationCap,
 import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
+import { PDFPagePreview } from "../pdf/pdf-page-preview";
 import { FormSelect } from "../ui/form-select";
+import { SafeAvatar } from "../ui/safe-avatar";
 
 const streamOptions = ["BCA", "B.Com", "BSc", "BA", "BBA", "1st PUC", "2nd PUC"];
 const categoryOptions = ["All", "Full Notes", "Revision", "Important Questions", "Unit Notes"];
@@ -43,18 +45,6 @@ function getTeacherNoteCategory(note: Document) {
   }
 
   return "Full Notes";
-}
-
-function getProfilePhotoSrc(profilePhoto?: string | null) {
-  if (!profilePhoto) {
-    return null;
-  }
-
-  if (profilePhoto.startsWith("http://") || profilePhoto.startsWith("https://") || profilePhoto.startsWith("/")) {
-    return profilePhoto;
-  }
-
-  return `/${profilePhoto.replace(/^\/+/, "")}`;
 }
 
 export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Document[] }) {
@@ -522,7 +512,6 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           <div className="grid grid-cols-1 gap-5 border-t border-slate-100 pt-8 dark:border-slate-900 lg:grid-cols-2 xl:grid-cols-3">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
-            const profilePhotoSrc = getProfilePhotoSrc(note.uploader?.profilePhoto);
 
             return (
               <article
@@ -536,22 +525,16 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       Verified teacher
                     </div>
                     <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-                      {profilePhotoSrc ? (
-                        <img src={profilePhotoSrc} alt={note.uploader?.name || "Teacher"} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-slate-500 dark:text-slate-300">
-                          {(note.uploader?.name || "T").slice(0, 1).toUpperCase()}
-                        </div>
-                      )}
+                      <SafeAvatar
+                        src={note.uploader?.profilePhoto ?? null}
+                        alt={note.uploader?.name || "Teacher"}
+                        className="h-full w-full object-cover"
+                        fallback={(note.uploader?.name || "T").slice(0, 1).toUpperCase()}
+                        fallbackClassName="h-full w-full text-sm font-semibold text-slate-500 dark:text-slate-300"
+                      />
                     </div>
                   </div>
-                  <div className="overflow-hidden">
-                    <iframe
-                      src={`/api/pdf?src=${encodeURIComponent(note.fileUrl)}#page=1&toolbar=0&navpanes=0&scrollbar=0`}
-                      title={`${note.title} first page preview`}
-                      className="pointer-events-none h-56 w-full"
-                    />
-                  </div>
+                  <PDFPagePreview url={note.fileUrl} title={note.title} canvasClassName="min-h-[220px] bg-white sm:min-h-[240px]" />
                 </div>
 
                 <div className="flex flex-1 flex-col px-1 pt-4">
@@ -660,13 +643,13 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       className="inline-flex items-center gap-3 text-left"
                     >
                       <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
-                        {getProfilePhotoSrc(teacher.profilePhoto) ? (
-                          <img src={getProfilePhotoSrc(teacher.profilePhoto)!} alt={teacher.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-xs font-semibold">
-                            {teacher.name.slice(0, 1).toUpperCase()}
-                          </div>
-                        )}
+                        <SafeAvatar
+                          src={teacher.profilePhoto ?? null}
+                          alt={teacher.name}
+                          className="h-full w-full object-cover"
+                          fallback={teacher.name.slice(0, 1).toUpperCase()}
+                          fallbackClassName="h-full w-full text-xs font-semibold"
+                        />
                       </div>
                       <span className="flex flex-col">
                         <span className="font-semibold">{teacher.name}</span>

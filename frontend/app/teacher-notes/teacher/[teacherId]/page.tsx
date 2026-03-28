@@ -2,24 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Download, Eye, FileText, ShieldCheck } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PDFPagePreview } from "@/components/pdf/pdf-page-preview";
+import { SafeAvatar } from "@/components/ui/safe-avatar";
 import { serverApi } from "@/lib/server-api";
-
-function getProfilePhotoSrc(profilePhoto?: string | null) {
-  if (!profilePhoto) {
-    return null;
-  }
-
-  if (profilePhoto.startsWith("http://") || profilePhoto.startsWith("https://") || profilePhoto.startsWith("/")) {
-    return profilePhoto;
-  }
-
-  return `/${profilePhoto.replace(/^\/+/, "")}`;
-}
-
-function getPreviewUrl(fileUrl: string) {
-  const separator = fileUrl.includes("?") ? "&" : "?";
-  return `${fileUrl}${separator}toolbar=0&navpanes=0&scrollbar=0#view=FitH&page=1`;
-}
 
 export default async function TeacherProfilePage({
   params
@@ -30,7 +15,6 @@ export default async function TeacherProfilePage({
   const teacherNotes = await serverApi.getTeacherNotes().catch(() => []);
   const notes = teacherNotes.filter((note) => String(note.uploader?.id ?? note.uploader?.email ?? note._id) === teacherId);
   const teacher = notes[0]?.uploader;
-  const profilePhoto = getProfilePhotoSrc(teacher?.profilePhoto);
 
   if (!teacherId) {
     notFound();
@@ -50,13 +34,13 @@ export default async function TeacherProfilePage({
             <div className="grid gap-6 px-5 py-6 sm:px-7 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 shadow-inner dark:border-slate-800 dark:bg-slate-900">
-                  {profilePhoto ? (
-                    <img src={profilePhoto} alt={teacher?.name || "Teacher"} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-slate-500">
-                      {(teacher?.name || "T").slice(0, 1).toUpperCase()}
-                    </div>
-                  )}
+                  <SafeAvatar
+                    src={teacher?.profilePhoto ?? null}
+                    alt={teacher?.name || "Teacher"}
+                    className="h-full w-full object-cover"
+                    fallback={(teacher?.name || "T").slice(0, 1).toUpperCase()}
+                    fallbackClassName="h-full w-full text-3xl font-semibold text-slate-500"
+                  />
                 </div>
                 <div className="min-w-0">
                   <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
@@ -96,23 +80,17 @@ export default async function TeacherProfilePage({
                     Verified Teacher
                   </div>
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
-                    {profilePhoto ? (
-                      <img src={profilePhoto} alt={teacher?.name || "Teacher"} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="text-sm font-semibold text-slate-500">
-                        {(teacher?.name || "T").slice(0, 1).toUpperCase()}
-                      </div>
-                    )}
+                    <SafeAvatar
+                      src={teacher?.profilePhoto ?? null}
+                      alt={teacher?.name || "Teacher"}
+                      className="h-full w-full object-cover"
+                      fallback={(teacher?.name || "T").slice(0, 1).toUpperCase()}
+                      fallbackClassName="h-full w-full text-sm font-semibold text-slate-500"
+                    />
                   </div>
                 </div>
                 <div className="p-5">
-                  <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-slate-50 shadow-inner dark:border-slate-800 dark:bg-slate-950">
-                    <iframe
-                      title={`${note.title} preview`}
-                      src={getPreviewUrl(note.fileUrl)}
-                      className="h-56 w-full bg-white sm:h-64"
-                    />
-                  </div>
+                  <PDFPagePreview url={note.fileUrl} title={note.title} canvasClassName="min-h-[220px] bg-white sm:min-h-[240px]" />
                   <div className="mt-5 space-y-3">
                     <div>
                       <h2 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">{note.title}</h2>
