@@ -5,7 +5,7 @@ import { FileText } from "lucide-react";
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type RenderTask } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { resolveMediaUrl } from "@/lib/utils";
 
-GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 type PDFPagePreviewProps = {
   url: string;
@@ -49,7 +49,8 @@ export function PDFPagePreview({
         const buffer = await response.arrayBuffer();
         const loadingTask = getDocument({
           data: new Uint8Array(buffer),
-          useWorkerFetch: false
+          useWorkerFetch: false,
+          disableWorker: true
         });
         pdfDocument = await loadingTask.promise;
         const page = await pdfDocument.getPage(1);

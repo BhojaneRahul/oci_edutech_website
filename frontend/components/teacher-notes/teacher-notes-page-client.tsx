@@ -542,7 +542,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       />
                     </div>
                   </div>
-                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[132px] bg-white sm:min-h-[148px]" />
+                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[112px] bg-white sm:min-h-[124px]" />
                 </div>
 
                 <div className="flex flex-1 flex-col px-1 pt-2.5">
@@ -576,39 +576,45 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       href={mediaUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-[13px] font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                    className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                    aria-label="Download Notes"
+                    title="Download Notes"
                   >
                     <Download className="h-4 w-4" />
-                    Download Notes
                   </a>
                   <button
                     type="button"
                     onClick={() => void toggleSavedDocument(note._id)}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition ${
+                    className={`inline-flex items-center justify-center rounded-full border p-2.5 transition ${
                       isSaved
                         ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
                         : "border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
                     }`}
+                    aria-label={isSaved ? "Saved Notes" : "Save Notes"}
+                    title={isSaved ? "Saved Notes" : "Save Notes"}
                   >
                     {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-                    {isSaved ? "Saved" : "Save"}
                   </button>
                   {isOwner ? (
                     <button
                       type="button"
                       onClick={() => startEditTeacherNote(note)}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-[13px] font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                      className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                      aria-label="Edit Notes"
+                      title="Edit Notes"
                     >
-                      Edit
+                      <FileText className="h-4 w-4" />
                     </button>
                   ) : null}
                   {isOwner ? (
                     <button
                       type="button"
                       onClick={() => void deleteTeacherNote(note._id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-3 py-1.5 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                      className="inline-flex items-center justify-center rounded-full border border-rose-200 p-2.5 text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                      aria-label="Delete Notes"
+                      title="Delete Notes"
                     >
-                      Delete
+                      <X className="h-4 w-4" />
                     </button>
                   ) : null}
                 </div>

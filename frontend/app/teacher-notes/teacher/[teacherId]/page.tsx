@@ -109,7 +109,7 @@ export default async function TeacherProfilePage({
                   </div>
                 </div>
                 <div className="p-5">
-                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[132px] bg-white sm:min-h-[148px]" />
+                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[112px] bg-white sm:min-h-[124px]" />
                   <div className="mt-4 space-y-2.5">
                     <div>
                       <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">{note.title}</h2>
