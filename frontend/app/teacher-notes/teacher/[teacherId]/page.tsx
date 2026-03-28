@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Download, Eye, FileText, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Download, Eye, FileText } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PDFPagePreview } from "@/components/pdf/pdf-page-preview";
-import { SafeAvatar } from "@/components/ui/safe-avatar";
 import { serverApi } from "@/lib/server-api";
 import { resolveMediaUrl } from "@/lib/utils";
 
@@ -40,28 +39,13 @@ export default async function TeacherProfilePage({
               </Link>
             </div>
             <div className="grid gap-6 px-5 py-6 sm:px-7 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[28px] border border-slate-200 bg-slate-50 shadow-inner dark:border-slate-800 dark:bg-slate-900">
-                  <SafeAvatar
-                    src={teacher?.profilePhoto ?? null}
-                    alt={teacher?.name || "Lecturer"}
-                    className="h-full w-full object-cover"
-                    fallback={(teacher?.name || "T").slice(0, 1).toUpperCase()}
-                    fallbackClassName="h-full w-full text-3xl font-semibold text-slate-500"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Verified Lecturer
-                  </div>
-                  <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
-                    {teacher?.name || "Lecturer profile"}
-                  </h1>
-                  <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-                    Browse complete lecturer notes uploaded by this verified lecturer. Each set is organized for clear reading, quick revision, and dependable subject-wise study support.
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
+                  {teacher?.name || "Lecturer profile"}
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  Browse complete lecturer notes uploaded by this lecturer. Each set is organized for clear reading, quick revision, and dependable subject-wise study support.
+                </p>
               </div>
               <div className="grid gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/50">
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -99,21 +83,6 @@ export default async function TeacherProfilePage({
                           key={String(note._id)}
                           className="w-[84vw] max-w-[320px] shrink-0 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_44px_-34px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_56px_-34px_rgba(245,158,11,0.2)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20 md:max-w-[280px]"
                         >
-                          <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-4 pb-3 pt-4 dark:border-slate-800">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-                              <ShieldCheck className="h-3.5 w-3.5" />
-                              Verified Lecturer
-                            </div>
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
-                              <SafeAvatar
-                                src={teacher?.profilePhoto ?? null}
-                                alt={teacher?.name || "Lecturer"}
-                                className="h-full w-full object-cover"
-                                fallback={(teacher?.name || "L").slice(0, 1).toUpperCase()}
-                                fallbackClassName="h-full w-full text-sm font-semibold text-slate-500"
-                              />
-                            </div>
-                          </div>
                           <div className="p-4">
                             <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[160px] bg-white" />
                             <div className="mt-4 space-y-2">
@@ -161,7 +130,7 @@ export default async function TeacherProfilePage({
                 </div>
               </>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                 {notes.map((note) => {
                   const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
 
@@ -170,21 +139,6 @@ export default async function TeacherProfilePage({
                       key={String(note._id)}
                       className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_44px_-34px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_56px_-34px_rgba(245,158,11,0.2)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
                     >
-                      <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-4 pb-3 pt-4 dark:border-slate-800">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-                          <ShieldCheck className="h-3.5 w-3.5" />
-                          Verified Lecturer
-                        </div>
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
-                          <SafeAvatar
-                            src={teacher?.profilePhoto ?? null}
-                            alt={teacher?.name || "Lecturer"}
-                            className="h-full w-full object-cover"
-                            fallback={(teacher?.name || "L").slice(0, 1).toUpperCase()}
-                            fallbackClassName="h-full w-full text-sm font-semibold text-slate-500"
-                          />
-                        </div>
-                      </div>
                       <div className="p-4">
                         <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[150px] bg-white sm:min-h-[170px]" />
                         <div className="mt-4 space-y-2">

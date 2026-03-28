@@ -8,7 +8,6 @@ import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
 import { PDFPagePreview } from "../pdf/pdf-page-preview";
-import { SafeAvatar } from "../ui/safe-avatar";
 import { resolveMediaUrl } from "@/lib/utils";
 
 const streamOptions = ["BCA", "B.Com", "BSc", "BA", "BBA", "1st PUC", "2nd PUC"];
@@ -476,21 +475,6 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[22px] border border-slate-200 bg-white p-2.5 shadow-[0_10px_26px_-22px_rgba(15,23,42,0.24)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_18px_36px_-24px_rgba(15,23,42,0.26)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
       >
         <div className="w-full overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 px-3 py-3 dark:border-slate-800">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Verified lecturer
-            </div>
-            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-              <SafeAvatar
-                src={note.uploader?.profilePhoto ?? null}
-                alt={note.uploader?.name || "Lecturer"}
-                className="h-full w-full object-cover"
-                fallback={(note.uploader?.name || "L").slice(0, 1).toUpperCase()}
-                fallbackClassName="h-full w-full text-sm font-semibold text-slate-500 dark:text-slate-300"
-              />
-            </div>
-          </div>
           <PDFPagePreview
             url={mediaUrl}
             title={note.title}
@@ -683,17 +667,8 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     <button
                       type="button"
                       onClick={() => setActiveTeacher(teacherGroup.key)}
-                      className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-left shadow-sm transition hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-emerald-500/30"
+                      className="inline-flex items-center gap-2 px-1 py-1 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
                     >
-                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-                        <SafeAvatar
-                          src={teacherGroup.profilePhoto ?? null}
-                          alt={teacherGroup.name}
-                          className="h-full w-full object-cover"
-                          fallback={teacherGroup.name.slice(0, 1).toUpperCase()}
-                          fallbackClassName="h-full w-full text-sm font-semibold text-slate-500 dark:text-slate-300"
-                        />
-                      </div>
                       <span className="flex min-w-0 flex-col">
                         <span className="truncate text-sm font-semibold text-slate-900 dark:text-white">{teacherGroup.name}</span>
                         <span className="text-xs text-slate-500 dark:text-slate-400">{teacherGroup.notes.length} notes</span>
@@ -712,12 +687,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden"
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                   >
-                    <div className="flex gap-4">
+                    <div className="grid auto-cols-[78vw] grid-flow-col gap-4 md:auto-cols-[calc((100%-2rem)/3)] lg:auto-cols-[calc((100%-3rem)/4)] xl:auto-cols-[calc((100%-4rem)/5)]">
                       {teacherGroup.notes.map((note) => (
-                        <div
-                          key={String(note._id)}
-                          className="w-[78vw] max-w-[310px] shrink-0 snap-start md:w-[250px] lg:w-[240px] xl:w-[230px]"
-                        >
+                        <div key={String(note._id)} className="min-w-0 snap-start">
                           {renderLecturerCard(note)}
                         </div>
                       ))}
@@ -768,26 +740,17 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   {teacherFolders.map((teacher) => (
                     <div
                       key={teacher.key}
-                      className={`inline-flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
+                      className={`inline-flex items-center gap-3 px-1 py-1 text-left text-sm transition ${
                         activeTeacher === teacher.key
-                          ? "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                          ? "text-emerald-800 dark:text-emerald-200"
+                          : "text-slate-700 hover:text-emerald-700 dark:text-slate-200"
                       }`}
                     >
                       <button
                         type="button"
                         onClick={() => setActiveTeacher(teacher.key)}
-                        className="inline-flex items-center gap-3 text-left"
+                        className="inline-flex items-center gap-2 text-left"
                       >
-                        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
-                          <SafeAvatar
-                            src={teacher.profilePhoto ?? null}
-                            alt={teacher.name}
-                            className="h-full w-full object-cover"
-                            fallback={teacher.name.slice(0, 1).toUpperCase()}
-                            fallbackClassName="h-full w-full text-xs font-semibold"
-                          />
-                        </div>
                         <span className="flex flex-col">
                           <span className="font-semibold">{teacher.name}</span>
                           <span className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</span>
@@ -879,20 +842,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     }}
                     className="w-full text-left"
                   >
-                    <div className="mb-2 flex items-center gap-3">
-                      <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
-                        <SafeAvatar
-                          src={teacher.profilePhoto ?? null}
-                          alt={teacher.name}
-                          className="h-full w-full object-cover"
-                          fallback={teacher.name.slice(0, 1).toUpperCase()}
-                          fallbackClassName="h-full w-full text-xs font-semibold"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{teacher.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</p>
-                      </div>
+                    <div className="mb-2 min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{teacher.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</p>
                     </div>
                   </button>
                   <Link
