@@ -701,7 +701,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       </section>
 
       {isSidePanelOpen ? (
-        <div className="fixed inset-x-0 bottom-0 top-[74px] z-40 sm:top-[86px]">
+        <div className="fixed inset-x-0 bottom-0 top-[86px] z-40 sm:top-[92px] lg:top-[96px]">
           <button
             type="button"
             aria-label="Close teacher notes panel"
@@ -737,75 +737,90 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
               <div className="space-y-6 px-4 py-5 sm:px-6">
                 {showVerificationForm && isTeacher && !isVerifiedTeacher ? (
-                  <form onSubmit={submitTeacherVerification} className="grid gap-4 lg:grid-cols-2">
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Full name</span>
-                      <input
-                        required
-                        value={verificationForm.fullName}
-                        onChange={(event) => setVerificationForm((current) => ({ ...current, fullName: event.target.value }))}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                        placeholder="Your full name"
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">College name</span>
-                      <input
-                        required
-                        value={verificationForm.collegeName}
-                        onChange={(event) => setVerificationForm((current) => ({ ...current, collegeName: event.target.value }))}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                        placeholder="Your college name"
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">University / Board</span>
-                      <input
-                        required
-                        value={verificationForm.universityBoard}
-                        onChange={(event) => setVerificationForm((current) => ({ ...current, universityBoard: event.target.value }))}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                        placeholder="Your university or board"
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject expertise</span>
-                      <input
-                        required
-                        value={verificationForm.subjectExpertise}
-                        onChange={(event) => setVerificationForm((current) => ({ ...current, subjectExpertise: event.target.value }))}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                        placeholder="Commerce, Mathematics, Physics..."
-                      />
-                    </label>
-
-                    <label className="lg:col-span-2 block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-slate-50/70 p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900/70">
-                      <input
-                        ref={verificationFileRef}
-                        type="file"
-                        accept=".jpg,.jpeg,.png,.webp,.pdf"
-                        className="sr-only"
-                        onChange={(event) => setVerificationFile(event.target.files?.[0] ?? null)}
-                      />
-                      <div className="flex items-start gap-4">
-                        <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-                          <GraduationCap className="h-5 w-5" />
+                  <form onSubmit={submitTeacherVerification} className="space-y-5">
+                    <section className="rounded-[28px] border border-slate-200 bg-slate-50/55 p-5 dark:border-slate-800 dark:bg-slate-900/40">
+                      <div className="mb-4 flex items-center gap-3">
+                        <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                          <BadgeCheck className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                            {verificationFile ? verificationFile.name : "Upload college ID card"}
-                          </p>
-                          <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                            JPG, PNG, WEBP, or PDF. This is reviewed by admin and not shown publicly.
-                          </p>
+                          <h3 className="text-base font-semibold text-slate-900 dark:text-white">Academic profile</h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">This is used once for lecturer verification and unlocks uploads after approval.</p>
                         </div>
                       </div>
-                    </label>
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        <label className="block">
+                          <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Full name</span>
+                          <input
+                            required
+                            value={verificationForm.fullName}
+                            onChange={(event) => setVerificationForm((current) => ({ ...current, fullName: event.target.value }))}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                            placeholder="Your full name"
+                          />
+                        </label>
 
-                    <div className="lg:col-span-2 flex flex-wrap gap-3 pt-2">
+                        <label className="block">
+                          <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">College name</span>
+                          <input
+                            required
+                            value={verificationForm.collegeName}
+                            onChange={(event) => setVerificationForm((current) => ({ ...current, collegeName: event.target.value }))}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                            placeholder="Your college name"
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">University / Board</span>
+                          <input
+                            required
+                            value={verificationForm.universityBoard}
+                            onChange={(event) => setVerificationForm((current) => ({ ...current, universityBoard: event.target.value }))}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                            placeholder="Your university or board"
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject expertise</span>
+                          <input
+                            required
+                            value={verificationForm.subjectExpertise}
+                            onChange={(event) => setVerificationForm((current) => ({ ...current, subjectExpertise: event.target.value }))}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                            placeholder="Commerce, Mathematics, Physics..."
+                          />
+                        </label>
+                      </div>
+                    </section>
+
+                    <section className="rounded-[28px] border border-dashed border-slate-200 bg-white p-5 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-950">
+                      <label className="block cursor-pointer">
+                        <input
+                          ref={verificationFileRef}
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.webp,.pdf"
+                          className="sr-only"
+                          onChange={(event) => setVerificationFile(event.target.files?.[0] ?? null)}
+                        />
+                        <div className="flex items-start gap-4">
+                          <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                            <GraduationCap className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                              {verificationFile ? verificationFile.name : "Upload college ID card"}
+                            </p>
+                            <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
+                              JPG, PNG, WEBP, or PDF. This file is reviewed by admin and stays private.
+                            </p>
+                          </div>
+                        </div>
+                      </label>
+                    </section>
+
+                    <div className="flex flex-wrap gap-3 pt-1">
                       <button
                         type="submit"
                         disabled={verificationBusy}
@@ -826,73 +841,107 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 ) : null}
 
                 {showUploadForm && isVerifiedTeacher ? (
-                  <form onSubmit={uploadTeacherNote} className="grid gap-4 lg:grid-cols-2">
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note title</span>
-                      <input
-                        required
-                        value={title}
-                        onChange={(event) => setTitle(event.target.value)}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                        placeholder="Full Corporate Accounting Notes"
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject</span>
-                      <input
-                        required
-                        value={subject}
-                        onChange={(event) => setSubject(event.target.value)}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
-                        placeholder="Corporate Accounting"
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Stream</span>
-                      <FormSelect
-                        value={stream}
-                        onChange={setStream}
-                        options={streamOptions.map((option) => ({ label: option, value: option }))}
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note category</span>
-                      <FormSelect
-                        value={noteCategory}
-                        onChange={setNoteCategory}
-                        options={categoryOptions
-                          .filter((option) => option !== "All")
-                          .map((option) => ({ label: option, value: option }))}
-                      />
-                    </label>
-
-                    <label className="block cursor-pointer rounded-[24px] border border-dashed border-slate-200 bg-slate-50/70 p-4 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900/70 lg:col-span-2">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="application/pdf"
-                        className="sr-only"
-                        onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
-                      />
-                      <div className="flex items-start gap-4">
-                        <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-                          <UploadCloud className="h-5 w-5" />
+                  <form onSubmit={uploadTeacherNote} className="space-y-5">
+                    <section className="rounded-[28px] border border-slate-200 bg-slate-50/55 p-5 dark:border-slate-800 dark:bg-slate-900/40">
+                      <div className="mb-4 flex items-center gap-3">
+                        <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                          <FileText className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                            {selectedFile ? selectedFile.name : editingNoteId ? "Replace teacher notes PDF (optional)" : "Choose full notes PDF"}
-                          </p>
-                          <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                            Upload one complete teacher notes PDF for students to open, save, and download.
-                          </p>
+                          <h3 className="text-base font-semibold text-slate-900 dark:text-white">Note details</h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">Add a clean title, subject, and stream so students can find the notes quickly.</p>
                         </div>
                       </div>
-                    </label>
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        <label className="block">
+                          <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Note title</span>
+                          <input
+                            required
+                            value={title}
+                            onChange={(event) => setTitle(event.target.value)}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                            placeholder="Full Corporate Accounting Notes"
+                          />
+                        </label>
 
-                    <div className="lg:col-span-2 flex flex-wrap gap-3 pt-2">
+                        <label className="block">
+                          <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Subject</span>
+                          <input
+                            required
+                            value={subject}
+                            onChange={(event) => setSubject(event.target.value)}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 dark:border-slate-800 dark:bg-slate-950"
+                            placeholder="Corporate Accounting"
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Stream</span>
+                          <FormSelect
+                            value={stream}
+                            onChange={setStream}
+                            options={streamOptions.map((option) => ({ label: option, value: option }))}
+                          />
+                        </label>
+                      </div>
+                    </section>
+
+                    <section className="rounded-[28px] border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
+                      <div className="mb-4 flex items-center gap-3">
+                        <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
+                          <ShieldCheck className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-slate-900 dark:text-white">Choose note category</h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">Students use these same chips in the library, so pick the category that matches this PDF best.</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {categoryOptions
+                          .filter((option) => option !== "All")
+                          .map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => setNoteCategory(option)}
+                              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                                noteCategory === option
+                                  ? "bg-slate-950 text-white dark:bg-amber-500 dark:text-slate-950"
+                                  : "border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                      </div>
+                    </section>
+
+                    <section className="rounded-[28px] border border-dashed border-slate-200 bg-white p-5 transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-950">
+                      <label className="block cursor-pointer">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="application/pdf"
+                          className="sr-only"
+                          onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                        />
+                        <div className="flex items-start gap-4">
+                          <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                            <UploadCloud className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                              {selectedFile ? selectedFile.name : editingNoteId ? "Replace teacher notes PDF (optional)" : "Choose full notes PDF"}
+                            </p>
+                            <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
+                              Upload one complete teacher notes PDF for students to open, save, and download.
+                            </p>
+                          </div>
+                        </div>
+                      </label>
+                    </section>
+
+                    <div className="flex flex-wrap gap-3 pt-1">
                       <button
                         type="submit"
                         disabled={busy}
