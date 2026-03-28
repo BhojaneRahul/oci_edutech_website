@@ -660,9 +660,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
           {groupedLecturerNotes.length ? (
-            <div className="space-y-8">
+            <div className="relative z-0 space-y-8 pt-5 sm:pt-6">
               {groupedLecturerNotes.map((teacherGroup) => (
-                <section key={teacherGroup.key} className="space-y-4">
+                <section key={teacherGroup.key} className="space-y-4 scroll-mt-40 sm:scroll-mt-44">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <button
                       type="button"
@@ -684,7 +684,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   </div>
 
                   <div
-                    className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden"
+                    className="overflow-x-auto overscroll-x-contain pb-2 pt-1 [&::-webkit-scrollbar]:hidden"
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                   >
                     <div className="grid auto-cols-[78vw] grid-flow-col gap-4 md:auto-cols-[calc((100%-2rem)/3)] lg:auto-cols-[calc((100%-3rem)/4)] xl:auto-cols-[calc((100%-4rem)/5)]">
@@ -701,7 +701,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           ) : null}
 
           {!filteredNotes.length ? (
-            <div className="mt-4 flex min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-200/80 bg-slate-50/40 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
+            <div className="mt-8 flex min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-200/80 bg-slate-50/40 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
               <div className="mx-auto max-w-md space-y-2">
                 <p className="text-base font-semibold text-slate-800 dark:text-slate-100">No lecturer notes found</p>
                 <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
