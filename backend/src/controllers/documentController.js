@@ -82,7 +82,8 @@ export const getTeacherNotes = asyncHandler(async (req, res) => {
           name: true,
           email: true,
           profilePhoto: true,
-          verifiedTeacher: true
+          verifiedTeacher: true,
+          createdAt: true
         }
       }
     },
@@ -107,7 +108,8 @@ export const getAdminTeacherNotes = asyncHandler(async (req, res) => {
           name: true,
           email: true,
           profilePhoto: true,
-          verifiedTeacher: true
+          verifiedTeacher: true,
+          createdAt: true
         }
       }
     },
@@ -240,41 +242,72 @@ export const uploadTeacherNote = asyncHandler(async (req, res) => {
   }
 
   const { title, subject, stream, noteCategory } = req.body;
+  const requestedStreams = req.body.streams ?? req.body["streams[]"] ?? stream;
+  const streams = Array.from(
+    new Set((Array.isArray(requestedStreams) ? requestedStreams : [requestedStreams]).map((value) => String(value ?? "").trim()).filter(Boolean))
+  );
 
-  if (!title || !subject || !stream || !noteCategory) {
+  if (!title || !subject || !streams.length || !noteCategory) {
     res.status(400);
-    throw new Error("Title, subject, stream, and note category are required");
+    throw new Error("Title, subject, at least one stream, and note category are required");
   }
 
   const fileUrl = buildUploadUrl(req, "pdfs", req.file.filename);
 
-  const createdDocument = await prisma.document.create({
-    data: {
-      title,
-      subject,
-      stream,
-      noteCategory,
-      type: "notes",
-      fileUrl,
-      uploadedBy: req.user.id
-    },
-    include: {
-      uploader: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          profilePhoto: true,
-          verifiedTeacher: true
+  const createdDocuments = await prisma.$transaction(
+    streams.map((selectedStream) =>
+      prisma.document.create({
+        data: {
+          title,
+          subject,
+          stream: selectedStream,
+          noteCategory,
+          type: "notes",
+          fileUrl,
+          uploadedBy: req.user.id
+        },
+        include: {
+          uploader: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              profilePhoto: true,
+              verifiedTeacher: true,
+              createdAt: true
+            }
+          }
         }
+      })
+    )
+  );
+  const primaryDocument = createdDocuments[0];
+
+  const admins = await prisma.user.findMany({
+    where: {
+      role: "admin",
+      id: {
+        not: req.user.id
       }
-    }
+    },
+    select: { id: true }
   });
+
+  if (admins.length) {
+    await createNotifications({
+      userIds: admins.map((admin) => admin.id),
+      documentId: primaryDocument.id,
+      type: "admin_lecturer_notes",
+      title: "New Lecturer Notes Uploaded",
+      message: `${primaryDocument.title} was uploaded by ${primaryDocument.uploader?.name || primaryDocument.uploader?.email || "a lecturer"}.`,
+      targetPath: "/admin#teacher-notes"
+    });
+  }
 
   res.status(201).json({
     success: true,
-    message: "Teacher notes uploaded successfully.",
-    document: normalizeDocument(createdDocument)
+    message: `Lecturer notes uploaded successfully to ${createdDocuments.length} stream${createdDocuments.length > 1 ? "s" : ""}.`,
+    documents: createdDocuments.map(normalizeDocument)
   });
 });
 
@@ -303,13 +336,17 @@ export const updateTeacherNote = asyncHandler(async (req, res) => {
   }
 
   const { title, subject, stream, noteCategory } = req.body;
+  const requestedStreams = req.body.streams ?? req.body["streams[]"] ?? stream;
+  const streams = Array.from(
+    new Set((Array.isArray(requestedStreams) ? requestedStreams : [requestedStreams]).map((value) => String(value ?? "").trim()).filter(Boolean))
+  );
 
   const updatedDocument = await prisma.document.update({
     where: { id: documentId },
     data: {
       title: title ?? existingDocument.title,
       subject: subject ?? existingDocument.subject,
-      stream: stream ?? existingDocument.stream,
+      stream: streams[0] ?? existingDocument.stream,
       noteCategory: noteCategory ?? existingDocument.noteCategory,
       fileUrl: req.file ? buildUploadUrl(req, "pdfs", req.file.filename) : existingDocument.fileUrl
     },
@@ -320,7 +357,8 @@ export const updateTeacherNote = asyncHandler(async (req, res) => {
           name: true,
           email: true,
           profilePhoto: true,
-          verifiedTeacher: true
+          verifiedTeacher: true,
+          createdAt: true
         }
       }
     }
@@ -328,7 +366,7 @@ export const updateTeacherNote = asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    message: "Teacher notes updated successfully.",
+    message: "Lecturer notes updated successfully.",
     document: normalizeDocument(updatedDocument)
   });
 });
@@ -374,7 +412,7 @@ export const updateTeacherNoteStatus = asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    message: "Teacher note status updated successfully",
+    message: "Lecturer notes status updated successfully",
     document: normalizeDocument(updatedDocument)
   });
 });
@@ -487,7 +525,7 @@ export const deleteTeacherNote = asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    message: "Teacher notes deleted successfully"
+    message: "Lecturer notes deleted successfully"
   });
 });
 

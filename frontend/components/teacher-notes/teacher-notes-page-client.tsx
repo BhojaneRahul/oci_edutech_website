@@ -8,7 +8,6 @@ import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
 import { PDFPagePreview } from "../pdf/pdf-page-preview";
-import { FormSelect } from "../ui/form-select";
 import { SafeAvatar } from "../ui/safe-avatar";
 import { resolveMediaUrl } from "@/lib/utils";
 
@@ -57,7 +56,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
-  const [stream, setStream] = useState("BCA");
+  const [selectedStreams, setSelectedStreams] = useState<string[]>(["BCA"]);
   const [noteCategory, setNoteCategory] = useState("Full Notes");
   const [editingNoteId, setEditingNoteId] = useState<string | number | null>(null);
   const [activeStream, setActiveStream] = useState("All");
@@ -125,6 +124,19 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     if (verificationFileRef.current) {
       verificationFileRef.current.value = "";
     }
+  };
+
+  const toggleStream = (value: string) => {
+    setSelectedStreams((current) => {
+      if (current.includes(value)) {
+        if (current.length === 1) {
+          return current;
+        }
+        return current.filter((item) => item !== value);
+      }
+
+      return [...current, value];
+    });
   };
 
   const closeTeacherFoldersSheet = () => {
@@ -254,7 +266,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         setEditingNoteId(null);
         setTitle("");
         setSubject("");
-        setStream("BCA");
+        setSelectedStreams(["BCA"]);
         setNoteCategory("Full Notes");
         setSelectedFile(null);
       }
@@ -285,8 +297,8 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       const formData = new FormData();
       formData.append("title", title);
       formData.append("subject", subject);
-      formData.append("stream", stream);
       formData.append("noteCategory", noteCategory);
+      selectedStreams.forEach((selectedStream) => formData.append("streams[]", selectedStream));
       if (selectedFile) {
         formData.append("file", selectedFile);
       }
@@ -306,7 +318,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       setUploadMessage(response.data.message);
       setTitle("");
       setSubject("");
-      setStream("BCA");
+      setSelectedStreams(["BCA"]);
       setNoteCategory("Full Notes");
       setEditingNoteId(null);
       setSelectedFile(null);
@@ -331,7 +343,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     setEditingNoteId(note._id);
     setTitle(note.title);
     setSubject(note.subject);
-    setStream(note.stream);
+    setSelectedStreams([note.stream]);
     setNoteCategory(getTeacherNoteCategory(note));
     setSelectedFile(null);
     if (fileInputRef.current) {
@@ -420,25 +432,140 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     }
   };
 
+  const renderLecturerCard = (note: Document) => {
+    const isOwner = Number(note.uploader?.id) === Number(user?.id);
+    const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
+    const isSaved = savedDocumentIds.has(String(note._id));
+
+    return (
+      <article
+        key={note._id}
+        className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[22px] border border-slate-200 bg-white p-2.5 shadow-[0_10px_26px_-22px_rgba(15,23,42,0.24)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_18px_36px_-24px_rgba(15,23,42,0.26)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+      >
+        <div className="w-full overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 px-3 py-3 dark:border-slate-800">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Verified lecturer
+            </div>
+            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+              <SafeAvatar
+                src={note.uploader?.profilePhoto ?? null}
+                alt={note.uploader?.name || "Lecturer"}
+                className="h-full w-full object-cover"
+                fallback={(note.uploader?.name || "L").slice(0, 1).toUpperCase()}
+                fallbackClassName="h-full w-full text-sm font-semibold text-slate-500 dark:text-slate-300"
+              />
+            </div>
+          </div>
+          <PDFPagePreview
+            url={mediaUrl}
+            title={note.title}
+            className="rounded-none border-0"
+            canvasClassName="min-h-[180px] bg-white sm:min-h-[200px]"
+          />
+        </div>
+
+        <div className="flex flex-1 flex-col px-1 pt-3">
+          <h3 className="line-clamp-2 text-[15px] font-semibold leading-5.5 text-slate-950 dark:text-white">{note.title}</h3>
+
+          <div className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+            <p className="line-clamp-1 text-[12.5px]">
+              <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
+            </p>
+            <p className="line-clamp-1 text-[12.5px]">
+              <span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}
+            </p>
+            <p className="line-clamp-1 text-[12.5px]">
+              <span className="font-semibold text-slate-900 dark:text-white">Lecturer:</span>{" "}
+              {note.uploader?.name || note.uploader?.email || "Verified lecturer"}
+            </p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+              {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
+            </p>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Link
+              href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
+              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[13px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+            >
+              <FileText className="h-4 w-4" />
+              Open Notes
+            </Link>
+            <a
+              href={mediaUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+              aria-label="Download Notes"
+              title="Download Notes"
+            >
+              <Download className="h-4 w-4" />
+            </a>
+            <button
+              type="button"
+              onClick={() => void toggleSavedDocument(note._id)}
+              className={`inline-flex items-center justify-center rounded-full border p-2.5 transition ${
+                isSaved
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+                  : "border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+              }`}
+              aria-label={isSaved ? "Saved Notes" : "Save Notes"}
+              title={isSaved ? "Saved Notes" : "Save Notes"}
+            >
+              {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+            </button>
+            {isOwner ? (
+              <button
+                type="button"
+                onClick={() => startEditTeacherNote(note)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                aria-label="Edit Notes"
+                title="Edit Notes"
+              >
+                <FileText className="h-4 w-4" />
+              </button>
+            ) : null}
+            {isOwner ? (
+              <button
+                type="button"
+                onClick={() => void deleteTeacherNote(note._id)}
+                className="inline-flex items-center justify-center rounded-full border border-rose-200 p-2.5 text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                aria-label="Delete Notes"
+                title="Delete Notes"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </article>
+    );
+  };
+
   return (
     <div className="min-w-0 overflow-x-hidden">
       <section className="min-w-0 bg-white dark:bg-slate-950">
         <div className="space-y-5 px-4 pb-28 pt-4 sm:px-6 lg:px-8">
-          {uploadMessage ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-              {uploadMessage}
-            </div>
-          ) : null}
-
-          {verificationMessage ? (
-            <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
-              {verificationMessage}
-            </div>
-          ) : null}
-
           {loading ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
               Checking your lecturer access...
+            </div>
+          ) : null}
+
+          {(uploadMessage || verificationMessage) ? (
+            <div className="pointer-events-none fixed left-1/2 top-[88px] z-[70] flex w-[min(440px,calc(100vw-24px))] -translate-x-1/2 flex-col gap-3 sm:left-auto sm:right-6 sm:top-[94px] sm:translate-x-0">
+              {uploadMessage ? (
+                <div className="pointer-events-auto rounded-2xl border border-amber-200 bg-white/95 px-4 py-3 text-sm text-amber-700 shadow-[0_22px_50px_-30px_rgba(15,23,42,0.45)] backdrop-blur dark:border-amber-500/20 dark:bg-slate-950/95 dark:text-amber-200">
+                  {uploadMessage}
+                </div>
+              ) : null}
+              {verificationMessage ? (
+                <div className="pointer-events-auto rounded-2xl border border-sky-200 bg-white/95 px-4 py-3 text-sm text-sky-700 shadow-[0_22px_50px_-30px_rgba(15,23,42,0.45)] backdrop-blur dark:border-sky-500/20 dark:bg-slate-950/95 dark:text-sky-200">
+                  {verificationMessage}
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -515,114 +642,30 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-8 dark:border-slate-900 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredNotes.map((note) => {
-            const isOwner = Number(note.uploader?.id) === Number(user?.id);
-            const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
-            const isSaved = savedDocumentIds.has(String(note._id));
-
-            return (
-              <article
-                key={note._id}
-                className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[20px] border border-slate-200 bg-white p-2.5 shadow-[0_8px_24px_-22px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_18px_36px_-28px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
-              >
-                <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
-                  <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 px-3 py-3 dark:border-slate-800">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                      Verified lecturer
-                    </div>
-                    <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-                      <SafeAvatar
-                        src={note.uploader?.profilePhoto ?? null}
-                        alt={note.uploader?.name || "Lecturer"}
-                        className="h-full w-full object-cover"
-                        fallback={(note.uploader?.name || "T").slice(0, 1).toUpperCase()}
-                        fallbackClassName="h-full w-full text-sm font-semibold text-slate-500 dark:text-slate-300"
-                      />
-                    </div>
+          {filteredNotes.length ? (
+            <>
+              <div className="relative md:hidden">
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-white via-white/90 to-transparent dark:from-slate-950 dark:via-slate-950/90" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white via-white/90 to-transparent dark:from-slate-950 dark:via-slate-950/90" />
+                <div
+                  className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  <div className="flex snap-x snap-mandatory gap-3 px-1">
+                    {filteredNotes.map((note) => (
+                      <div key={String(note._id)} className="w-[82vw] max-w-[300px] shrink-0 snap-start">
+                        {renderLecturerCard(note)}
+                      </div>
+                    ))}
                   </div>
-                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[112px] bg-white sm:min-h-[124px]" />
                 </div>
+              </div>
 
-                <div className="flex flex-1 flex-col px-1 pt-2.5">
-                  <h3 className="line-clamp-2 text-[14px] font-semibold leading-5.5 text-slate-950 dark:text-white">{note.title}</h3>
-
-                  <div className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-300">
-                    <p className="line-clamp-1 text-[12.5px]">
-                      <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
-                    </p>
-                    <p className="line-clamp-1 text-[12.5px]">
-                      <span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}
-                    </p>
-                    <p className="line-clamp-1 text-[12.5px]">
-                      <span className="font-semibold text-slate-900 dark:text-white">Lecturer:</span>{" "}
-                      {note.uploader?.name || note.uploader?.email || "Verified lecturer"}
-                    </p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                      {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
-                    </p>
-                  </div>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                      href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-                    className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Open Notes
-                  </Link>
-                  <a
-                      href={mediaUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
-                    aria-label="Download Notes"
-                    title="Download Notes"
-                  >
-                    <Download className="h-4 w-4" />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => void toggleSavedDocument(note._id)}
-                    className={`inline-flex items-center justify-center rounded-full border p-2.5 transition ${
-                      isSaved
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
-                        : "border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
-                    }`}
-                    aria-label={isSaved ? "Saved Notes" : "Save Notes"}
-                    title={isSaved ? "Saved Notes" : "Save Notes"}
-                  >
-                    {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-                  </button>
-                  {isOwner ? (
-                    <button
-                      type="button"
-                      onClick={() => startEditTeacherNote(note)}
-                      className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
-                      aria-label="Edit Notes"
-                      title="Edit Notes"
-                    >
-                      <FileText className="h-4 w-4" />
-                    </button>
-                  ) : null}
-                  {isOwner ? (
-                    <button
-                      type="button"
-                      onClick={() => void deleteTeacherNote(note._id)}
-                      className="inline-flex items-center justify-center rounded-full border border-rose-200 p-2.5 text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
-                      aria-label="Delete Notes"
-                      title="Delete Notes"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  ) : null}
-                </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+              <div className="hidden md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                {filteredNotes.map((note) => renderLecturerCard(note))}
+              </div>
+            </>
+          ) : null}
 
           {!filteredNotes.length ? (
             <div className="mt-4 flex min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-200/80 bg-slate-50/40 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
@@ -821,12 +864,11 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">
                       {showUploadForm ? "Upload notes" : "Lecturer verification"}
                     </p>
-                    <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
-                      {showUploadForm ? (editingNoteId ? "Edit lecturer notes" : "Upload lecturer notes") : "Verify lecturer profile"}
-                    </h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                       {showUploadForm
-                        ? "Upload one complete PDF in a clean format so students can open, save, and download it easily."
+                        ? editingNoteId
+                          ? "Update the uploaded PDF details, category, and streams in one clean sheet."
+                          : "Add one complete PDF with the right category and streams so students can open, save, and download it easily."
                         : "Submit your academic details once. After admin approval, uploads unlock automatically everywhere."}
                     </p>
                   </div>
@@ -954,7 +996,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                         </div>
                         <div>
                           <h3 className="text-base font-semibold text-slate-900 dark:text-white">Note details</h3>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">Add a clean title, subject, and stream so students can find the notes quickly.</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">Add a clean title, subject, and streams so students can find the notes quickly.</p>
                         </div>
                       </div>
                       <div className="grid gap-4 lg:grid-cols-2">
@@ -980,14 +1022,29 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                           />
                         </label>
 
-                        <label className="block">
-                          <span className="mb-2 block text-sm font-medium text-slate-800 dark:text-slate-200">Stream</span>
-                          <FormSelect
-                            value={stream}
-                            onChange={setStream}
-                            options={streamOptions.map((option) => ({ label: option, value: option }))}
-                          />
-                        </label>
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        <span className="block text-sm font-medium text-slate-800 dark:text-slate-200">Streams</span>
+                        <p className="text-xs leading-6 text-slate-500 dark:text-slate-400">Choose one or more streams if this same PDF is useful across multiple courses.</p>
+                        <div className="flex flex-wrap gap-2">
+                          {streamOptions.map((option) => {
+                            const active = selectedStreams.includes(option);
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                onClick={() => toggleStream(option)}
+                                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                                  active
+                                    ? "bg-slate-950 text-white dark:bg-amber-500 dark:text-slate-950"
+                                    : "border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                                }`}
+                              >
+                                {option}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </section>
 

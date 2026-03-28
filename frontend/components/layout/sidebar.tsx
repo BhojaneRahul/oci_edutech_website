@@ -37,7 +37,7 @@ const items = [
   { href: "/community", label: "Community", icon: MessagesSquare },
   { href: "/mock-tests", label: "Mock Tests", icon: ListChecks },
   { href: "/projects", label: "Projects", icon: FolderKanban },
-  { href: "/teacher-notes", label: "Teacher Notes", icon: BookText },
+  { href: "/teacher-notes", label: "Lecturer Notes", icon: BookText },
   { href: "/syllabus-to-notes", label: "Syllabus Upload", icon: FileUp }
 ];
 

@@ -26,6 +26,8 @@ export default async function TeacherProfilePage({
     notFound();
   }
 
+  const useHorizontalRail = notes.length > 10;
+
   return (
     <DashboardShell fullBleed>
       <section className="bg-[linear-gradient(180deg,#fffdf8_0%,#ffffff_20%,#f8fafc_100%)] px-4 pb-12 pt-4 dark:bg-slate-950 sm:px-6 lg:px-8">
@@ -84,80 +86,155 @@ export default async function TeacherProfilePage({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {notes.map((note) => {
-              const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
+          <div className={useHorizontalRail ? "relative" : ""}>
+            {useHorizontalRail ? (
+              <>
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-10 bg-gradient-to-r from-[#fffdf8] via-[#fffdf8]/90 to-transparent md:block dark:from-slate-950 dark:via-slate-950/90" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-12 bg-gradient-to-l from-[#f8fafc] via-[#f8fafc]/90 to-transparent md:block dark:from-slate-950 dark:via-slate-950/90" />
+                <div className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+                  <div className="flex gap-4">
+                    {notes.map((note) => {
+                      const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
 
-              return (
-                <article
-                  key={String(note._id)}
-                  className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_44px_-34px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_56px_-34px_rgba(245,158,11,0.2)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
-                >
-                <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 pb-4 pt-5 dark:border-slate-800">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Verified Lecturer
-                  </div>
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
-                    <SafeAvatar
-                      src={teacher?.profilePhoto ?? null}
-                      alt={teacher?.name || "Lecturer"}
-                      className="h-full w-full object-cover"
-                      fallback={(teacher?.name || "T").slice(0, 1).toUpperCase()}
-                      fallbackClassName="h-full w-full text-sm font-semibold text-slate-500"
-                    />
-                  </div>
-                </div>
-                <div className="p-5">
-                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[112px] bg-white sm:min-h-[124px]" />
-                  <div className="mt-4 space-y-2.5">
-                    <div>
-                      <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">{note.title}</h2>
-                      <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                        Subject-wise lecturer notes curated for structured reading, quick revision, and dependable classroom-style preparation.
-                      </p>
-                    </div>
-                    <div className="grid gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
-                      <p>
-                        <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
-                      </p>
-                      <p>
-                        <span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}
-                      </p>
-                    </div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                      {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
-                    </div>
-                  </div>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <Link
-                      href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-                      className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-                    >
-                      <Eye className="h-4 w-4" />
-                      Open Notes
-                    </Link>
-                    <a
-                      href={mediaUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Notes
-                    </a>
-                    <Link
-                      href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-200"
-                    >
-                      <FileText className="h-4 w-4" />
-                      Quick Read
-                    </Link>
+                      return (
+                        <article
+                          key={String(note._id)}
+                          className="w-[84vw] max-w-[320px] shrink-0 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_44px_-34px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_56px_-34px_rgba(245,158,11,0.2)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20 md:max-w-[280px]"
+                        >
+                          <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-4 pb-3 pt-4 dark:border-slate-800">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+                              <ShieldCheck className="h-3.5 w-3.5" />
+                              Verified Lecturer
+                            </div>
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+                              <SafeAvatar
+                                src={teacher?.profilePhoto ?? null}
+                                alt={teacher?.name || "Lecturer"}
+                                className="h-full w-full object-cover"
+                                fallback={(teacher?.name || "L").slice(0, 1).toUpperCase()}
+                                fallbackClassName="h-full w-full text-sm font-semibold text-slate-500"
+                              />
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[160px] bg-white" />
+                            <div className="mt-4 space-y-2">
+                              <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">{note.title}</h2>
+                              <div className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
+                                <p><span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}</p>
+                                <p><span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}</p>
+                              </div>
+                              <div className="text-sm text-slate-500 dark:text-slate-400">
+                                {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
+                              </div>
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              <Link
+                                href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
+                                className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                              >
+                                <Eye className="h-4 w-4" />
+                                Open Notes
+                              </Link>
+                              <a
+                                href={mediaUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                                aria-label="Download Notes"
+                                title="Download Notes"
+                              >
+                                <Download className="h-4 w-4" />
+                              </a>
+                              <Link
+                                href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
+                                className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-200"
+                                aria-label="Quick Read"
+                                title="Quick Read"
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Link>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
                 </div>
-                </article>
-              );
-            })}
+              </>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {notes.map((note) => {
+                  const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
+
+                  return (
+                    <article
+                      key={String(note._id)}
+                      className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_44px_-34px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_56px_-34px_rgba(245,158,11,0.2)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+                    >
+                      <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-4 pb-3 pt-4 dark:border-slate-800">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          Verified Lecturer
+                        </div>
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+                          <SafeAvatar
+                            src={teacher?.profilePhoto ?? null}
+                            alt={teacher?.name || "Lecturer"}
+                            className="h-full w-full object-cover"
+                            fallback={(teacher?.name || "L").slice(0, 1).toUpperCase()}
+                            fallbackClassName="h-full w-full text-sm font-semibold text-slate-500"
+                          />
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[150px] bg-white sm:min-h-[170px]" />
+                        <div className="mt-4 space-y-2">
+                          <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">{note.title}</h2>
+                          <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
+                            Subject-wise lecturer notes curated for structured reading, quick revision, and dependable classroom-style preparation.
+                          </p>
+                          <div className="grid gap-2 text-sm text-slate-600 dark:text-slate-300">
+                            <p><span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}</p>
+                            <p><span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}</p>
+                          </div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400">
+                            {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
+                          </div>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <Link
+                            href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
+                            className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Open Notes
+                          </Link>
+                          <a
+                            href={mediaUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                            aria-label="Download Notes"
+                            title="Download Notes"
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                          <Link
+                            href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
+                            className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-200"
+                            aria-label="Quick Read"
+                            title="Quick Read"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Link>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {!notes.length ? (

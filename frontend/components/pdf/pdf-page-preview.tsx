@@ -29,7 +29,6 @@ export function PDFPagePreview({
     let isMounted = true;
     let renderTask: RenderTask | null = null;
     let pdfDocument: PDFDocumentProxy | null = null;
-    const abortController = new AbortController();
 
     const renderPreview = async () => {
       const canvas = canvasRef.current;
@@ -38,18 +37,9 @@ export function PDFPagePreview({
 
       try {
         setState("loading");
-        const response = await fetch(resolvedUrl, {
-          signal: abortController.signal,
-          cache: "force-cache",
-          mode: "cors"
-        });
-        if (!response.ok) {
-          throw new Error(`Preview request failed: ${response.status}`);
-        }
-        const buffer = await response.arrayBuffer();
         const loadingTask = getDocument({
-          data: new Uint8Array(buffer),
-          useWorkerFetch: false
+          url: resolvedUrl,
+          withCredentials: false
         });
         pdfDocument = await loadingTask.promise;
         const page = await pdfDocument.getPage(1);
@@ -93,7 +83,6 @@ export function PDFPagePreview({
 
     return () => {
       isMounted = false;
-      abortController.abort();
       renderTask?.cancel?.();
       pdfDocument?.destroy?.();
     };

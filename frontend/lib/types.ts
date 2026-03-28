@@ -159,6 +159,7 @@ export type Document = {
     email: string;
     profilePhoto?: string | null;
     verifiedTeacher?: boolean;
+    createdAt?: string;
   };
 };
 

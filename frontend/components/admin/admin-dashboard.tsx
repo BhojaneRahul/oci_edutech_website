@@ -398,18 +398,18 @@ export function AdminDashboard() {
   ) => {
     setMessage("");
     await api.put(`/documents/admin/teacher-notes/${documentId}/status`, updates);
-    setMessage("Teacher note status updated successfully");
+    setMessage("Lecturer notes status updated successfully");
     refetchTeacherNotes();
   };
 
   const deleteAdminTeacherNote = async (documentId: string | number) => {
-    if (!window.confirm("Delete this teacher note permanently?")) {
+    if (!window.confirm("Delete this lecturer notes entry permanently?")) {
       return;
     }
 
     setMessage("");
     await api.delete(`/documents/teacher-notes/${documentId}`);
-    setMessage("Teacher note deleted successfully");
+    setMessage("Lecturer notes deleted successfully");
     refetchTeacherNotes();
   };
 
@@ -576,10 +576,10 @@ export function AdminDashboard() {
     sectionContent = (
       <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-600">Teacher Notes</p>
-          <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Verified teacher uploads</h3>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-600">Lecturer Notes</p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">Verified lecturer uploads</h3>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Review all verified-teacher PDFs, open teacher profile pages, and manage note visibility from one place.
+            Review all verified lecturer PDFs, open lecturer profile pages, and manage note visibility from one place.
           </p>
         </div>
 
@@ -655,7 +655,7 @@ export function AdminDashboard() {
               {!adminTeacherNotes.length ? (
                 <tr>
                   <td colSpan={5} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                    No teacher notes uploaded yet.
+                    No lecturer notes uploaded yet.
                   </td>
                 </tr>
               ) : null}
