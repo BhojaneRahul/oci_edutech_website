@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PDFPagePreview } from "@/components/pdf/pdf-page-preview";
 import { SafeAvatar } from "@/components/ui/safe-avatar";
 import { serverApi } from "@/lib/server-api";
+import { resolveMediaUrl } from "@/lib/utils";
 
 export default async function TeacherProfilePage({
   params
@@ -69,11 +70,14 @@ export default async function TeacherProfilePage({
           </div>
 
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {notes.map((note) => (
-              <article
-                key={String(note._id)}
-                className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_44px_-34px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_56px_-34px_rgba(245,158,11,0.2)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
-              >
+            {notes.map((note) => {
+              const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
+
+              return (
+                <article
+                  key={String(note._id)}
+                  className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_44px_-34px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_56px_-34px_rgba(245,158,11,0.2)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+                >
                 <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 pb-4 pt-5 dark:border-slate-800">
                   <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
                     <ShieldCheck className="h-3.5 w-3.5" />
@@ -90,7 +94,7 @@ export default async function TeacherProfilePage({
                   </div>
                 </div>
                 <div className="p-5">
-                  <PDFPagePreview url={note.fileUrl} title={note.title} canvasClassName="min-h-[170px] bg-white sm:min-h-[190px]" />
+                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[170px] bg-white sm:min-h-[190px]" />
                   <div className="mt-5 space-y-3">
                     <div>
                       <h2 className="text-xl font-semibold tracking-tight text-slate-950 dark:text-white">{note.title}</h2>
@@ -112,14 +116,14 @@ export default async function TeacherProfilePage({
                   </div>
                   <div className="mt-5 flex flex-wrap gap-2">
                     <Link
-                      href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(note.fileUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
+                      href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
                       className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
                     >
                       <Eye className="h-4 w-4" />
                       Open notes
                     </Link>
                     <a
-                      href={note.fileUrl}
+                      href={mediaUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
@@ -128,7 +132,7 @@ export default async function TeacherProfilePage({
                       Download notes
                     </a>
                     <Link
-                      href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(note.fileUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
+                      href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
                       className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-200"
                     >
                       <FileText className="h-4 w-4" />
@@ -136,8 +140,9 @@ export default async function TeacherProfilePage({
                     </Link>
                   </div>
                 </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
 
           {!notes.length ? (

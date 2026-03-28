@@ -8,6 +8,17 @@ import { awardBookmarkXp, awardDailyLogin } from "../services/gamificationServic
 
 const getFrontendUrl = () => process.env.FRONTEND_URL || process.env.CLIENT_URL || "http://localhost:3000";
 
+const getRequestOrigin = (req) => {
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || req.protocol || "http")
+    .split(",")[0]
+    .trim();
+  const forwardedHost = String(req.headers["x-forwarded-host"] || req.get("host") || "")
+    .split(",")[0]
+    .trim();
+
+  return `${forwardedProto}://${forwardedHost}`;
+};
+
 const safelyRunGamification = async (task) => {
   try {
     await task();
@@ -153,7 +164,7 @@ export const uploadAvatar = asyncHandler(async (req, res) => {
   const user = await prisma.user.update({
     where: { id: req.user.id },
     data: {
-      profilePhoto: `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`
+      profilePhoto: `${getRequestOrigin(req)}/uploads/avatars/${req.file.filename}`
     }
   });
 

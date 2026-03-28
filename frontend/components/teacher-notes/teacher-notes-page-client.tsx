@@ -10,6 +10,7 @@ import { useAuth } from "../providers/auth-provider";
 import { PDFPagePreview } from "../pdf/pdf-page-preview";
 import { FormSelect } from "../ui/form-select";
 import { SafeAvatar } from "../ui/safe-avatar";
+import { resolveMediaUrl } from "@/lib/utils";
 
 const streamOptions = ["BCA", "B.Com", "BSc", "BA", "BBA", "1st PUC", "2nd PUC"];
 const categoryOptions = ["All", "Full Notes", "Revision", "Important Questions", "Unit Notes"];
@@ -517,6 +518,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-8 dark:border-slate-900 sm:grid-cols-2 xl:grid-cols-4">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
+            const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
 
             return (
               <article
@@ -539,7 +541,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       />
                     </div>
                   </div>
-                  <PDFPagePreview url={note.fileUrl} title={note.title} canvasClassName="min-h-[170px] bg-white sm:min-h-[190px]" />
+                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[170px] bg-white sm:min-h-[190px]" />
                 </div>
 
                 <div className="flex flex-1 flex-col px-1 pt-3">
@@ -563,14 +565,14 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Link
-                    href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(note.fileUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
+                      href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
                     className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
                   >
                     <FileText className="h-4 w-4" />
                     Open notes
                   </Link>
                   <a
-                    href={note.fileUrl}
+                      href={mediaUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"

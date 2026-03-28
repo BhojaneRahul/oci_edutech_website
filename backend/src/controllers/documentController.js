@@ -5,6 +5,19 @@ import { prisma } from "../config/db.js";
 import { withMongoStyleId } from "../utils/serializers.js";
 import { buildDocumentTargetPath, createNotifications } from "../services/notificationService.js";
 
+const getRequestOrigin = (req) => {
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || req.protocol || "http")
+    .split(",")[0]
+    .trim();
+  const forwardedHost = String(req.headers["x-forwarded-host"] || req.get("host") || "")
+    .split(",")[0]
+    .trim();
+
+  return `${forwardedProto}://${forwardedHost}`;
+};
+
+const buildUploadUrl = (req, folder, filename) => `${getRequestOrigin(req)}/uploads/${folder}/${filename}`;
+
 export const normalizeDocument = (document) => ({
   ...withMongoStyleId(document),
   canDownload: document.type === "model_qp",
@@ -174,7 +187,7 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     throw new Error("Title, subject, type, and at least one stream are required");
   }
 
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/pdfs/${req.file.filename}`;
+  const fileUrl = buildUploadUrl(req, "pdfs", req.file.filename);
 
   const createdDocuments = await prisma.$transaction(
     streams.map((selectedStream) =>
@@ -233,7 +246,7 @@ export const uploadTeacherNote = asyncHandler(async (req, res) => {
     throw new Error("Title, subject, stream, and note category are required");
   }
 
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/pdfs/${req.file.filename}`;
+  const fileUrl = buildUploadUrl(req, "pdfs", req.file.filename);
 
   const createdDocument = await prisma.document.create({
     data: {
@@ -298,7 +311,7 @@ export const updateTeacherNote = asyncHandler(async (req, res) => {
       subject: subject ?? existingDocument.subject,
       stream: stream ?? existingDocument.stream,
       noteCategory: noteCategory ?? existingDocument.noteCategory,
-      fileUrl: req.file ? `${req.protocol}://${req.get("host")}/uploads/pdfs/${req.file.filename}` : existingDocument.fileUrl
+      fileUrl: req.file ? buildUploadUrl(req, "pdfs", req.file.filename) : existingDocument.fileUrl
     },
     include: {
       uploader: {
@@ -386,7 +399,7 @@ export const updateDocument = asyncHandler(async (req, res) => {
       subject: subject ?? existingDocument.subject,
       stream: stream ?? existingDocument.stream,
       type: type ?? existingDocument.type,
-      fileUrl: req.file ? `${req.protocol}://${req.get("host")}/uploads/pdfs/${req.file.filename}` : existingDocument.fileUrl
+      fileUrl: req.file ? buildUploadUrl(req, "pdfs", req.file.filename) : existingDocument.fileUrl
     }
   });
 

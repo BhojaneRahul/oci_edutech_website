@@ -12,6 +12,21 @@ export const resolveMediaUrl = (value?: string | null) => {
   }
 
   if (/^(https?:)?\/\//i.test(trimmed) || trimmed.startsWith("blob:") || trimmed.startsWith("data:")) {
+    try {
+      const absoluteUrl = new URL(trimmed);
+      const shouldUpgradeToHttps =
+        absoluteUrl.protocol === "http:" &&
+        absoluteUrl.hostname !== "localhost" &&
+        absoluteUrl.hostname !== "127.0.0.1";
+
+      if (shouldUpgradeToHttps) {
+        absoluteUrl.protocol = "https:";
+        return absoluteUrl.toString();
+      }
+    } catch {
+      // Keep the original value if URL parsing fails.
+    }
+
     return trimmed;
   }
 

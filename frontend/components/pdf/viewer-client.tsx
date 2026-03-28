@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { useAuth } from "../providers/auth-provider";
 import { LoginGate } from "../materials/login-gate";
+import { resolveMediaUrl } from "@/lib/utils";
 
 const PDFViewer = dynamic(() => import("./PDFViewer").then((module) => module.PDFViewer), {
   ssr: false,
@@ -32,8 +33,9 @@ export function ViewerClient({
     }
 
     try {
+      const normalizedUrl = resolveMediaUrl(url) ?? url;
       const baseOrigin = typeof window === "undefined" ? "http://localhost:3000" : window.location.origin;
-      const absoluteUrl = new URL(url, baseOrigin);
+      const absoluteUrl = new URL(normalizedUrl, baseOrigin);
       const isLocalUpload =
         /^https?:\/\/localhost:\d+$/i.test(absoluteUrl.origin) || absoluteUrl.pathname.startsWith("/uploads/");
 

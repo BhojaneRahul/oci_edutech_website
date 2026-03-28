@@ -39,8 +39,7 @@ export function PDFPagePreview({
       try {
         setState("loading");
         const response = await fetch(resolvedUrl, {
-          signal: abortController.signal,
-          credentials: "include"
+          signal: abortController.signal
         });
         if (!response.ok) {
           throw new Error(`Preview request failed: ${response.status}`);
