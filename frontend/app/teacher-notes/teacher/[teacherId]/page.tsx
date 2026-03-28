@@ -18,7 +18,9 @@ export default async function TeacherProfilePage({
   const teacher = notes[0]?.uploader;
   const totalDownloads = notes.reduce((sum, note) => sum + (note.downloadCount ?? 0), 0);
   const subjectsCovered = new Set(notes.map((note) => note.subject).filter(Boolean)).size;
-  const joinedLabel = teacher?.createdAt ? new Date(teacher.createdAt).toLocaleDateString() : "Recently joined";
+  const joinedAt =
+    teacher && "createdAt" in teacher && typeof teacher.createdAt === "string" ? teacher.createdAt : undefined;
+  const joinedLabel = joinedAt ? new Date(joinedAt).toLocaleDateString() : "Recently joined";
 
   if (!teacherId) {
     notFound();
