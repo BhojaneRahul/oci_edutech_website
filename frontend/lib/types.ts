@@ -160,6 +160,10 @@ export type Document = {
     profilePhoto?: string | null;
     verifiedTeacher?: boolean;
     createdAt?: string;
+    university?: string | null;
+    phone?: string | null;
+    course?: string | null;
+    semester?: string | null;
   };
 };
 

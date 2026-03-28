@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PDFPagePreview } from "@/components/pdf/pdf-page-preview";
 import { serverApi } from "@/lib/server-api";
 import { resolveMediaUrl } from "@/lib/utils";
+import { SafeAvatar } from "@/components/ui/safe-avatar";
 
 export default async function TeacherProfilePage({
   params
@@ -20,6 +21,13 @@ export default async function TeacherProfilePage({
   const joinedAt =
     teacher && "createdAt" in teacher && typeof teacher.createdAt === "string" ? teacher.createdAt : undefined;
   const joinedLabel = joinedAt ? new Date(joinedAt).toLocaleDateString() : "Recently joined";
+  const [collegeNameRaw, universityBoardRaw] = String(teacher?.university ?? "").split("|");
+  const collegeName = collegeNameRaw?.trim() || "Not shared yet";
+  const universityBoard = universityBoardRaw?.trim() || String(teacher?.university ?? "").trim() || "Not shared yet";
+  const accountCourse = String(teacher?.course ?? "").trim() || "Not shared yet";
+  const accountSemester = String(teacher?.semester ?? "").trim() || "Not shared yet";
+  const accountPhone = String(teacher?.phone ?? "").trim() || "Not shared yet";
+  const accountEmail = String(teacher?.email ?? "").trim() || "Not shared yet";
 
   if (!teacherId) {
     notFound();
@@ -40,12 +48,49 @@ export default async function TeacherProfilePage({
             </div>
             <div className="grid gap-6 px-5 py-6 sm:px-7 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
               <div className="min-w-0">
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
-                  {teacher?.name || "Lecturer profile"}
-                </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-                  Browse complete lecturer notes uploaded by this lecturer. Each set is organized for clear reading, quick revision, and dependable subject-wise study support.
-                </p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <SafeAvatar
+                    src={teacher?.profilePhoto}
+                    alt={teacher?.name || "Lecturer"}
+                    fallback={(teacher?.name || "L").slice(0, 1).toUpperCase()}
+                    className="h-20 w-20 rounded-[24px] object-cover shadow-[0_16px_30px_-20px_rgba(15,23,42,0.5)]"
+                    fallbackClassName="h-20 w-20 rounded-[24px] bg-amber-100 text-2xl font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+                  />
+                  <div className="min-w-0">
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
+                      {teacher?.name || "Lecturer profile"}
+                    </h1>
+                    <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      Verified lecturer profile with uploaded notes, academic details, and trusted study support for students.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Email</p>
+                    <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">{accountEmail}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">College Name</p>
+                    <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">{collegeName}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">University / Board</p>
+                    <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">{universityBoard}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Course</p>
+                    <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">{accountCourse}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Semester</p>
+                    <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">{accountSemester}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Phone</p>
+                    <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">{accountPhone}</p>
+                  </div>
+                </div>
               </div>
               <div className="grid gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/50">
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -143,9 +188,6 @@ export default async function TeacherProfilePage({
                         <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[150px] bg-white sm:min-h-[170px]" />
                         <div className="mt-4 space-y-2">
                           <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">{note.title}</h2>
-                          <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
-                            Subject-wise lecturer notes curated for structured reading, quick revision, and dependable classroom-style preparation.
-                          </p>
                           <div className="grid gap-2 text-sm text-slate-600 dark:text-slate-300">
                             <p><span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}</p>
                             <p><span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}</p>

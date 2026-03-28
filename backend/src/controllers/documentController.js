@@ -83,7 +83,11 @@ export const getTeacherNotes = asyncHandler(async (req, res) => {
           email: true,
           profilePhoto: true,
           verifiedTeacher: true,
-          createdAt: true
+          createdAt: true,
+          university: true,
+          phone: true,
+          course: true,
+          semester: true
         }
       }
     },
@@ -109,7 +113,11 @@ export const getAdminTeacherNotes = asyncHandler(async (req, res) => {
           email: true,
           profilePhoto: true,
           verifiedTeacher: true,
-          createdAt: true
+          createdAt: true,
+          university: true,
+          phone: true,
+          course: true,
+          semester: true
         }
       }
     },

@@ -30,6 +30,9 @@ export function AccountPageClient() {
     newPassword: "",
     confirmPassword: ""
   });
+  const [collegeNameRaw, universityBoardRaw] = String(profileForm.university ?? "").split("|");
+  const collegeName = collegeNameRaw?.trim() || "Not added yet";
+  const universityBoard = universityBoardRaw?.trim() || String(profileForm.university ?? "").trim() || "Not added yet";
   const [editingField, setEditingField] = useState<null | "name" | "role" | "university" | "phone" | "course" | "semester">(null);
   const [changingPassword, setChangingPassword] = useState(false);
   const [avatarEditor, setAvatarEditor] = useState<{
@@ -304,7 +307,7 @@ export function AccountPageClient() {
         </EditableProfileCard>
 
         <EditableProfileCard
-          label="University"
+          label="College / University"
           value={profileForm.university || "Not added yet"}
           icon={<Building2 className="h-4 w-4" />}
           editing={editingField === "university"}
@@ -317,6 +320,20 @@ export function AccountPageClient() {
         >
           <ProfileInput compact value={profileForm.university} onChange={(value) => setProfileForm((current) => ({ ...current, university: value }))} required />
         </EditableProfileCard>
+
+        <StaticProfileCard
+          label="College Name"
+          value={collegeName}
+          icon={<Building2 className="h-4 w-4" />}
+          helper="Shown from your lecturer verification / academic profile details."
+        />
+
+        <StaticProfileCard
+          label="University / Board"
+          value={universityBoard}
+          icon={<Building2 className="h-4 w-4" />}
+          helper="This is separated from the saved college and university entry for easier viewing."
+        />
 
         <EditableProfileCard
           label="Phone"
