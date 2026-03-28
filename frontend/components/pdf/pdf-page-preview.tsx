@@ -49,8 +49,7 @@ export function PDFPagePreview({
         const buffer = await response.arrayBuffer();
         const loadingTask = getDocument({
           data: new Uint8Array(buffer),
-          useWorkerFetch: false,
-          disableWorker: true
+          useWorkerFetch: false
         });
         pdfDocument = await loadingTask.promise;
         const page = await pdfDocument.getPage(1);
