@@ -71,6 +71,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const [verificationBusy, setVerificationBusy] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [showVerificationForm, setShowVerificationForm] = useState(false);
+  const [showTeacherFoldersSheet, setShowTeacherFoldersSheet] = useState(false);
   const [verificationFile, setVerificationFile] = useState<File | null>(null);
   const [verificationForm, setVerificationForm] = useState({
     fullName: user?.name || "",
@@ -123,6 +124,10 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     if (verificationFileRef.current) {
       verificationFileRef.current.value = "";
     }
+  };
+
+  const closeTeacherFoldersSheet = () => {
+    setShowTeacherFoldersSheet(false);
   };
 
   useEffect(() => {
@@ -617,7 +622,13 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               <div className="mx-auto flex w-max min-w-max items-center gap-3 rounded-[22px] border border-slate-200 bg-white/95 p-2 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
                 <button
                   type="button"
-                  onClick={() => setActiveTeacher("All")}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) {
+                      setShowTeacherFoldersSheet(true);
+                    } else {
+                      setActiveTeacher("All");
+                    }
+                  }}
                   className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-medium transition ${
                     activeTeacher === "All"
                       ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
@@ -628,42 +639,44 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   All teacher folders
                 </button>
 
-                {teacherFolders.map((teacher) => (
-                  <div
-                    key={teacher.key}
-                    className={`inline-flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
-                      activeTeacher === teacher.key
-                        ? "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setActiveTeacher(teacher.key)}
-                      className="inline-flex items-center gap-3 text-left"
+                <div className="hidden items-center gap-3 lg:flex">
+                  {teacherFolders.map((teacher) => (
+                    <div
+                      key={teacher.key}
+                      className={`inline-flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
+                        activeTeacher === teacher.key
+                          ? "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                      }`}
                     >
-                      <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
-                        <SafeAvatar
-                          src={teacher.profilePhoto ?? null}
-                          alt={teacher.name}
-                          className="h-full w-full object-cover"
-                          fallback={teacher.name.slice(0, 1).toUpperCase()}
-                          fallbackClassName="h-full w-full text-xs font-semibold"
-                        />
-                      </div>
-                      <span className="flex flex-col">
-                        <span className="font-semibold">{teacher.name}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</span>
-                      </span>
-                    </button>
-                    <Link
-                      href={`/teacher-notes/teacher/${teacher.key}`}
-                      className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:text-slate-300"
-                    >
-                      Profile
-                    </Link>
-                  </div>
-                ))}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTeacher(teacher.key)}
+                        className="inline-flex items-center gap-3 text-left"
+                      >
+                        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                          <SafeAvatar
+                            src={teacher.profilePhoto ?? null}
+                            alt={teacher.name}
+                            className="h-full w-full object-cover"
+                            fallback={teacher.name.slice(0, 1).toUpperCase()}
+                            fallbackClassName="h-full w-full text-xs font-semibold"
+                          />
+                        </div>
+                        <span className="flex flex-col">
+                          <span className="font-semibold">{teacher.name}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</span>
+                        </span>
+                      </button>
+                      <Link
+                        href={`/teacher-notes/teacher/${teacher.key}`}
+                        className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:text-slate-300"
+                      >
+                        Profile
+                      </Link>
+                    </div>
+                  ))}
+                </div>
                 {isTeacher ? (
                   <button
                     type="button"
@@ -682,6 +695,94 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           <div className="h-28 md:h-32" />
         </div>
       </section>
+
+      {showTeacherFoldersSheet ? (
+        <div className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-[2px] lg:hidden">
+          <button
+            type="button"
+            aria-label="Close teacher folders"
+            className="absolute inset-0"
+            onClick={closeTeacherFoldersSheet}
+          />
+          <div className="absolute inset-x-0 bottom-0 rounded-t-[30px] border-t border-slate-200 bg-white px-4 pb-6 pt-4 shadow-[0_-24px_80px_-28px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950">
+            <div className="mx-auto mb-4 h-1.5 w-16 rounded-full bg-slate-200 dark:bg-slate-700" />
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Teacher folders</p>
+                <h3 className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">Browse all folders</h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeTeacherFoldersSheet}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTeacher("All");
+                  closeTeacherFoldersSheet();
+                }}
+                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${
+                  activeTeacher === "All"
+                    ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                    : "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                }`}
+              >
+                <FolderOpen className="h-4 w-4 shrink-0" />
+                <span>All folders</span>
+              </button>
+
+              {teacherFolders.map((teacher) => (
+                <div
+                  key={teacher.key}
+                  className={`rounded-2xl border px-3 py-3 transition ${
+                    activeTeacher === teacher.key
+                      ? "border-emerald-300 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10"
+                      : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTeacher(teacher.key);
+                      closeTeacherFoldersSheet();
+                    }}
+                    className="w-full text-left"
+                  >
+                    <div className="mb-2 flex items-center gap-3">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                        <SafeAvatar
+                          src={teacher.profilePhoto ?? null}
+                          alt={teacher.name}
+                          className="h-full w-full object-cover"
+                          fallback={teacher.name.slice(0, 1).toUpperCase()}
+                          fallbackClassName="h-full w-full text-xs font-semibold"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{teacher.name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{teacher.noteCount} notes</p>
+                      </div>
+                    </div>
+                  </button>
+                  <Link
+                    href={`/teacher-notes/teacher/${teacher.key}`}
+                    className="inline-flex rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                    onClick={closeTeacherFoldersSheet}
+                  >
+                    Profile
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isSidePanelOpen ? (
         <div className="fixed inset-x-0 bottom-0 top-[86px] z-40 sm:top-[92px] lg:top-[96px]">
