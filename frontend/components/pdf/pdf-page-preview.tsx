@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FileText } from "lucide-react";
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type RenderTask } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { resolveMediaUrl } from "@/lib/utils";
 
-GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 type PDFPagePreviewProps = {
   url: string;
@@ -22,20 +23,30 @@ export function PDFPagePreview({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const resolvedUrl = useMemo(() => resolveMediaUrl(url), [url]);
 
   useEffect(() => {
     let isMounted = true;
     let renderTask: RenderTask | null = null;
     let pdfDocument: PDFDocumentProxy | null = null;
+    const abortController = new AbortController();
 
     const renderPreview = async () => {
       const canvas = canvasRef.current;
       const wrapper = wrapperRef.current;
-      if (!canvas || !wrapper) return;
+      if (!canvas || !wrapper || !resolvedUrl) return;
 
       try {
         setState("loading");
-        const loadingTask = getDocument(url);
+        const response = await fetch(resolvedUrl, {
+          signal: abortController.signal,
+          credentials: "include"
+        });
+        if (!response.ok) {
+          throw new Error(`Preview request failed: ${response.status}`);
+        }
+        const buffer = await response.arrayBuffer();
+        const loadingTask = getDocument({ data: new Uint8Array(buffer) });
         pdfDocument = await loadingTask.promise;
         const page = await pdfDocument.getPage(1);
 
@@ -77,10 +88,11 @@ export function PDFPagePreview({
 
     return () => {
       isMounted = false;
+      abortController.abort();
       renderTask?.cancel?.();
       pdfDocument?.destroy?.();
     };
-  }, [url]);
+  }, [resolvedUrl]);
 
   return (
     <div

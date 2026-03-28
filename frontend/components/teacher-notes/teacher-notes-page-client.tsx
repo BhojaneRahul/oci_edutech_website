@@ -406,7 +406,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   };
 
   const deleteTeacherNote = async (documentId: string | number) => {
-    if (!window.confirm("Delete this teacher note permanently?")) {
+    if (!window.confirm("Delete these teacher notes permanently?")) {
       return;
     }
 
@@ -514,22 +514,22 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 border-t border-slate-100 pt-8 dark:border-slate-900 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-8 dark:border-slate-900 sm:grid-cols-2 xl:grid-cols-4">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
 
             return (
               <article
                 key={note._id}
-                className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white p-4 transition hover:border-amber-200 hover:shadow-[0_22px_55px_-36px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+                className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white p-3 transition hover:border-amber-200 hover:shadow-[0_18px_40px_-30px_rgba(15,23,42,0.24)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
               >
                 <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
-                  <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 px-4 py-3 dark:border-slate-800">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 px-3 py-3 dark:border-slate-800">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
                       <ShieldCheck className="h-3.5 w-3.5" />
                       Verified teacher
                     </div>
-                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
                       <SafeAvatar
                         src={note.uploader?.profilePhoto ?? null}
                         alt={note.uploader?.name || "Teacher"}
@@ -539,20 +539,20 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       />
                     </div>
                   </div>
-                  <PDFPagePreview url={note.fileUrl} title={note.title} canvasClassName="min-h-[220px] bg-white sm:min-h-[240px]" />
+                  <PDFPagePreview url={note.fileUrl} title={note.title} canvasClassName="min-h-[170px] bg-white sm:min-h-[190px]" />
                 </div>
 
-                <div className="flex flex-1 flex-col px-1 pt-4">
-                  <h3 className="line-clamp-2 text-lg font-semibold leading-7 text-slate-950 dark:text-white">{note.title}</h3>
+                <div className="flex flex-1 flex-col px-1 pt-3">
+                  <h3 className="line-clamp-2 text-base font-semibold leading-6 text-slate-950 dark:text-white">{note.title}</h3>
 
-                  <div className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                    <p className="line-clamp-1">
+                  <div className="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
+                    <p className="line-clamp-1 text-[13px]">
                       <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
                     </p>
-                    <p className="line-clamp-1">
+                    <p className="line-clamp-1 text-[13px]">
                       <span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}
                     </p>
-                    <p className="line-clamp-1">
+                    <p className="line-clamp-1 text-[13px]">
                       <span className="font-semibold text-slate-900 dark:text-white">Teacher:</span>{" "}
                       {note.uploader?.name || note.uploader?.email || "Verified teacher"}
                     </p>
@@ -561,28 +561,28 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     </p>
                   </div>
 
-                <div className="mt-5 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                   <Link
                     href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(note.fileUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-                    className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                    className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
                   >
                     <FileText className="h-4 w-4" />
-                    Open note
+                    Open notes
                   </Link>
                   <a
                     href={note.fileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
                   >
                     <Download className="h-4 w-4" />
-                    Download
+                    Download notes
                   </a>
                   {isOwner ? (
                     <button
                       type="button"
                       onClick={() => startEditTeacherNote(note)}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
                     >
                       Edit
                     </button>
@@ -591,7 +591,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     <button
                       type="button"
                       onClick={() => void deleteTeacherNote(note._id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                      className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-3.5 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
                     >
                       Delete
                     </button>
@@ -685,7 +685,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     className="ml-1 inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
                   >
                     {isVerifiedTeacher ? <UploadCloud className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4" />}
-                    {isVerifiedTeacher ? "Upload teacher note" : hasPendingVerification ? "Verification pending" : "Verify to upload"}
+                    {isVerifiedTeacher ? "Upload teacher notes" : hasPendingVerification ? "Verification pending" : "Verify to upload"}
                   </button>
                 ) : null}
               </div>
@@ -801,7 +801,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                       {showUploadForm ? "Upload notes" : "Teacher verification"}
                     </p>
                     <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
-                      {showUploadForm ? (editingNoteId ? "Edit teacher note" : "Upload teacher note") : "Verify lecturer profile"}
+                      {showUploadForm ? (editingNoteId ? "Edit teacher notes" : "Upload teacher notes") : "Verify lecturer profile"}
                     </h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                       {showUploadForm
@@ -1026,14 +1026,14 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     </section>
 
                     <div className="flex flex-wrap gap-3 pt-1">
-                      <button
-                        type="submit"
-                        disabled={busy}
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-                      >
-                        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-                        {busy ? (editingNoteId ? "Saving teacher notes..." : "Uploading teacher notes...") : editingNoteId ? "Save teacher notes" : "Upload teacher notes"}
-                      </button>
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                  >
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                    {busy ? (editingNoteId ? "Saving teacher notes..." : "Uploading teacher notes...") : editingNoteId ? "Save teacher notes" : "Upload teacher notes"}
+                  </button>
                       <button
                         type="button"
                         onClick={closeSidePanel}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { resolveMediaUrl } from "@/lib/utils";
 
 type SafeAvatarProps = {
   src?: string | null;
@@ -20,11 +21,7 @@ export function SafeAvatar({
   const [failed, setFailed] = useState(false);
 
   const normalizedSrc = useMemo(() => {
-    if (!src) return null;
-    if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/")) {
-      return src;
-    }
-    return `/${src.replace(/^\/+/, "")}`;
+    return resolveMediaUrl(src);
   }, [src]);
 
   if (!normalizedSrc || failed) {

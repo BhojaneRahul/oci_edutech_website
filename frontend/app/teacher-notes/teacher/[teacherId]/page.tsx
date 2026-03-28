@@ -59,20 +59,20 @@ export default async function TeacherProfilePage({
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Folder summary</p>
                   <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{notes.length}</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">uploaded note{notes.length === 1 ? "" : "s"} available</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">uploaded notes available</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-                  Open any note to preview the first page, then continue with full reading or download.
+                  Open any notes to preview the first page, then continue with full reading or download.
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {notes.map((note) => (
               <article
                 key={String(note._id)}
-                className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_70px_-44px_rgba(15,23,42,0.26)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_28px_70px_-38px_rgba(245,158,11,0.22)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+                className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_44px_-34px_rgba(15,23,42,0.24)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_56px_-34px_rgba(245,158,11,0.2)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
               >
                 <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 pb-4 pt-5 dark:border-slate-800">
                   <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
@@ -90,10 +90,10 @@ export default async function TeacherProfilePage({
                   </div>
                 </div>
                 <div className="p-5">
-                  <PDFPagePreview url={note.fileUrl} title={note.title} canvasClassName="min-h-[220px] bg-white sm:min-h-[240px]" />
+                  <PDFPagePreview url={note.fileUrl} title={note.title} canvasClassName="min-h-[170px] bg-white sm:min-h-[190px]" />
                   <div className="mt-5 space-y-3">
                     <div>
-                      <h2 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">{note.title}</h2>
+                      <h2 className="text-xl font-semibold tracking-tight text-slate-950 dark:text-white">{note.title}</h2>
                       <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
                         Subject-wise lecturer notes curated for structured reading, quick revision, and dependable classroom-style preparation.
                       </p>
@@ -116,7 +116,7 @@ export default async function TeacherProfilePage({
                       className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
                     >
                       <Eye className="h-4 w-4" />
-                      Open note
+                      Open notes
                     </Link>
                     <a
                       href={note.fileUrl}
@@ -125,7 +125,7 @@ export default async function TeacherProfilePage({
                       className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
                     >
                       <Download className="h-4 w-4" />
-                      Download
+                      Download notes
                     </a>
                     <Link
                       href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(note.fileUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
