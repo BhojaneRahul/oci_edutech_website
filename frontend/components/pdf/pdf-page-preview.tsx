@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FileText } from "lucide-react";
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type RenderTask } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
@@ -25,8 +25,8 @@ export function PDFPagePreview({
 
   useEffect(() => {
     let isMounted = true;
-    let renderTask: { cancel?: () => void } | null = null;
-    let pdfDocument: { destroy?: () => void } | null = null;
+    let renderTask: RenderTask | null = null;
+    let pdfDocument: PDFDocumentProxy | null = null;
 
     const renderPreview = async () => {
       const canvas = canvasRef.current;
