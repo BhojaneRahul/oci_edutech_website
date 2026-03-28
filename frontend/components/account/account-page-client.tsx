@@ -10,8 +10,14 @@ import { resolveMediaUrl } from "@/lib/utils";
 export function AccountPageClient() {
   const { user, loading, setAuthUser, refreshUser } = useAuth();
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const fallbackDisplayName =
+    String(user?.name ?? "").trim() ||
+    String(user?.email ?? "")
+      .split("@")[0]
+      .trim() ||
+    "Account";
   const [profileForm, setProfileForm] = useState({
-    name: user?.name ?? "",
+    name: user?.name ?? fallbackDisplayName,
     email: user?.email ?? "",
     university: user?.university ?? "",
     phone: user?.phone ?? "",
@@ -45,7 +51,11 @@ export function AccountPageClient() {
     if (!user) return;
 
     setProfileForm({
-      name: user.name ?? "",
+      name:
+        String(user.name ?? "").trim() ||
+        String(user.email ?? "")
+          .split("@")[0]
+          .trim(),
       email: user.email ?? "",
       university: user.university ?? "",
       phone: user.phone ?? "",
@@ -83,7 +93,12 @@ export function AccountPageClient() {
 
     try {
       const response = await api.put("/auth/profile", {
-        name: profileForm.name,
+        name:
+          String(profileForm.name ?? "").trim() ||
+          String(user?.name ?? "").trim() ||
+          String(user?.email ?? "")
+            .split("@")[0]
+            .trim(),
         role: profileForm.role,
         university: profileForm.university,
         phone: profileForm.phone,
@@ -91,6 +106,7 @@ export function AccountPageClient() {
         semester: profileForm.semester
       });
       setAuthUser(response.data.user);
+      await refreshUser();
       setMessage(response.data.message);
       setEditingField(null);
     } catch (error: any) {
@@ -155,6 +171,7 @@ export function AccountPageClient() {
         }
       });
       setAuthUser(response.data.user);
+      await refreshUser();
       setMessage(response.data.message);
       URL.revokeObjectURL(avatarEditor.src);
       setAvatarEditor(null);
@@ -184,7 +201,7 @@ export function AccountPageClient() {
                 <div className="flex justify-center md:block">
                   {profilePhotoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profilePhotoUrl} alt={user.name} className="h-20 w-20 rounded-3xl object-cover" />
+                    <img src={profilePhotoUrl} alt={user.name || fallbackDisplayName} className="h-20 w-20 rounded-3xl object-cover" />
                   ) : (
                     <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-100 text-amber-600 dark:bg-amber-500/15">
                       <UserRound className="h-8 w-8" />
@@ -196,7 +213,7 @@ export function AccountPageClient() {
                   <p className="hidden text-sm font-semibold uppercase tracking-[0.24em] text-amber-600 md:block">Account</p>
                   <div className="hidden md:mt-2 md:flex md:flex-wrap md:items-center md:gap-3">
                     <h1 className="text-[1.35rem] font-semibold leading-tight text-slate-950 dark:text-white lg:text-[1.45rem]">
-                      {user.name}
+                      {user.name || fallbackDisplayName}
                     </h1>
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                       <Shield className="h-3.5 w-3.5" />
@@ -204,7 +221,7 @@ export function AccountPageClient() {
                     </span>
                   </div>
                   <h1 className="mt-3 max-w-[280px] text-[1.2rem] font-semibold leading-tight text-slate-950 dark:text-white sm:text-[1.3rem] md:hidden">
-                    {user.name}
+                    {user.name || fallbackDisplayName}
                   </h1>
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
                 </div>

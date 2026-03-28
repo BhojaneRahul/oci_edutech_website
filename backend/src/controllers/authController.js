@@ -103,8 +103,16 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 
 export const updateProfile = asyncHandler(async (req, res) => {
   const { name, role, university, phone, course, semester } = req.body;
+  const normalizedName =
+    String(name ?? "")
+      .trim() ||
+    String(req.user?.name ?? "")
+      .trim() ||
+    String(req.user?.email ?? "")
+      .split("@")[0]
+      .trim();
 
-  if (!name) {
+  if (!normalizedName) {
     res.status(400);
     throw new Error("Name is required");
   }
@@ -112,12 +120,12 @@ export const updateProfile = asyncHandler(async (req, res) => {
   const user = await prisma.user.update({
     where: { id: req.user.id },
     data: {
-      name,
+      name: normalizedName,
       role: req.user.role === "admin" ? req.user.role : role === "teacher" ? "teacher" : "student",
-      university: university || null,
-      phone: phone || null,
-      course: course || null,
-      semester: semester || null
+      university: String(university ?? "").trim() || null,
+      phone: String(phone ?? "").trim() || null,
+      course: String(course ?? "").trim() || null,
+      semester: String(semester ?? "").trim() || null
     }
   });
 

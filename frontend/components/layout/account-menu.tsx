@@ -17,6 +17,12 @@ export function AccountMenu() {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const profilePhotoUrl = resolveMediaUrl(user?.profilePhoto);
+  const displayName =
+    String(user?.name ?? "").trim() ||
+    String(user?.email ?? "")
+      .split("@")[0]
+      .trim() ||
+    "Account";
 
   useEffect(() => {
     setAvatarFailed(false);
@@ -65,7 +71,7 @@ export function AccountMenu() {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={profilePhotoUrl}
-            alt={user.name}
+            alt={displayName}
             className="h-7 w-7 rounded-full object-cover"
             referrerPolicy="no-referrer"
             onError={() => setAvatarFailed(true)}
@@ -73,14 +79,14 @@ export function AccountMenu() {
         ) : (
           <UserCircle2 className="h-5 w-5 text-amber-500" />
         )}
-        <span className="hidden text-sm font-medium sm:inline">{user.name ?? "Account"}</span>
+        <span className="hidden text-sm font-medium sm:inline">{displayName}</span>
         <ChevronDown className="h-4 w-4 text-slate-400" />
       </button>
 
       {open ? (
         <div className="absolute right-0 top-14 z-50 w-64 rounded-3xl border border-slate-200 bg-white p-3 shadow-soft dark:border-slate-800 dark:bg-slate-950">
           <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
-            <p className="text-sm font-semibold">{user.name}</p>
+            <p className="text-sm font-semibold">{displayName}</p>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
             <span className="mt-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
               {user.role === "admin" ? "Admin" : user.role === "teacher" ? "Teacher" : "Student"}
