@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, ChevronDown, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud, X } from "lucide-react";
+import { BadgeCheck, Bookmark, BookmarkCheck, ChevronDown, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
@@ -268,7 +268,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       return;
     }
 
-    setUploadMessage("Teacher Notes uploads are available only for verified teacher accounts.");
+    setUploadMessage("Lecturer Notes uploads are available only for verified lecturer accounts.");
   };
 
   const uploadTeacherNote = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -318,7 +318,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     } catch (error: any) {
       setUploadMessage(
         error?.response?.data?.message ||
-          (editingNoteId ? "We could not update the teacher notes right now." : "We could not upload the teacher notes right now.")
+          (editingNoteId ? "We could not update the lecturer notes right now." : "We could not upload the lecturer notes right now.")
       );
     } finally {
       setBusy(false);
@@ -400,23 +400,23 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         verificationFileRef.current.value = "";
       }
     } catch (error: any) {
-      setVerificationMessage(error?.response?.data?.message || "We could not submit teacher verification right now.");
+      setVerificationMessage(error?.response?.data?.message || "We could not submit lecturer verification right now.");
     } finally {
       setVerificationBusy(false);
     }
   };
 
   const deleteTeacherNote = async (documentId: string | number) => {
-    if (!window.confirm("Delete these teacher notes permanently?")) {
+    if (!window.confirm("Delete these lecturer notes permanently?")) {
       return;
     }
 
     try {
       await api.delete(`/documents/teacher-notes/${documentId}`);
-      setUploadMessage("Teacher notes deleted successfully.");
+      setUploadMessage("Lecturer notes deleted successfully.");
       await queryClient.invalidateQueries({ queryKey: ["teacher-notes"] });
     } catch (error: any) {
-      setUploadMessage(error?.response?.data?.message || "We could not delete these teacher notes right now.");
+      setUploadMessage(error?.response?.data?.message || "We could not delete these lecturer notes right now.");
     }
   };
 
@@ -438,7 +438,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
           {loading ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
-              Checking your teacher access...
+              Checking your lecturer access...
             </div>
           ) : null}
 
@@ -454,7 +454,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search teacher notes, subjects, or teacher names"
+                    placeholder="Search lecturer notes, subjects, or lecturer names"
                     className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-14 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition focus:border-amber-400 focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950 dark:placeholder:text-slate-500 lg:pr-4"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 lg:hidden">
@@ -464,7 +464,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                         value={sortBy}
                         onChange={(event) => setSortBy(event.target.value as (typeof sortOptions)[number]["value"])}
                         className="absolute inset-0 appearance-none opacity-0"
-                        aria-label="Sort teacher notes"
+                        aria-label="Sort lecturer notes"
                       >
                         {sortOptions.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -515,76 +515,89 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-8 dark:border-slate-900 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-8 dark:border-slate-900 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredNotes.map((note) => {
             const isOwner = Number(note.uploader?.id) === Number(user?.id);
             const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
+            const isSaved = savedDocumentIds.has(String(note._id));
 
             return (
               <article
                 key={note._id}
-                className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white p-3 transition hover:border-amber-200 hover:shadow-[0_18px_40px_-30px_rgba(15,23,42,0.24)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+                className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[20px] border border-slate-200 bg-white p-2.5 shadow-[0_8px_24px_-22px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_18px_36px_-28px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
               >
                 <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
                   <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 px-3 py-3 dark:border-slate-800">
                     <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      Verified teacher
+                      Verified lecturer
                     </div>
                     <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
                       <SafeAvatar
                         src={note.uploader?.profilePhoto ?? null}
-                        alt={note.uploader?.name || "Teacher"}
+                        alt={note.uploader?.name || "Lecturer"}
                         className="h-full w-full object-cover"
                         fallback={(note.uploader?.name || "T").slice(0, 1).toUpperCase()}
                         fallbackClassName="h-full w-full text-sm font-semibold text-slate-500 dark:text-slate-300"
                       />
                     </div>
                   </div>
-                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[170px] bg-white sm:min-h-[190px]" />
+                  <PDFPagePreview url={mediaUrl} title={note.title} canvasClassName="min-h-[132px] bg-white sm:min-h-[148px]" />
                 </div>
 
-                <div className="flex flex-1 flex-col px-1 pt-3">
-                  <h3 className="line-clamp-2 text-base font-semibold leading-6 text-slate-950 dark:text-white">{note.title}</h3>
+                <div className="flex flex-1 flex-col px-1 pt-2.5">
+                  <h3 className="line-clamp-2 text-[14px] font-semibold leading-5.5 text-slate-950 dark:text-white">{note.title}</h3>
 
-                  <div className="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
-                    <p className="line-clamp-1 text-[13px]">
+                  <div className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+                    <p className="line-clamp-1 text-[12.5px]">
                       <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
                     </p>
-                    <p className="line-clamp-1 text-[13px]">
+                    <p className="line-clamp-1 text-[12.5px]">
                       <span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}
                     </p>
-                    <p className="line-clamp-1 text-[13px]">
-                      <span className="font-semibold text-slate-900 dark:text-white">Teacher:</span>{" "}
-                      {note.uploader?.name || note.uploader?.email || "Verified teacher"}
+                    <p className="line-clamp-1 text-[12.5px]">
+                      <span className="font-semibold text-slate-900 dark:text-white">Lecturer:</span>{" "}
+                      {note.uploader?.name || note.uploader?.email || "Verified lecturer"}
                     </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
                       {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
                     </p>
                   </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Link
                       href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-                    className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                    className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
                   >
                     <FileText className="h-4 w-4" />
-                    Open notes
+                    Open Notes
                   </Link>
                   <a
                       href={mediaUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-[13px] font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
                   >
                     <Download className="h-4 w-4" />
-                    Download notes
+                    Download Notes
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => void toggleSavedDocument(note._id)}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition ${
+                      isSaved
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+                        : "border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+                    {isSaved ? "Saved" : "Save"}
+                  </button>
                   {isOwner ? (
                     <button
                       type="button"
                       onClick={() => startEditTeacherNote(note)}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-[13px] font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
                     >
                       Edit
                     </button>
@@ -593,7 +606,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     <button
                       type="button"
                       onClick={() => void deleteTeacherNote(note._id)}
-                      className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-3.5 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                      className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-3 py-1.5 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
                     >
                       Delete
                     </button>
@@ -608,9 +621,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           {!filteredNotes.length ? (
             <div className="mt-4 flex min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-200/80 bg-slate-50/40 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
               <div className="mx-auto max-w-md space-y-2">
-                <p className="text-base font-semibold text-slate-800 dark:text-slate-100">No teacher notes found</p>
+                <p className="text-base font-semibold text-slate-800 dark:text-slate-100">No lecturer notes found</p>
                 <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
-                  Try another subject, teacher name, or filter to see more approved notes.
+                  Try another subject, lecturer name, or filter to see more approved notes.
                 </p>
               </div>
             </div>
@@ -638,7 +651,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   }`}
                 >
                   <FolderOpen className="h-4 w-4" />
-                  All teacher folders
+                  All lecturer folders
                 </button>
 
                 <div className="hidden items-center gap-3 lg:flex">
@@ -687,7 +700,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     className="ml-1 inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
                   >
                     {isVerifiedTeacher ? <UploadCloud className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4" />}
-                    {isVerifiedTeacher ? "Upload teacher notes" : hasPendingVerification ? "Verification pending" : "Verify to upload"}
+                    {isVerifiedTeacher ? "Upload Lecturer Notes" : hasPendingVerification ? "Verification pending" : "Verify to upload"}
                   </button>
                 ) : null}
               </div>
@@ -710,7 +723,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             <div className="mx-auto mb-4 h-1.5 w-16 rounded-full bg-slate-200 dark:bg-slate-700" />
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Teacher folders</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Lecturer folders</p>
                 <h3 className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">Browse all folders</h3>
               </div>
               <button
@@ -790,7 +803,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
         <div className="fixed inset-x-0 bottom-0 top-[86px] z-40 sm:top-[92px] lg:top-[96px]">
           <button
             type="button"
-            aria-label="Close teacher notes panel"
+            aria-label="Close lecturer notes panel"
             className="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px]"
             onClick={closeSidePanel}
           />
@@ -800,10 +813,10 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">
-                      {showUploadForm ? "Upload notes" : "Teacher verification"}
+                      {showUploadForm ? "Upload notes" : "Lecturer verification"}
                     </p>
                     <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
-                      {showUploadForm ? (editingNoteId ? "Edit teacher notes" : "Upload teacher notes") : "Verify lecturer profile"}
+                      {showUploadForm ? (editingNoteId ? "Edit lecturer notes" : "Upload lecturer notes") : "Verify lecturer profile"}
                     </h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                       {showUploadForm
@@ -913,7 +926,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                         className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
                       >
                         {verificationBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
-                        {verificationBusy ? "Submitting verification..." : "Submit teacher verification"}
+                        {verificationBusy ? "Submitting verification..." : "Submit lecturer verification"}
                       </button>
                       <button
                         type="button"
@@ -1017,10 +1030,10 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                              {selectedFile ? selectedFile.name : editingNoteId ? "Replace teacher notes PDF (optional)" : "Choose full notes PDF"}
+                              {selectedFile ? selectedFile.name : editingNoteId ? "Replace lecturer notes PDF (optional)" : "Choose full notes PDF"}
                             </p>
                             <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                              Upload one complete teacher notes PDF for students to open, save, and download.
+                              Upload one complete lecturer notes PDF for students to open, save, and download.
                             </p>
                           </div>
                         </div>
@@ -1034,7 +1047,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
                   >
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-                    {busy ? (editingNoteId ? "Saving teacher notes..." : "Uploading teacher notes...") : editingNoteId ? "Save teacher notes" : "Upload teacher notes"}
+                    {busy ? (editingNoteId ? "Saving lecturer notes..." : "Uploading lecturer notes...") : editingNoteId ? "Save lecturer notes" : "Upload lecturer notes"}
                   </button>
                       <button
                         type="button"

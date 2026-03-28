@@ -77,7 +77,19 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(passport.initialize());
-app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && (allowedOrigins.includes(origin) || isAllowedLocalOrigin(origin))) {
+      res.header("Access-Control-Allow-Origin", origin);
+      res.header("Vary", "Origin");
+      res.header("Access-Control-Allow-Credentials", "true");
+    }
+    next();
+  },
+  express.static(path.resolve(__dirname, "../uploads"))
+);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });

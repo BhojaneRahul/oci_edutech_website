@@ -5,7 +5,7 @@ import { FileText } from "lucide-react";
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type RenderTask } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { resolveMediaUrl } from "@/lib/utils";
 
-GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
 type PDFPagePreviewProps = {
   url: string;
@@ -39,13 +39,18 @@ export function PDFPagePreview({
       try {
         setState("loading");
         const response = await fetch(resolvedUrl, {
-          signal: abortController.signal
+          signal: abortController.signal,
+          cache: "force-cache",
+          mode: "cors"
         });
         if (!response.ok) {
           throw new Error(`Preview request failed: ${response.status}`);
         }
         const buffer = await response.arrayBuffer();
-        const loadingTask = getDocument({ data: new Uint8Array(buffer) });
+        const loadingTask = getDocument({
+          data: new Uint8Array(buffer),
+          useWorkerFetch: false
+        });
         pdfDocument = await loadingTask.promise;
         const page = await pdfDocument.getPage(1);
 
@@ -76,7 +81,8 @@ export function PDFPagePreview({
         if (isMounted) {
           setState("ready");
         }
-      } catch {
+      } catch (error) {
+        console.error("Lecturer notes preview failed", error);
         if (isMounted) {
           setState("error");
         }
