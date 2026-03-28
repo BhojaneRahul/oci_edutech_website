@@ -86,11 +86,9 @@ export default async function TeacherProfilePage({
             </div>
           </div>
 
-          <div className={useHorizontalRail ? "relative" : ""}>
+          <div>
             {useHorizontalRail ? (
               <>
-                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-10 bg-gradient-to-r from-[#fffdf8] via-[#fffdf8]/90 to-transparent md:block dark:from-slate-950 dark:via-slate-950/90" />
-                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-12 bg-gradient-to-l from-[#f8fafc] via-[#f8fafc]/90 to-transparent md:block dark:from-slate-950 dark:via-slate-950/90" />
                 <div className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
                   <div className="flex gap-4">
                     {notes.map((note) => {

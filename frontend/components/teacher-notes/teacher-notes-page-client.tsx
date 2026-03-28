@@ -244,6 +244,39 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     });
   }, [activeCategory, activeStream, activeTeacher, search, sortBy, teacherNotes]);
 
+  const groupedLecturerNotes = useMemo(() => {
+    const grouped = new Map<
+      string,
+      {
+        key: string;
+        name: string;
+        email: string;
+        profilePhoto?: string | null;
+        notes: Document[];
+      }
+    >();
+
+    filteredNotes.forEach((note) => {
+      const key = String(note.uploader?.id ?? note.uploader?.email ?? note._id);
+      const existing = grouped.get(key);
+
+      if (existing) {
+        existing.notes.push(note);
+        return;
+      }
+
+      grouped.set(key, {
+        key,
+        name: note.uploader?.name || "Verified lecturer",
+        email: note.uploader?.email || "",
+        profilePhoto: note.uploader?.profilePhoto ?? null,
+        notes: [note]
+      });
+    });
+
+    return Array.from(grouped.values()).sort((left, right) => left.name.localeCompare(right.name));
+  }, [filteredNotes]);
+
   const openUploadFlow = () => {
     setUploadMessage("");
     setVerificationMessage("");
@@ -642,29 +675,57 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           </div>
 
-          {filteredNotes.length ? (
-            <>
-              <div className="relative md:hidden">
-                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-white via-white/90 to-transparent dark:from-slate-950 dark:via-slate-950/90" />
-                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white via-white/90 to-transparent dark:from-slate-950 dark:via-slate-950/90" />
-                <div
-                  className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  <div className="flex snap-x snap-mandatory gap-3 px-1">
-                    {filteredNotes.map((note) => (
-                      <div key={String(note._id)} className="w-[82vw] max-w-[300px] shrink-0 snap-start">
-                        {renderLecturerCard(note)}
+          {groupedLecturerNotes.length ? (
+            <div className="space-y-8">
+              {groupedLecturerNotes.map((teacherGroup) => (
+                <section key={teacherGroup.key} className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTeacher(teacherGroup.key)}
+                      className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-left shadow-sm transition hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-emerald-500/30"
+                    >
+                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+                        <SafeAvatar
+                          src={teacherGroup.profilePhoto ?? null}
+                          alt={teacherGroup.name}
+                          className="h-full w-full object-cover"
+                          fallback={teacherGroup.name.slice(0, 1).toUpperCase()}
+                          fallbackClassName="h-full w-full text-sm font-semibold text-slate-500 dark:text-slate-300"
+                        />
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                      <span className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm font-semibold text-slate-900 dark:text-white">{teacherGroup.name}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{teacherGroup.notes.length} notes</span>
+                      </span>
+                    </button>
 
-              <div className="hidden md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                {filteredNotes.map((note) => renderLecturerCard(note))}
-              </div>
-            </>
+                    <Link
+                      href={`/teacher-notes/teacher/${teacherGroup.key}`}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:text-slate-200"
+                    >
+                      Profile
+                    </Link>
+                  </div>
+
+                  <div
+                    className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    <div className="flex gap-4">
+                      {teacherGroup.notes.map((note) => (
+                        <div
+                          key={String(note._id)}
+                          className="w-[78vw] max-w-[310px] shrink-0 snap-start md:w-[250px] lg:w-[240px] xl:w-[230px]"
+                        >
+                          {renderLecturerCard(note)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              ))}
+            </div>
           ) : null}
 
           {!filteredNotes.length ? (
