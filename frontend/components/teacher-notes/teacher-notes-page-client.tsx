@@ -663,9 +663,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
           {groupedLecturerNotes.length ? (
-            <div className="relative z-0 space-y-8 pt-28 sm:pt-32 lg:pt-36">
+            <div className="relative z-0 space-y-8 pt-36 sm:pt-40 lg:pt-44">
               {groupedLecturerNotes.map((teacherGroup) => (
-                <section key={teacherGroup.key} className="space-y-4 scroll-mt-60 sm:scroll-mt-64 lg:scroll-mt-72">
+                <section key={teacherGroup.key} className="space-y-4 scroll-mt-72 pt-2 first:pt-4 sm:scroll-mt-80 sm:pt-3 sm:first:pt-5 lg:scroll-mt-88">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <button
                       type="button"
