@@ -163,6 +163,19 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (!uploadMessage && !verificationMessage) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setUploadMessage("");
+      setVerificationMessage("");
+    }, 3800);
+
+    return () => window.clearTimeout(timeout);
+  }, [uploadMessage, verificationMessage]);
+
   const teacherFolders = useMemo(() => {
     const grouped = new Map<
       string,
@@ -317,6 +330,15 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
   const uploadTeacherNote = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const cleanTitle = title.trim();
+    const cleanSubject = subject.trim();
+    const cleanStreams = selectedStreams.map((value) => value.trim()).filter(Boolean);
+
+    if (!cleanTitle || !cleanSubject || !cleanStreams.length) {
+      setUploadMessage("Title, subject, and at least one stream are required.");
+      return;
+    }
+
     if (!selectedFile && !editingNoteId) {
       setUploadMessage("Please select a PDF file first.");
       return;
@@ -327,28 +349,23 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
     try {
       const formData = new FormData();
-      formData.append("title", title);
-      formData.append("subject", subject);
+      formData.append("title", cleanTitle);
+      formData.append("subject", cleanSubject);
       formData.append("noteCategory", noteCategory);
-      if (selectedStreams[0]) {
-        formData.append("stream", selectedStreams[0]);
+      if (cleanStreams[0]) {
+        formData.append("stream", cleanStreams[0]);
       }
-      selectedStreams.forEach((selectedStream) => formData.append("streams[]", selectedStream));
+      cleanStreams.forEach((selectedStream) => {
+        formData.append("streams[]", selectedStream);
+        formData.append("streams", selectedStream);
+      });
       if (selectedFile) {
         formData.append("file", selectedFile);
       }
 
       const response = editingNoteId
-        ? await api.put<{ success: true; message: string; document: Document }>(`/documents/teacher-notes/${editingNoteId}`, formData, {
-            headers: {
-              "Content-Type": "multipart/form-data"
-            }
-          })
-        : await api.post<{ success: true; message: string; document: Document }>("/documents/teacher-notes", formData, {
-            headers: {
-              "Content-Type": "multipart/form-data"
-            }
-          });
+        ? await api.put<{ success: true; message: string; document: Document }>(`/documents/teacher-notes/${editingNoteId}`, formData)
+        : await api.post<{ success: true; message: string; document: Document }>("/documents/teacher-notes", formData);
 
       setUploadMessage(response.data.message);
       setTitle("");
@@ -434,11 +451,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       formData.append("subjectExpertise", verificationForm.subjectExpertise.trim());
       formData.append("idCard", verificationFile);
 
-      const response = await api.post<{ success: true; message: string }>("/community/teacher-verification", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      });
+      const response = await api.post<{ success: true; message: string }>("/community/teacher-verification", formData);
 
       setVerificationMessage(response.data.message);
       closeSidePanel();
@@ -575,7 +588,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           ) : null}
 
           {(uploadMessage || verificationMessage) ? (
-            <div className="pointer-events-none fixed left-1/2 top-[88px] z-[70] flex w-[min(440px,calc(100vw-24px))] -translate-x-1/2 flex-col gap-3 sm:left-auto sm:right-6 sm:top-[94px] sm:translate-x-0">
+            <div className="pointer-events-none fixed left-1/2 top-[96px] z-[70] flex w-[min(440px,calc(100vw-24px))] -translate-x-1/2 flex-col gap-3 sm:left-auto sm:right-6 sm:top-[100px] sm:translate-x-0 lg:top-[104px]">
               {uploadMessage ? (
                 <div className="pointer-events-auto rounded-2xl border border-amber-200 bg-white/95 px-4 py-3 text-sm text-amber-700 shadow-[0_22px_50px_-30px_rgba(15,23,42,0.45)] backdrop-blur dark:border-amber-500/20 dark:bg-slate-950/95 dark:text-amber-200">
                   {uploadMessage}
@@ -594,7 +607,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               isToolbarPinned ? "shadow-[0_14px_35px_-26px_rgba(15,23,42,0.28)]" : ""
             }`}
           >
-            <div className="flex flex-col gap-4 pb-6">
+            <div className="flex flex-col gap-4 pb-7">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -663,10 +676,10 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
           {groupedLecturerNotes.length ? (
-            <div className="relative z-0 space-y-8 pt-36 sm:pt-40 lg:pt-44">
+            <div className="relative z-0 space-y-10 pt-36 sm:pt-40 lg:pt-44">
               {groupedLecturerNotes.map((teacherGroup) => (
-                <section key={teacherGroup.key} className="space-y-4 scroll-mt-72 pt-2 first:pt-4 sm:scroll-mt-80 sm:pt-3 sm:first:pt-5 lg:scroll-mt-88">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                <section key={teacherGroup.key} className="space-y-4 scroll-mt-60 sm:scroll-mt-64 lg:scroll-mt-72">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-slate-200 bg-white px-4 py-3 shadow-[0_12px_30px_-28px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900/80">
                     <button
                       type="button"
                       onClick={() => setActiveTeacher(teacherGroup.key)}
@@ -690,7 +703,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     className="overflow-x-auto overscroll-x-contain pb-2 pt-1 [&::-webkit-scrollbar]:hidden"
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                   >
-                    <div className="grid auto-cols-[78vw] grid-flow-col gap-4 md:auto-cols-[calc((100%-2rem)/3)] lg:auto-cols-[calc((100%-3rem)/4)] xl:auto-cols-[calc((100%-4rem)/5)]">
+                    <div className="grid auto-cols-[78vw] grid-flow-col gap-4 md:auto-cols-[minmax(260px,34vw)] lg:auto-cols-[minmax(220px,23vw)] xl:auto-cols-[minmax(200px,18vw)] 2xl:auto-cols-[minmax(185px,14vw)]">
                       {teacherGroup.notes.map((note) => (
                         <div key={String(note._id)} className="min-w-0 snap-start">
                           {renderLecturerCard(note)}
@@ -865,7 +878,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       ) : null}
 
       {isSidePanelOpen ? (
-        <div className="fixed inset-x-0 bottom-0 top-[72px] z-40 sm:top-[78px] lg:top-[82px]">
+        <div className="fixed inset-x-0 bottom-0 top-[78px] z-40 sm:top-[82px] lg:top-[86px]">
           <button
             type="button"
             aria-label="Close lecturer notes panel"
