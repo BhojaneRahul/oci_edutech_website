@@ -591,7 +591,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               isToolbarPinned ? "shadow-[0_14px_35px_-26px_rgba(15,23,42,0.28)]" : ""
             }`}
           >
-            <div className="flex flex-col gap-4 pb-5">
+            <div className="flex flex-col gap-4 pb-6">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -660,9 +660,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
           {groupedLecturerNotes.length ? (
-            <div className="relative z-0 space-y-8 pt-5 sm:pt-6">
+            <div className="relative z-0 space-y-8 pt-16 sm:pt-20 lg:pt-20">
               {groupedLecturerNotes.map((teacherGroup) => (
-                <section key={teacherGroup.key} className="space-y-4 scroll-mt-40 sm:scroll-mt-44">
+                <section key={teacherGroup.key} className="space-y-4 scroll-mt-48 sm:scroll-mt-52">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <button
                       type="button"
