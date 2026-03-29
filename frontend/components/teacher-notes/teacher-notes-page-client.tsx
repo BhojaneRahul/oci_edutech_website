@@ -330,6 +330,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       formData.append("title", title);
       formData.append("subject", subject);
       formData.append("noteCategory", noteCategory);
+      if (selectedStreams[0]) {
+        formData.append("stream", selectedStreams[0]);
+      }
       selectedStreams.forEach((selectedStream) => formData.append("streams[]", selectedStream));
       if (selectedFile) {
         formData.append("file", selectedFile);
@@ -862,7 +865,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
       ) : null}
 
       {isSidePanelOpen ? (
-        <div className="fixed inset-x-0 bottom-0 top-[86px] z-40 sm:top-[92px] lg:top-[96px]">
+        <div className="fixed inset-x-0 bottom-0 top-[72px] z-40 sm:top-[78px] lg:top-[82px]">
           <button
             type="button"
             aria-label="Close lecturer notes panel"
