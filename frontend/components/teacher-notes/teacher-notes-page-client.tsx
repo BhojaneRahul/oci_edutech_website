@@ -502,21 +502,21 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     return (
       <article
         key={note._id}
-        className="group flex min-h-[178px] min-w-0 items-stretch gap-3 rounded-[22px] border border-slate-200 bg-white p-3 shadow-[0_16px_36px_-30px_rgba(15,23,42,0.34)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_22px_44px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+        className="group flex min-h-[172px] min-w-0 items-stretch gap-3 rounded-[22px] border border-slate-200 bg-white p-3 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.28)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_20px_38px_-24px_rgba(15,23,42,0.34)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
       >
-        <div className="h-[146px] w-[96px] shrink-0 overflow-hidden rounded-[16px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:h-[150px] sm:w-[100px]">
+        <div className="h-[150px] w-[108px] shrink-0 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:h-[154px] sm:w-[112px]">
           <PDFPagePreview
             url={mediaUrl}
             title={note.title}
             className="h-full rounded-none border-0"
-            canvasClassName="w-full bg-white"
+            canvasClassName="bg-white p-1.5"
           />
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col justify-between">
           <div className="space-y-1.5">
             <div className="space-y-1">
-              <p className="line-clamp-1 text-[12px] font-semibold leading-5 text-slate-900 dark:text-white">
+              <p className="line-clamp-1 text-[11.5px] font-semibold leading-5 text-slate-900 dark:text-white">
                 Subject: <span className="font-medium text-slate-600 dark:text-slate-300">{note.subject}</span>
               </p>
               <p className="line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400">
@@ -524,24 +524,25 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               </p>
             </div>
 
-            <p className="line-clamp-2 text-[16px] font-semibold leading-5 text-slate-950 dark:text-white">
+            <p className="line-clamp-2 text-[15px] font-semibold leading-5 text-slate-950 dark:text-white">
               {note.title}
             </p>
 
-            <p className="line-clamp-1 text-[11.5px] text-slate-600 dark:text-slate-300">
+            <p className="line-clamp-1 text-[11px] text-slate-600 dark:text-slate-300">
               <span className="font-semibold text-slate-900 dark:text-white">Lecturer:</span>{" "}
               {lecturerName}
             </p>
 
-            <p className="text-[10.5px] leading-5 text-slate-400 dark:text-slate-500">
+            <p className="text-[10px] leading-5 text-slate-400 dark:text-slate-500">
               {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
             </p>
           </div>
 
-          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          <div className="mt-2.5 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[11.5px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
             >
               <FileText className="h-4 w-4" />
               Open Notes
@@ -569,8 +570,9 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             >
               {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
             </button>
+            </div>
             {isOwner ? (
-              <>
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => startEditTeacherNote(note)}
@@ -589,7 +591,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 >
                   <X className="h-4 w-4" />
                 </button>
-              </>
+              </div>
             ) : null}
           </div>
         </div>
@@ -709,7 +711,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                         className="flex min-w-0 items-center gap-3 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
                       >
                         <SafeAvatar
-                          src={teacherGroup.notes[0]?.uploader?.profilePhoto}
+                          src={teacherGroup.profilePhoto}
                           alt={teacherGroup.name}
                           fallback={teacherGroup.name?.charAt(0)?.toUpperCase() || "L"}
                           className="h-11 w-11 rounded-2xl object-cover ring-1 ring-slate-200 dark:ring-slate-700"
@@ -745,7 +747,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                         {teacherGroup.notes.map((note) => (
                           <div
                             key={String(note._id)}
-                            className="w-[84vw] max-w-[360px] min-w-[84vw] snap-start sm:w-[310px] sm:min-w-[310px] lg:w-[270px] lg:min-w-[270px] xl:w-[252px] xl:min-w-[252px]"
+                            className="w-[84vw] max-w-[356px] min-w-[84vw] snap-start sm:w-[320px] sm:min-w-[320px] lg:w-[292px] lg:min-w-[292px] xl:w-[282px] xl:min-w-[282px] 2xl:w-[270px] 2xl:min-w-[270px]"
                           >
                             {renderLecturerCard(note)}
                           </div>

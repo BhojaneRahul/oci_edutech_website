@@ -44,7 +44,7 @@ export function PDFPagePreview({
         pdfDocument = await loadingTask.promise;
         const page = await pdfDocument.getPage(1);
 
-        const targetWidth = Math.max(wrapper.clientWidth || 320, 240);
+        const targetWidth = Math.max(Math.min(wrapper.clientWidth || 220, 220), 150);
         const initialViewport = page.getViewport({ scale: 1 });
         const scale = targetWidth / initialViewport.width;
         const viewport = page.getViewport({ scale });
@@ -57,8 +57,8 @@ export function PDFPagePreview({
         const ratio = window.devicePixelRatio || 1;
         canvas.width = Math.floor(viewport.width * ratio);
         canvas.height = Math.floor(viewport.height * ratio);
-        canvas.style.width = `${viewport.width}px`;
-        canvas.style.height = `${viewport.height}px`;
+        canvas.style.width = "";
+        canvas.style.height = "";
         context.setTransform(ratio, 0, 0, ratio, 0, 0);
 
         renderTask = page.render({
@@ -91,9 +91,13 @@ export function PDFPagePreview({
   return (
     <div
       ref={wrapperRef}
-      className={`relative overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-inner dark:border-slate-800 dark:bg-slate-950 ${className}`}
+      className={`relative flex items-center justify-center overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-inner dark:border-slate-800 dark:bg-slate-950 ${className}`}
     >
-      <canvas ref={canvasRef} className={`block w-full ${canvasClassName}`} aria-label={`${title} first page preview`} />
+      <canvas
+        ref={canvasRef}
+        className={`block h-full w-full object-contain object-top ${canvasClassName}`}
+        aria-label={`${title} first page preview`}
+      />
 
       {state !== "ready" ? (
         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-white/95 to-slate-50/95 text-center dark:from-slate-950/95 dark:to-slate-900/95">
