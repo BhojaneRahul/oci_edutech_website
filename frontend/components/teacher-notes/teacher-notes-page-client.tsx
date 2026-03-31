@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Bookmark, BookmarkCheck, ChevronDown, ChevronRight, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud, X } from "lucide-react";
+import { BadgeCheck, Bookmark, BookmarkCheck, ChevronDown, ChevronRight, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, Share2, ShieldCheck, SlidersHorizontal, UploadCloud, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
@@ -433,6 +433,65 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     ]);
   };
 
+  const shareLecturerNote = async (note: Document) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
+    const lecturerName = note.uploader?.name || note.uploader?.email || "Verified lecturer";
+    const shareTitle = note.title || "Lecturer Notes";
+    const shareText = `${shareTitle} • ${note.subject || "Subject"} • ${lecturerName}`;
+    const shareUrl = `${window.location.origin}/viewer?documentId=${encodeURIComponent(String(note._id))}&url=${encodeURIComponent(
+      mediaUrl
+    )}&title=${encodeURIComponent(shareTitle)}&type=${encodeURIComponent(note.type || "pdf")}`;
+
+    try {
+      if (navigator.share) {
+        try {
+          const response = await fetch(mediaUrl);
+          const blob = await response.blob();
+          const extension = blob.type?.includes("pdf") ? "pdf" : "file";
+          const file = new File([blob], `${shareTitle}.${extension}`, {
+            type: blob.type || "application/pdf"
+          });
+
+          if (navigator.canShare?.({ files: [file] })) {
+            await navigator.share({
+              title: shareTitle,
+              text: shareText,
+              files: [file]
+            });
+            return;
+          }
+        } catch {
+          // Fall back to link-based share.
+        }
+
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl
+        });
+        return;
+      }
+
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      setUploadMessage("Lecturer notes link copied.");
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        setUploadMessage("Lecturer notes link copied.");
+      } catch {
+        setUploadMessage("Unable to share lecturer notes right now.");
+      }
+    }
+  };
+
   const submitTeacherVerification = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -570,6 +629,15 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               title={isSaved ? "Saved Notes" : "Save Notes"}
             >
               {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => void shareLecturerNote(note)}
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+              aria-label="Share Notes"
+              title="Share Notes"
+            >
+              <Share2 className="h-4 w-4" />
             </button>
           </div>
           {isOwner ? (
@@ -710,7 +778,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                           src={teacherGroup.profilePhoto}
                           alt={teacherGroup.name}
                           fallback={teacherGroup.name?.charAt(0)?.toUpperCase() || "L"}
-                          className="h-11 w-11 rounded-2xl object-cover ring-1 ring-slate-200 dark:ring-slate-700"
+                          className="h-11 w-11 rounded-2xl bg-slate-50 object-contain p-0.5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700"
                           fallbackClassName="h-11 w-11 rounded-2xl bg-slate-100 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
                         />
                         <span className="min-w-0">
