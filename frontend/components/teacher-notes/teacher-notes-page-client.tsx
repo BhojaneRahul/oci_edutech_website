@@ -502,21 +502,21 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     return (
       <article
         key={note._id}
-        className="group flex min-h-[172px] min-w-0 items-stretch gap-3 rounded-[22px] border border-slate-200 bg-white p-3 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.28)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_20px_38px_-24px_rgba(15,23,42,0.34)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+        className="group flex min-h-[190px] min-w-0 flex-col rounded-[22px] border border-slate-200 bg-white p-3 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.28)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_20px_38px_-24px_rgba(15,23,42,0.34)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
       >
-        <div className="h-[150px] w-[108px] shrink-0 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:h-[154px] sm:w-[112px]">
-          <PDFPagePreview
-            url={mediaUrl}
-            title={note.title}
-            className="h-full rounded-none border-0"
-            canvasClassName="bg-white p-1.5"
-          />
-        </div>
+        <div className="flex min-w-0 gap-3">
+          <div className="h-[122px] w-[92px] shrink-0 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:h-[132px] sm:w-[98px]">
+            <PDFPagePreview
+              url={mediaUrl}
+              title={note.title}
+              className="h-full rounded-none border-0"
+              canvasClassName="bg-white p-1.5"
+            />
+          </div>
 
-        <div className="flex min-w-0 flex-1 flex-col justify-between">
-          <div className="space-y-1.5">
+          <div className="flex min-w-0 flex-1 flex-col">
             <div className="space-y-1">
-              <p className="line-clamp-1 text-[11.5px] font-semibold leading-5 text-slate-900 dark:text-white">
+              <p className="line-clamp-1 text-[11px] font-semibold leading-5 text-slate-900 dark:text-white">
                 Subject: <span className="font-medium text-slate-600 dark:text-slate-300">{note.subject}</span>
               </p>
               <p className="line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400">
@@ -524,25 +524,26 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               </p>
             </div>
 
-            <p className="line-clamp-2 text-[15px] font-semibold leading-5 text-slate-950 dark:text-white">
+            <p className="mt-1.5 line-clamp-2 text-[14px] font-semibold leading-5 text-slate-950 dark:text-white">
               {note.title}
             </p>
 
-            <p className="line-clamp-1 text-[11px] text-slate-600 dark:text-slate-300">
+            <p className="mt-1.5 line-clamp-1 text-[11px] text-slate-600 dark:text-slate-300">
               <span className="font-semibold text-slate-900 dark:text-white">Lecturer:</span>{" "}
               {lecturerName}
             </p>
 
-            <p className="text-[10px] leading-5 text-slate-400 dark:text-slate-500">
+            <p className="mt-2 text-[10px] leading-5 text-slate-400 dark:text-slate-500">
               {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
             </p>
           </div>
+        </div>
 
-          <div className="mt-2.5 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
+        <div className="mt-3 space-y-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[11.5px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+              className="inline-flex min-w-[136px] items-center justify-center gap-2 rounded-full bg-slate-950 px-3.5 py-2 text-[11.5px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
             >
               <FileText className="h-4 w-4" />
               Open Notes
@@ -570,30 +571,25 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             >
               {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
             </button>
-            </div>
-            {isOwner ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => startEditTeacherNote(note)}
-                  className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
-                  aria-label="Edit Notes"
-                  title="Edit Notes"
-                >
-                  <FileText className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void deleteTeacherNote(note._id)}
-                  className="inline-flex items-center justify-center rounded-full border border-rose-200 p-2.5 text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
-                  aria-label="Delete Notes"
-                  title="Delete Notes"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ) : null}
           </div>
+          {isOwner ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => startEditTeacherNote(note)}
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 px-3.5 py-2 text-[11px] font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => void deleteTeacherNote(note._id)}
+                className="inline-flex items-center justify-center rounded-full border border-rose-200 px-3.5 py-2 text-[11px] font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
+              >
+                Delete
+              </button>
+            </div>
+          ) : null}
         </div>
       </article>
     );
