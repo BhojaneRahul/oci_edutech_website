@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
 import { PDFPagePreview } from "../pdf/pdf-page-preview";
+import { SafeAvatar } from "../ui/safe-avatar";
 import { resolveMediaUrl } from "@/lib/utils";
 
 const streamOptions = ["BCA", "B.Com", "BSc", "BA", "BBA", "1st PUC", "2nd PUC"];
@@ -496,50 +497,51 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     const isOwner = Number(note.uploader?.id) === Number(user?.id);
     const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
     const isSaved = savedDocumentIds.has(String(note._id));
+    const lecturerName = note.uploader?.name || note.uploader?.email || "Verified lecturer";
 
     return (
       <article
         key={note._id}
-        className="group flex min-h-[182px] min-w-0 items-stretch gap-3 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_18px_42px_-34px_rgba(15,23,42,0.38)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.42)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+        className="group flex min-h-[178px] min-w-0 items-stretch gap-3 rounded-[22px] border border-slate-200 bg-white p-3 shadow-[0_16px_36px_-30px_rgba(15,23,42,0.34)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_22px_44px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
       >
-        <div className="w-[106px] shrink-0 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:w-[116px]">
+        <div className="h-[146px] w-[96px] shrink-0 overflow-hidden rounded-[16px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:h-[150px] sm:w-[100px]">
           <PDFPagePreview
             url={mediaUrl}
             title={note.title}
-            className="rounded-none border-0"
-            canvasClassName="min-h-[146px] bg-white sm:min-h-[152px]"
+            className="h-full rounded-none border-0"
+            canvasClassName="w-full bg-white"
           />
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col justify-between">
           <div className="space-y-1.5">
-            <div className="space-y-0.5">
-              <p className="line-clamp-1 text-[13px] font-semibold text-slate-900 dark:text-white">
+            <div className="space-y-1">
+              <p className="line-clamp-1 text-[12px] font-semibold leading-5 text-slate-900 dark:text-white">
                 Subject: <span className="font-medium text-slate-600 dark:text-slate-300">{note.subject}</span>
               </p>
-              <p className="line-clamp-1 text-[12.5px] text-slate-500 dark:text-slate-400">
+              <p className="line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400">
                 {note.noteCategory || "Notes"}
               </p>
             </div>
 
-            <p className="line-clamp-2 text-[13px] font-semibold leading-5 text-slate-900 dark:text-white">
+            <p className="line-clamp-2 text-[16px] font-semibold leading-5 text-slate-950 dark:text-white">
               {note.title}
             </p>
 
-            <p className="line-clamp-1 text-[12px] text-slate-600 dark:text-slate-300">
+            <p className="line-clamp-1 text-[11.5px] text-slate-600 dark:text-slate-300">
               <span className="font-semibold text-slate-900 dark:text-white">Lecturer:</span>{" "}
-              {note.uploader?.name || note.uploader?.email || "Verified lecturer"}
+              {lecturerName}
             </p>
 
-            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            <p className="text-[10.5px] leading-5 text-slate-400 dark:text-slate-500">
               {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
             </p>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
             <Link
               href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[12.5px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
             >
               <FileText className="h-4 w-4" />
               Open Notes
@@ -700,17 +702,26 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     key={teacherGroup.key}
                     className="space-y-3 scroll-mt-56 sm:scroll-mt-60 lg:scroll-mt-64"
                   >
-                    <div className="flex items-end justify-between gap-4 px-1">
+                    <div className="flex items-center justify-between gap-4 px-1">
                       <button
                         type="button"
                         onClick={() => setActiveTeacher(teacherGroup.key)}
-                        className="min-w-0 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
+                        className="flex min-w-0 items-center gap-3 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
                       >
-                        <span className="block truncate text-[19px] font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
-                          {teacherGroup.name}
-                        </span>
-                        <span className="mt-0.5 block text-sm text-slate-500 dark:text-slate-400">
-                          {teacherGroup.notes.length} notes
+                        <SafeAvatar
+                          src={teacherGroup.notes[0]?.uploader?.profilePhoto}
+                          alt={teacherGroup.name}
+                          fallback={teacherGroup.name?.charAt(0)?.toUpperCase() || "L"}
+                          className="h-11 w-11 rounded-2xl object-cover ring-1 ring-slate-200 dark:ring-slate-700"
+                          fallbackClassName="h-11 w-11 rounded-2xl bg-slate-100 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
+                        />
+                        <span className="min-w-0">
+                          <span className="block truncate text-[17px] font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                            {teacherGroup.name}
+                          </span>
+                          <span className="mt-0.5 block text-[12px] text-slate-500 dark:text-slate-400">
+                            {teacherGroup.notes.length} notes
+                          </span>
                         </span>
                       </button>
 
@@ -734,7 +745,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                         {teacherGroup.notes.map((note) => (
                           <div
                             key={String(note._id)}
-                            className="w-[84vw] max-w-[430px] min-w-[84vw] snap-start sm:w-[360px] sm:min-w-[360px] lg:w-[320px] lg:min-w-[320px] xl:w-[300px] xl:min-w-[300px]"
+                            className="w-[84vw] max-w-[360px] min-w-[84vw] snap-start sm:w-[310px] sm:min-w-[310px] lg:w-[270px] lg:min-w-[270px] xl:w-[252px] xl:min-w-[252px]"
                           >
                             {renderLecturerCard(note)}
                           </div>
