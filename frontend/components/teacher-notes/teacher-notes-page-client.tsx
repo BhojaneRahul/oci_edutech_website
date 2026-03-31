@@ -676,32 +676,34 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
             {groupedLecturerNotes.length ? (
-              <div className="relative z-0 space-y-7 pt-8 sm:space-y-8 sm:pt-10 lg:space-y-9 lg:pt-12">
-                {groupedLecturerNotes.map((teacherGroup, index) => (
+              <div className="relative z-0 space-y-8 pt-12 sm:space-y-9 sm:pt-14 lg:space-y-10 lg:pt-16">
+                {groupedLecturerNotes.map((teacherGroup) => (
                   <section
                     key={teacherGroup.key}
-                    className={`space-y-4 scroll-mt-56 sm:scroll-mt-60 lg:scroll-mt-64 ${index === 0 ? "pt-2 sm:pt-3" : ""}`}
+                    className="space-y-4 scroll-mt-56 sm:scroll-mt-60 lg:scroll-mt-64"
                   >
-                    <div className="relative z-[1] flex items-end justify-between gap-4 px-1 sm:px-0">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTeacher(teacherGroup.key)}
-                        className="min-w-0 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
-                      >
-                        <span className="block truncate text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
-                          {teacherGroup.name}
-                        </span>
-                        <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">
-                          {teacherGroup.notes.length} notes
-                        </span>
-                      </button>
+                    <div className="relative z-[1] rounded-[28px] border border-slate-200/90 bg-white/96 px-5 py-4 shadow-[0_16px_40px_-34px_rgba(15,23,42,0.3)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+                      <div className="flex items-center justify-between gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setActiveTeacher(teacherGroup.key)}
+                          className="min-w-0 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
+                        >
+                          <span className="block truncate text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                            {teacherGroup.name}
+                          </span>
+                          <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">
+                            {teacherGroup.notes.length} notes
+                          </span>
+                        </button>
 
-                      <Link
-                        href={`/teacher-notes/teacher/${teacherGroup.key}`}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                      >
-                        Open Folder
-                      </Link>
+                        <Link
+                          href={`/teacher-notes/teacher/${teacherGroup.key}`}
+                          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                        >
+                          Open Folder
+                        </Link>
+                      </div>
                     </div>
 
                     <div
