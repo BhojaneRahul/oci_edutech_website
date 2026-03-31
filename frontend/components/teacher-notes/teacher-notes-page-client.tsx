@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Bookmark, BookmarkCheck, ChevronDown, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud, X } from "lucide-react";
+import { BadgeCheck, Bookmark, BookmarkCheck, ChevronDown, ChevronRight, Download, FileText, FolderOpen, GraduationCap, Loader2, Search, ShieldCheck, SlidersHorizontal, UploadCloud, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { CommunityBootstrap, Document } from "@/lib/types";
 import { useAuth } from "../providers/auth-provider";
@@ -480,6 +480,18 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     }
   };
 
+  const lecturerRailRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const scrollLecturerRow = (teacherKey: string) => {
+    const rail = lecturerRailRefs.current[teacherKey];
+    if (!rail) {
+      return;
+    }
+
+    const amount = Math.max(rail.clientWidth * 0.72, 260);
+    rail.scrollBy({ left: amount, behavior: "smooth" });
+  };
+
   const renderLecturerCard = (note: Document) => {
     const isOwner = Number(note.uploader?.id) === Number(user?.id);
     const mediaUrl = resolveMediaUrl(note.fileUrl) ?? note.fileUrl;
@@ -488,31 +500,37 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     return (
       <article
         key={note._id}
-        className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[22px] border border-slate-200 bg-white p-2.5 shadow-[0_10px_26px_-22px_rgba(15,23,42,0.24)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_18px_36px_-24px_rgba(15,23,42,0.26)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+        className="group flex min-h-[182px] min-w-0 items-stretch gap-3 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_18px_42px_-34px_rgba(15,23,42,0.38)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.42)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
       >
-        <div className="w-full overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+        <div className="w-[106px] shrink-0 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:w-[116px]">
           <PDFPagePreview
             url={mediaUrl}
             title={note.title}
             className="rounded-none border-0"
-            canvasClassName="min-h-[180px] bg-white sm:min-h-[200px]"
+            canvasClassName="min-h-[146px] bg-white sm:min-h-[152px]"
           />
         </div>
 
-        <div className="flex flex-1 flex-col px-1 pt-3">
-          <h3 className="line-clamp-2 text-[15px] font-semibold leading-5.5 text-slate-950 dark:text-white">{note.title}</h3>
+        <div className="flex min-w-0 flex-1 flex-col justify-between">
+          <div className="space-y-1.5">
+            <div className="space-y-0.5">
+              <p className="line-clamp-1 text-[13px] font-semibold text-slate-900 dark:text-white">
+                Subject: <span className="font-medium text-slate-600 dark:text-slate-300">{note.subject}</span>
+              </p>
+              <p className="line-clamp-1 text-[12.5px] text-slate-500 dark:text-slate-400">
+                {note.noteCategory || "Notes"}
+              </p>
+            </div>
 
-          <div className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-300">
-            <p className="line-clamp-1 text-[12.5px]">
-              <span className="font-semibold text-slate-900 dark:text-white">Subject:</span> {note.subject}
+            <p className="line-clamp-2 text-[13px] font-semibold leading-5 text-slate-900 dark:text-white">
+              {note.title}
             </p>
-            <p className="line-clamp-1 text-[12.5px]">
-              <span className="font-semibold text-slate-900 dark:text-white">Stream:</span> {note.stream}
-            </p>
-            <p className="line-clamp-1 text-[12.5px]">
+
+            <p className="line-clamp-1 text-[12px] text-slate-600 dark:text-slate-300">
               <span className="font-semibold text-slate-900 dark:text-white">Lecturer:</span>{" "}
               {note.uploader?.name || note.uploader?.email || "Verified lecturer"}
             </p>
+
             <p className="text-[11px] text-slate-400 dark:text-slate-500">
               {new Date(note.createdAt).toLocaleDateString()} • {note.viewCount ?? 0} views • {note.downloadCount ?? 0} downloads
             </p>
@@ -521,7 +539,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Link
               href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[13px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[12.5px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
             >
               <FileText className="h-4 w-4" />
               Open Notes
@@ -550,26 +568,26 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
               {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
             </button>
             {isOwner ? (
-              <button
-                type="button"
-                onClick={() => startEditTeacherNote(note)}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
-                aria-label="Edit Notes"
-                title="Edit Notes"
-              >
-                <FileText className="h-4 w-4" />
-              </button>
-            ) : null}
-            {isOwner ? (
-              <button
-                type="button"
-                onClick={() => void deleteTeacherNote(note._id)}
-                className="inline-flex items-center justify-center rounded-full border border-rose-200 p-2.5 text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
-                aria-label="Delete Notes"
-                title="Delete Notes"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => startEditTeacherNote(note)}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200 p-2.5 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                  aria-label="Edit Notes"
+                  title="Edit Notes"
+                >
+                  <FileText className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void deleteTeacherNote(note._id)}
+                  className="inline-flex items-center justify-center rounded-full border border-rose-200 p-2.5 text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                  aria-label="Delete Notes"
+                  title="Delete Notes"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </>
             ) : null}
           </div>
         </div>
@@ -676,52 +694,69 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
             {groupedLecturerNotes.length ? (
-              <div className="relative z-0 space-y-8 pt-12 sm:space-y-9 sm:pt-14 lg:space-y-10 lg:pt-16">
+              <div className="relative z-0 space-y-6 pt-8 sm:space-y-7 sm:pt-9 lg:space-y-8 lg:pt-10">
                 {groupedLecturerNotes.map((teacherGroup) => (
                   <section
                     key={teacherGroup.key}
-                    className="space-y-4 scroll-mt-56 sm:scroll-mt-60 lg:scroll-mt-64"
+                    className="space-y-3 scroll-mt-56 sm:scroll-mt-60 lg:scroll-mt-64"
                   >
-                    <div className="relative z-[1] rounded-[28px] border border-slate-200/90 bg-white/96 px-5 py-4 shadow-[0_16px_40px_-34px_rgba(15,23,42,0.3)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
-                      <div className="flex items-center justify-between gap-4">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTeacher(teacherGroup.key)}
-                          className="min-w-0 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
-                        >
-                          <span className="block truncate text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
-                            {teacherGroup.name}
-                          </span>
-                          <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">
-                            {teacherGroup.notes.length} notes
-                          </span>
-                        </button>
+                    <div className="flex items-end justify-between gap-4 px-1">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTeacher(teacherGroup.key)}
+                        className="min-w-0 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
+                      >
+                        <span className="block truncate text-[19px] font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                          {teacherGroup.name}
+                        </span>
+                        <span className="mt-0.5 block text-sm text-slate-500 dark:text-slate-400">
+                          {teacherGroup.notes.length} notes
+                        </span>
+                      </button>
 
-                        <Link
-                          href={`/teacher-notes/teacher/${teacherGroup.key}`}
-                          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                        >
-                          Open Folder
-                        </Link>
-                      </div>
+                      <Link
+                        href={`/teacher-notes/teacher/${teacherGroup.key}`}
+                        className="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        Open Folder
+                      </Link>
                     </div>
 
-                    <div
-                      className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden"
-                      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                    >
-                      <div className="grid auto-cols-[82vw] grid-flow-col gap-4 md:auto-cols-[minmax(240px,32vw)] lg:auto-cols-[minmax(220px,21vw)] xl:auto-cols-[minmax(205px,18vw)] 2xl:auto-cols-[minmax(190px,16vw)]">
+                    <div className="relative">
+                      <div
+                        ref={(node) => {
+                          lecturerRailRefs.current[teacherGroup.key] = node;
+                        }}
+                        className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden"
+                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                      >
+                        <div className="flex min-w-max gap-4">
                         {teacherGroup.notes.map((note) => (
-                          <div key={String(note._id)} className="min-w-0 snap-start">
+                          <div
+                            key={String(note._id)}
+                            className="w-[84vw] max-w-[430px] min-w-[84vw] snap-start sm:w-[360px] sm:min-w-[360px] lg:w-[320px] lg:min-w-[320px] xl:w-[300px] xl:min-w-[300px]"
+                          >
                             {renderLecturerCard(note)}
                           </div>
-                      ))}
+                        ))}
+                        </div>
+                      </div>
+
+                      {teacherGroup.notes.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => scrollLecturerRow(teacherGroup.key)}
+                          className="absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-white/90 text-slate-600 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.4)] backdrop-blur transition hover:text-amber-700 lg:inline-flex"
+                          aria-label={`Scroll ${teacherGroup.name} notes`}
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                      ) : null}
                     </div>
-                  </div>
-                </section>
-              ))}
-            </div>
-          ) : null}
+                  </section>
+                ))}
+              </div>
+            ) : null}
 
           {!filteredNotes.length ? (
             <div className="mt-8 flex min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-200/80 bg-slate-50/40 px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
