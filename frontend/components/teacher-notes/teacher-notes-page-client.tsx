@@ -675,42 +675,44 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           </div>
 
-          {groupedLecturerNotes.length ? (
-            <div className="relative z-0 space-y-8 pt-16 sm:pt-20 lg:pt-24">
-              {groupedLecturerNotes.map((teacherGroup, index) => (
-                <section
-                  key={teacherGroup.key}
-                  className={`space-y-3 scroll-mt-56 sm:scroll-mt-60 lg:scroll-mt-64 ${index === 0 ? "pt-4 sm:pt-5" : ""}`}
-                >
-                  <div className="relative z-[1] flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-[0_12px_30px_-28px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-900/85">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTeacher(teacherGroup.key)}
-                      className="inline-flex min-w-0 items-center gap-2 px-1 py-1 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
-                    >
-                      <span className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm font-semibold text-slate-900 dark:text-white">{teacherGroup.name}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{teacherGroup.notes.length} notes</span>
-                      </span>
-                    </button>
-
-                    <Link
-                      href={`/teacher-notes/teacher/${teacherGroup.key}`}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:text-slate-200"
-                    >
-                      Open Folder
-                    </Link>
-                  </div>
-
-                  <div
-                    className="overflow-x-auto overscroll-x-contain pb-2 pt-2 [&::-webkit-scrollbar]:hidden"
-                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            {groupedLecturerNotes.length ? (
+              <div className="relative z-0 space-y-7 pt-8 sm:space-y-8 sm:pt-10 lg:space-y-9 lg:pt-12">
+                {groupedLecturerNotes.map((teacherGroup, index) => (
+                  <section
+                    key={teacherGroup.key}
+                    className={`space-y-4 scroll-mt-56 sm:scroll-mt-60 lg:scroll-mt-64 ${index === 0 ? "pt-2 sm:pt-3" : ""}`}
                   >
-                    <div className="grid auto-cols-[78vw] grid-flow-col gap-4 md:auto-cols-[minmax(260px,34vw)] lg:auto-cols-[minmax(220px,23vw)] xl:auto-cols-[minmax(200px,18vw)] 2xl:auto-cols-[minmax(185px,14vw)]">
-                      {teacherGroup.notes.map((note) => (
-                        <div key={String(note._id)} className="min-w-0 snap-start">
-                          {renderLecturerCard(note)}
-                        </div>
+                    <div className="relative z-[1] flex items-end justify-between gap-4 px-1 sm:px-0">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTeacher(teacherGroup.key)}
+                        className="min-w-0 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
+                      >
+                        <span className="block truncate text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                          {teacherGroup.name}
+                        </span>
+                        <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">
+                          {teacherGroup.notes.length} notes
+                        </span>
+                      </button>
+
+                      <Link
+                        href={`/teacher-notes/teacher/${teacherGroup.key}`}
+                        className="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-amber-300 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        Open Folder
+                      </Link>
+                    </div>
+
+                    <div
+                      className="overflow-x-auto overscroll-x-contain pb-2 [&::-webkit-scrollbar]:hidden"
+                      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                    >
+                      <div className="grid auto-cols-[82vw] grid-flow-col gap-4 md:auto-cols-[minmax(240px,32vw)] lg:auto-cols-[minmax(220px,21vw)] xl:auto-cols-[minmax(205px,18vw)] 2xl:auto-cols-[minmax(190px,16vw)]">
+                        {teacherGroup.notes.map((note) => (
+                          <div key={String(note._id)} className="min-w-0 snap-start">
+                            {renderLecturerCard(note)}
+                          </div>
                       ))}
                     </div>
                   </div>
