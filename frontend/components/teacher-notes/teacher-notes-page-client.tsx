@@ -676,14 +676,17 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
           {groupedLecturerNotes.length ? (
-            <div className="relative z-0 space-y-10 pt-36 sm:pt-40 lg:pt-44">
-              {groupedLecturerNotes.map((teacherGroup) => (
-                <section key={teacherGroup.key} className="space-y-4 scroll-mt-60 sm:scroll-mt-64 lg:scroll-mt-72">
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-slate-200 bg-white px-4 py-3 shadow-[0_12px_30px_-28px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900/80">
+            <div className="relative z-0 space-y-8 pt-16 sm:pt-20 lg:pt-24">
+              {groupedLecturerNotes.map((teacherGroup, index) => (
+                <section
+                  key={teacherGroup.key}
+                  className={`space-y-3 scroll-mt-56 sm:scroll-mt-60 lg:scroll-mt-64 ${index === 0 ? "pt-4 sm:pt-5" : ""}`}
+                >
+                  <div className="relative z-[1] flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-slate-200 bg-white px-4 py-3 shadow-[0_12px_30px_-28px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-900/85">
                     <button
                       type="button"
                       onClick={() => setActiveTeacher(teacherGroup.key)}
-                      className="inline-flex items-center gap-2 px-1 py-1 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
+                      className="inline-flex min-w-0 items-center gap-2 px-1 py-1 text-left transition hover:text-emerald-700 dark:text-slate-100 dark:hover:text-emerald-300"
                     >
                       <span className="flex min-w-0 flex-col">
                         <span className="truncate text-sm font-semibold text-slate-900 dark:text-white">{teacherGroup.name}</span>
@@ -700,7 +703,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   </div>
 
                   <div
-                    className="overflow-x-auto overscroll-x-contain pb-2 pt-1 [&::-webkit-scrollbar]:hidden"
+                    className="overflow-x-auto overscroll-x-contain pb-2 pt-2 [&::-webkit-scrollbar]:hidden"
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                   >
                     <div className="grid auto-cols-[78vw] grid-flow-col gap-4 md:auto-cols-[minmax(260px,34vw)] lg:auto-cols-[minmax(220px,23vw)] xl:auto-cols-[minmax(200px,18vw)] 2xl:auto-cols-[minmax(185px,14vw)]">
