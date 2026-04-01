@@ -561,7 +561,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     return (
         <article
           key={note._id}
-          className="group flex min-h-[208px] min-w-0 flex-col rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.28)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-[0_20px_38px_-24px_rgba(15,23,42,0.34)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-500/20"
+          className="flex min-h-[208px] min-w-0 flex-col rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex min-w-0 gap-3">
             <div className="h-[118px] w-[88px] shrink-0 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:h-[126px] sm:w-[94px]">
@@ -691,7 +691,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           ) : null}
 
           <div
-            className={`sticky top-[72px] z-20 -mx-4 bg-white/95 px-4 pt-4 backdrop-blur transition-all duration-300 dark:bg-slate-950/95 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8 ${
+            className={`sticky top-[88px] z-20 -mx-4 bg-white/95 px-4 pt-4 backdrop-blur transition-all duration-300 dark:bg-slate-950/95 sm:top-[84px] sm:-mx-6 sm:px-6 lg:top-[72px] xl:-mx-8 xl:px-8 ${
               isToolbarPinned ? "shadow-[0_14px_35px_-26px_rgba(15,23,42,0.28)]" : ""
             }`}
           >
@@ -764,7 +764,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
             {groupedLecturerNotes.length ? (
-              <div className="relative z-0 space-y-6 pt-8 sm:space-y-7 sm:pt-9 lg:space-y-8 lg:pt-10">
+              <div className="relative z-0 space-y-6 pt-12 sm:space-y-7 sm:pt-11 lg:space-y-8 lg:pt-10">
                 {groupedLecturerNotes.map((teacherGroup) => (
                   <section
                     key={teacherGroup.key}
