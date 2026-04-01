@@ -6,7 +6,7 @@ export default async function TeacherNotesPage() {
   const teacherNotes = await serverApi.getTeacherNotes().catch(() => []);
 
   return (
-    <DashboardShell fullBleed contentClassName="pt-28 sm:pt-28 lg:pt-28">
+    <DashboardShell fullBleed contentClassName="pt-20 sm:pt-20 lg:pt-20">
       <TeacherNotesPageClient initialNotes={teacherNotes} />
     </DashboardShell>
   );
