@@ -561,7 +561,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     return (
         <article
           key={note._id}
-          className="flex min-h-[208px] min-w-0 flex-col rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
+          className="flex min-h-[212px] min-w-0 flex-col rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex min-w-0 gap-3">
             <div className="h-[118px] w-[88px] shrink-0 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:h-[126px] sm:w-[94px]">
@@ -599,7 +599,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
           <div className="mt-3 space-y-2.5">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-nowrap items-center gap-2">
               <Link
                 href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
                 className="inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[11px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
@@ -607,7 +607,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 <FileText className="h-4 w-4" />
                 Open Notes
               </Link>
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex shrink-0 flex-nowrap items-center gap-1.5">
                 <a
                   href={mediaUrl}
                   target="_blank"
@@ -814,7 +814,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                         {teacherGroup.notes.map((note) => (
                           <div
                             key={String(note._id)}
-                            className="w-[92vw] max-w-[404px] min-w-[92vw] snap-start sm:w-[372px] sm:min-w-[372px] lg:w-[364px] lg:min-w-[364px] xl:w-[352px] xl:min-w-[352px] 2xl:w-[340px] 2xl:min-w-[340px]"
+                            className="w-[92vw] max-w-[416px] min-w-[92vw] snap-start sm:w-[388px] sm:min-w-[388px] lg:w-[388px] lg:min-w-[388px] xl:w-[380px] xl:min-w-[380px] 2xl:w-[372px] 2xl:min-w-[372px]"
                           >
                             {renderLecturerCard(note)}
                           </div>
