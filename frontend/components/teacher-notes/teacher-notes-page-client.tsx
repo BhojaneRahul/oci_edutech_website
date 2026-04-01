@@ -691,11 +691,11 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           ) : null}
 
           <div
-            className={`sticky top-[88px] z-20 -mx-4 bg-white/95 px-4 pt-4 backdrop-blur transition-all duration-300 dark:bg-slate-950/95 sm:top-[84px] sm:-mx-6 sm:px-6 lg:top-[72px] xl:-mx-8 xl:px-8 ${
+            className={`sticky top-[72px] z-20 -mx-4 bg-white/95 px-4 pt-3 backdrop-blur transition-all duration-300 dark:bg-slate-950/95 sm:top-[76px] sm:-mx-6 sm:px-6 lg:top-[72px] xl:-mx-8 xl:px-8 ${
               isToolbarPinned ? "shadow-[0_14px_35px_-26px_rgba(15,23,42,0.28)]" : ""
             }`}
           >
-            <div className="flex flex-col gap-4 pb-7">
+            <div className="pb-4">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -739,32 +739,37 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 </label>
               </div>
-              <div
-                className="relative z-10 overflow-x-auto overscroll-x-contain px-1 pb-2 pt-1 [&::-webkit-scrollbar]:hidden"
+            </div>
+          </div>
+
+          <div
+            className="relative z-10 -mx-4 bg-white px-4 pb-4 pt-3 dark:bg-slate-950 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8"
+          >
+            <div
+              className="overflow-x-auto overscroll-x-contain px-1 [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              >
-                <div className="flex min-w-max gap-2 lg:min-w-0 lg:justify-center">
-                  {categoryOptions.map((chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() => setActiveCategory(chip)}
-                      className={`rounded-full px-4 py-2 text-sm font-medium shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] transition ${
-                        activeCategory === chip
-                          ? "bg-slate-950 text-white dark:bg-emerald-500 dark:text-slate-950"
-                          : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                      }`}
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
+            >
+              <div className="flex min-w-max gap-2 lg:min-w-0 lg:justify-center">
+                {categoryOptions.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setActiveCategory(chip)}
+                    className={`rounded-full px-4 py-2 text-sm font-medium shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] transition ${
+                      activeCategory === chip
+                        ? "bg-slate-950 text-white dark:bg-emerald-500 dark:text-slate-950"
+                        : "border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                    }`}
+                  >
+                    {chip}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
             {groupedLecturerNotes.length ? (
-              <div className="relative z-0 space-y-6 pt-12 sm:space-y-7 sm:pt-11 lg:space-y-8 lg:pt-10">
+              <div className="relative z-0 space-y-6 pt-4 sm:space-y-7 sm:pt-5 lg:space-y-8 lg:pt-6">
                 {groupedLecturerNotes.map((teacherGroup) => (
                   <section
                     key={teacherGroup.key}
