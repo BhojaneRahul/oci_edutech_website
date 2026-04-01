@@ -690,12 +690,8 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           ) : null}
 
-          <div
-            className={`sticky top-[72px] z-20 -mx-4 bg-white/95 px-4 pt-3 backdrop-blur transition-all duration-300 dark:bg-slate-950/95 sm:top-[76px] sm:-mx-6 sm:px-6 lg:top-[72px] xl:-mx-8 xl:px-8 ${
-              isToolbarPinned ? "shadow-[0_14px_35px_-26px_rgba(15,23,42,0.28)]" : ""
-            }`}
-          >
-            <div className="pb-4">
+          <div className="-mx-4 px-4 pt-3 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
+            <div className="pb-3">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -743,7 +739,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
           <div
-            className="relative z-10 -mx-4 bg-white px-4 pb-4 pt-3 dark:bg-slate-950 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8"
+            className="-mx-4 px-4 pb-3 pt-1 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8"
           >
             <div
               className="overflow-x-auto overscroll-x-contain px-1 [&::-webkit-scrollbar]:hidden"
@@ -769,7 +765,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
             {groupedLecturerNotes.length ? (
-              <div className="relative z-0 space-y-6 pt-4 sm:space-y-7 sm:pt-5 lg:space-y-8 lg:pt-6">
+              <div className="relative z-0 space-y-6 pt-3 sm:space-y-7 sm:pt-4 lg:space-y-8 lg:pt-5">
                 {groupedLecturerNotes.map((teacherGroup) => (
                   <section
                     key={teacherGroup.key}
