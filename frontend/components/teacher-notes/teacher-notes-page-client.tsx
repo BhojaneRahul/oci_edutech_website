@@ -668,7 +668,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   return (
     <div className="min-w-0 overflow-x-hidden">
       <section className="min-w-0 bg-white dark:bg-slate-950">
-        <div className="space-y-5 px-4 pb-28 pt-4 sm:px-6 sm:pt-4 lg:px-8 lg:pt-4">
+        <div className="space-y-5 px-4 pb-28 pt-2 sm:px-6 sm:pt-3 lg:px-8 lg:pt-3">
           {loading ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
               Checking your lecturer access...
@@ -690,7 +690,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           ) : null}
 
-          <div className="-mx-4 px-4 pt-0 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
+          <div className="-mx-4 px-4 pt-1 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
             <div className="pb-3">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="relative">
