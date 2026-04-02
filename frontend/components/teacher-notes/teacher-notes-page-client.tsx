@@ -52,6 +52,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const verificationFileRef = useRef<HTMLInputElement | null>(null);
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
@@ -64,6 +65,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   const [activeTeacher, setActiveTeacher] = useState("All");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<(typeof sortOptions)[number]["value"]>("latest");
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [isToolbarPinned, setIsToolbarPinned] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
   const [verificationMessage, setVerificationMessage] = useState("");
@@ -177,6 +179,17 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     return () => window.clearTimeout(timeout);
   }, [uploadMessage, verificationMessage]);
 
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!sortMenuRef.current?.contains(event.target as Node)) {
+        setShowSortMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
+
   const teacherFolders = useMemo(() => {
     const grouped = new Map<
       string,
@@ -289,6 +302,8 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
 
     return Array.from(grouped.values()).sort((left, right) => left.name.localeCompare(right.name));
   }, [filteredNotes]);
+
+  const activeSortLabel = sortOptions.find((option) => option.value === sortBy)?.label || "Latest";
 
   const openUploadFlow = () => {
     setUploadMessage("");
@@ -668,7 +683,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
   return (
     <div className="min-w-0 overflow-x-hidden">
       <section className="min-w-0 bg-white dark:bg-slate-950">
-        <div className="space-y-5 px-4 pb-28 pt-3 sm:px-6 sm:pt-3 lg:px-8 lg:pt-3">
+        <div className="space-y-5 px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pt-4">
           {loading ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
               Checking your lecturer access...
@@ -690,9 +705,13 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
             </div>
           ) : null}
 
-          <div className="-mx-4 px-4 pt-0 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
+          <div className="-mx-4 px-4 pt-1 sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
             <div className="pb-3">
-              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+              <div
+                ref={sortMenuRef}
+                className="rounded-[28px] border border-slate-200 bg-gradient-to-b from-white to-slate-50/80 p-3 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:from-slate-950 dark:to-slate-900/90"
+              >
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
@@ -702,38 +721,70 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                     className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-14 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition focus:border-amber-400 focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950 dark:placeholder:text-slate-500 lg:pr-4"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 lg:hidden">
-                    <label className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <button
+                      type="button"
+                      onClick={() => setShowSortMenu((current) => !current)}
+                      className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900"
+                      aria-label="Sort lecturer notes"
+                    >
                       <SlidersHorizontal className="h-4 w-4 text-slate-500" />
-                      <select
-                        value={sortBy}
-                        onChange={(event) => setSortBy(event.target.value as (typeof sortOptions)[number]["value"])}
-                        className="absolute inset-0 appearance-none opacity-0"
-                        aria-label="Sort lecturer notes"
-                      >
+                    </button>
+                    {showSortMenu ? (
+                      <div className="absolute right-0 top-[calc(100%+10px)] z-40 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:bg-slate-900">
                         {sortOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setSortBy(option.value);
+                              setShowSortMenu(false);
+                            }}
+                            className={`flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
+                              sortBy === option.value
+                                ? "bg-slate-950 text-white dark:bg-amber-400 dark:text-slate-950"
+                                : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                            }`}
+                          >
                             {option.label}
-                          </option>
+                          </button>
                         ))}
-                      </select>
-                    </label>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-                <label className="relative hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:flex">
-                  <SlidersHorizontal className="h-4 w-4 shrink-0 text-slate-400" />
-                  <select
-                    value={sortBy}
-                    onChange={(event) => setSortBy(event.target.value as (typeof sortOptions)[number]["value"])}
-                    className="h-12 w-full appearance-none bg-transparent pr-8 text-sm font-medium text-slate-700 outline-none dark:text-slate-100"
-                  >
-                    {sortOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                </label>
+                  <div className="relative hidden lg:block">
+                    <button
+                      type="button"
+                      onClick={() => setShowSortMenu((current) => !current)}
+                      className="flex h-12 w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.28)] transition hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900"
+                    >
+                      <SlidersHorizontal className="h-4 w-4 shrink-0 text-slate-400" />
+                      <span className="min-w-0 flex-1 truncate text-left text-sm font-semibold text-slate-700 dark:text-slate-100">{activeSortLabel}</span>
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition ${showSortMenu ? "rotate-180" : ""}`} />
+                    </button>
+                    {showSortMenu ? (
+                      <div className="absolute right-0 top-[calc(100%+10px)] z-40 w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:bg-slate-900">
+                        {sortOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setSortBy(option.value);
+                              setShowSortMenu(false);
+                            }}
+                            className={`flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
+                              sortBy === option.value
+                                ? "bg-slate-950 text-white dark:bg-amber-400 dark:text-slate-950"
+                                : "text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
