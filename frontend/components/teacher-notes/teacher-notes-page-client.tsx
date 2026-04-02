@@ -561,7 +561,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
     return (
         <article
           key={note._id}
-          className="flex min-h-[212px] min-w-0 flex-col rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
+          className="flex min-h-[204px] min-w-0 flex-col rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex min-w-0 gap-3">
             <div className="h-[118px] w-[88px] shrink-0 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-800 dark:bg-slate-950 sm:h-[126px] sm:w-[94px]">
@@ -599,10 +599,10 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
           </div>
 
           <div className="mt-3 space-y-2.5">
-            <div className="flex flex-nowrap items-center gap-2">
+            <div className="flex flex-nowrap items-center gap-1.5">
               <Link
                 href={`/viewer?documentId=${note._id}&url=${encodeURIComponent(mediaUrl)}&title=${encodeURIComponent(note.title)}&type=${note.type}`}
-                className="inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[11px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                className="inline-flex min-w-[132px] flex-1 items-center justify-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-[10.5px] font-semibold text-white transition hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
               >
                 <FileText className="h-4 w-4" />
                 Open Notes
@@ -612,7 +612,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                   href={mediaUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                  className="inline-flex h-8.5 w-8.5 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
                   aria-label="Download Notes"
                   title="Download Notes"
                 >
@@ -621,7 +621,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 <button
                   type="button"
                   onClick={() => void toggleSavedDocument(note._id)}
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${
+                  className={`inline-flex h-8.5 w-8.5 items-center justify-center rounded-full border transition ${
                     isSaved
                       ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
                       : "border-slate-200 text-slate-700 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
@@ -634,7 +634,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                 <button
                   type="button"
                   onClick={() => void shareLecturerNote(note)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
+                  className="inline-flex h-8.5 w-8.5 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-200"
                   aria-label="Share Notes"
                   title="Share Notes"
                 >
@@ -814,7 +814,7 @@ export function TeacherNotesPageClient({ initialNotes }: { initialNotes: Documen
                         {teacherGroup.notes.map((note) => (
                           <div
                             key={String(note._id)}
-                            className="w-[92vw] max-w-[416px] min-w-[92vw] snap-start sm:w-[388px] sm:min-w-[388px] lg:w-[388px] lg:min-w-[388px] xl:w-[380px] xl:min-w-[380px] 2xl:w-[372px] 2xl:min-w-[372px]"
+                            className="w-[88vw] max-w-[430px] min-w-[88vw] snap-start sm:w-[410px] sm:min-w-[410px] lg:w-[404px] lg:min-w-[404px] xl:w-[396px] xl:min-w-[396px] 2xl:w-[388px] 2xl:min-w-[388px]"
                           >
                             {renderLecturerCard(note)}
                           </div>
